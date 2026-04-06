@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.calculation_run import CalculationRun
 from app.db.models.economic_result import EconomicResult
+from app.db.models.result_by_use import ResultByUse
+from app.db.models.result_by_zone import ResultByZone
 from app.db.models.result_summary import ResultSummary
 
 
@@ -50,6 +52,22 @@ class CalculationRepository:
         self.db.commit()
         self.db.refresh(economic)
         return economic
+
+    def create_results_by_use(self, calculation_run_id: UUID, items: list[dict]) -> list[ResultByUse]:
+        results = [ResultByUse(calculation_run_id=calculation_run_id, **item) for item in items]
+        self.db.add_all(results)
+        self.db.commit()
+        for result in results:
+            self.db.refresh(result)
+        return results
+
+    def create_results_by_zone(self, calculation_run_id: UUID, items: list[dict]) -> list[ResultByZone]:
+        results = [ResultByZone(calculation_run_id=calculation_run_id, **item) for item in items]
+        self.db.add_all(results)
+        self.db.commit()
+        for result in results:
+            self.db.refresh(result)
+        return results
 
     def get_latest_by_scenario(self, scenario_id: UUID, project_id: UUID) -> CalculationRun | None:
         statement = (

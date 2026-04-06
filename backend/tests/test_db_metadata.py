@@ -9,6 +9,8 @@ from app.db.models import (  # noqa: F401
     EconomicResult,
     Organization,
     Project,
+    ResultByUse,
+    ResultByZone,
     ResultSummary,
     Scenario,
     TechnicalSystem,
@@ -31,4 +33,6 @@ def test_base_metadata_registers_core_tables() -> None:
         "calculation_runs",
         "result_summaries",
         "economic_results",
+        "result_by_use",
+        "result_by_zone",
     }

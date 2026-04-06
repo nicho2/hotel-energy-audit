@@ -67,6 +67,8 @@ class CalculationService:
         )
         self.calculation_repository.create_result_summary(run.id, **output.summary)
         self.calculation_repository.create_economic_result(run.id, **output.economic)
+        self.calculation_repository.create_results_by_use(run.id, output.by_use)
+        self.calculation_repository.create_results_by_zone(run.id, output.by_zone)
         latest = self.calculation_repository.get_latest_by_scenario(scenario.id, project.id)
         if latest is None:
             raise NotFoundError("Calculation result not found")

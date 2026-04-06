@@ -47,3 +47,13 @@ class CalculationRun(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    results_by_use: Mapped[list["ResultByUse"]] = relationship(
+        back_populates="calculation_run",
+        cascade="all, delete-orphan",
+        order_by="ResultByUse.usage_type",
+    )
+    results_by_zone: Mapped[list["ResultByZone"]] = relationship(
+        back_populates="calculation_run",
+        cascade="all, delete-orphan",
+        order_by="ResultByZone.zone_name",
+    )
