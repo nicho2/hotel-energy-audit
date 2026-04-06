@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from app.core.security import get_password_hash
@@ -60,7 +62,7 @@ def test_get_wizard_state_is_scoped_to_current_organization(client: TestClient) 
     with SessionLocal() as db:
         other_organization = Organization(
             name="Other Organization",
-            slug="wizard-other-org",
+            slug=f"wizard-other-org-{uuid4().hex[:8]}",
             default_language="fr",
             is_active=True,
         )
@@ -69,7 +71,7 @@ def test_get_wizard_state_is_scoped_to_current_organization(client: TestClient) 
 
         other_user = User(
             organization_id=other_organization.id,
-            email="wizard-other@example.com",
+            email=f"wizard-other-{uuid4().hex[:8]}@example.com",
             password_hash=get_password_hash("password123"),
             first_name="Other",
             last_name="User",
