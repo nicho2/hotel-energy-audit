@@ -30,7 +30,13 @@ L'API expose:
 ## Test
 
 ```bash
-pytest
+py -3.12 -m pytest
+```
+
+Commande ciblee P0 backend :
+
+```bash
+py -3.12 -m pytest tests/test_auth_api.py tests/test_projects_api.py tests/test_buildings_api.py tests/test_zones_api.py tests/test_bacs_api.py tests/test_calculations_api.py tests/test_results_api.py tests/test_scenarios_compare_api.py tests/test_reports_api.py tests/test_calculation_engine.py tests/test_project_service.py tests/test_readiness_service.py
 ```
 
 ## Migrations
