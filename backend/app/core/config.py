@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True, alias="DEBUG")
     api_v1_prefix: str = Field(default="/api/v1", alias="API_V1_PREFIX")
     database_url: str = Field(
-        default="postgresql+psycopg://postgres:postgres@localhost:5432/hotel_audit",
+        default="postgresql+psycopg://postgres:admin@localhost:5432/hotel_audit",
         alias="DATABASE_URL",
     )
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")

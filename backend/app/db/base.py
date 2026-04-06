@@ -1,5 +1,10 @@
-from app.db.session import Base
-from app.db.models.organization import Organization  # noqa: F401
-from app.db.models.user import User  # noqa: F401
-from app.db.models.project import Project  # noqa: F401
-from app.db.models.building import Building  # noqa: F401
+from sqlalchemy.orm import DeclarativeBase
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+from app.db.models.organization import Organization  # noqa: E402,F401
+from app.db.models.project import Project  # noqa: E402,F401
+from app.db.models.user import User  # noqa: E402,F401

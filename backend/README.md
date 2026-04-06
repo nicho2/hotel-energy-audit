@@ -32,3 +32,12 @@ L'API expose:
 ```bash
 pytest
 ```
+
+## Migrations
+
+```bash
+alembic upgrade head
+```
+
+Par defaut, l'exemple de configuration cible un PostgreSQL local sur `localhost:5432`
+avec l'utilisateur `postgres`, le mot de passe `admin` et la base `hotel_audit`.
