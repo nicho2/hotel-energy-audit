@@ -51,6 +51,14 @@ class Project(Base):
         back_populates="project",
         uselist=False,
     )
+    scenarios: Mapped[list["Scenario"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+    calculation_runs: Mapped[list["CalculationRun"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
     zones: Mapped[list["BuildingZone"]] = relationship(
         back_populates="project",
         cascade="all, delete-orphan",
