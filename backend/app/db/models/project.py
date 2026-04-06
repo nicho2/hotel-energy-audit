@@ -51,3 +51,7 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    technical_systems: Mapped[list["TechnicalSystem"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
