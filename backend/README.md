@@ -41,3 +41,14 @@ alembic upgrade head
 
 Par defaut, l'exemple de configuration cible un PostgreSQL local sur `localhost:5432`
 avec l'utilisateur `postgres`, le mot de passe `admin` et la base `hotel_audit`.
+
+## Dev auth seed
+
+```bash
+py -3.12 scripts/seed_all.py
+```
+
+Utilisateur de dev cree ou mis a jour :
+
+- email : `demo@hotel-energy-audit.example.com`
+- mot de passe : `admin1234`

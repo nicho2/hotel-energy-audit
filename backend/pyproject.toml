@@ -5,9 +5,11 @@ description = "FastAPI backend for the hotel energy audit MVP."
 requires-python = ">=3.12"
 dependencies = [
   "alembic",
+  "email-validator",
   "fastapi",
   "pydantic-settings",
   "psycopg[binary]",
+  "python-jose[cryptography]",
   "sqlalchemy",
   "uvicorn[standard]"
 ]
@@ -21,6 +23,9 @@ dev = [
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"

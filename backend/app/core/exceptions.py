@@ -39,3 +39,9 @@ class BusinessRuleError(AppError):
     code = "BUSINESS_RULE_ERROR"
     message = "Business rule error"
     status_code = HTTPStatus.CONFLICT
+
+
+class UnauthorizedError(AppError):
+    code = "UNAUTHORIZED"
+    message = "Authentication required"
+    status_code = HTTPStatus.UNAUTHORIZED
