@@ -47,3 +47,7 @@ class Project(Base):
     organization: Mapped["Organization"] = relationship(back_populates="projects")
     created_by_user: Mapped["User"] = relationship(back_populates="projects_created")
     building: Mapped["Building"] = relationship(back_populates="project", uselist=False)
+    zones: Mapped[list["BuildingZone"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
