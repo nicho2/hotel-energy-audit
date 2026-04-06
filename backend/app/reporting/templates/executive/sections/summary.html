@@ -1,0 +1,21 @@
+<section class="section">
+  <h2>Executive Summary</h2>
+  <div class="grid">
+    <article class="card">
+      <div class="metric-label">Baseline Energy</div>
+      <span class="metric-value">{{ "%.0f"|format(results.summary.baseline_energy_kwh_year) }} kWh/year</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Scenario Energy</div>
+      <span class="metric-value">{{ "%.0f"|format(results.summary.scenario_energy_kwh_year) }} kWh/year</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Energy Savings</div>
+      <span class="metric-value">{{ "%.1f"|format(results.summary.energy_savings_percent) }}%</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Simple Payback</div>
+      <span class="metric-value">{{ "%.1f"|format(results.economic.simple_payback_years) }} years</span>
+    </article>
+  </div>
+</section>

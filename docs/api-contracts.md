@@ -39,6 +39,7 @@
 - `/api/v1/projects/{id}/scenarios/{scenarioId}/results/by-zone`
 - `/api/v1/calculations/{id}`
 - `/api/v1/reports`
+- `/api/v1/reports/executive/{calculationRunId}/html`
 
 ## Main enums
 ### building_type

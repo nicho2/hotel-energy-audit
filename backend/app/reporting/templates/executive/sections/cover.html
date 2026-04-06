@@ -1,0 +1,12 @@
+<section class="hero">
+  <div class="eyebrow">{{ branding.company_name }}</div>
+  <h1>{{ project.name }}</h1>
+  <p class="subtitle">
+    Executive energy performance summary for scenario <strong>{{ scenario.name }}</strong>.
+  </p>
+  <p class="meta">
+    {% if project.client_name %}Client: {{ project.client_name }} | {% endif %}
+    {% if project.reference_code %}Reference: {{ project.reference_code }} | {% endif %}
+    Building type: {{ project.building_type }}
+  </p>
+</section>

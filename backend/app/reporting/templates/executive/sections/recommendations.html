@@ -1,0 +1,13 @@
+<section class="section">
+  <h2>Recommendations</h2>
+  <div class="card">
+    <ul>
+      {% for item in recommendations %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    {% if project.description %}
+    <p class="muted" style="margin-top: 16px;">Project note: {{ project.description }}</p>
+    {% endif %}
+  </div>
+</section>

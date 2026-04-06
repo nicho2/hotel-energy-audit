@@ -1,0 +1,54 @@
+<section class="section">
+  <h2>Building Snapshot</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr>
+          <th>Building Name</th>
+          <td>{{ building.name or project.name }}</td>
+          <th>Rooms</th>
+          <td>{{ building.number_of_rooms or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Gross Area</th>
+          <td>{{ "%.0f"|format(building.gross_floor_area_m2) if building.gross_floor_area_m2 else "-" }} m2</td>
+          <th>Heated Area</th>
+          <td>{{ "%.0f"|format(building.heated_area_m2) if building.heated_area_m2 else "-" }} m2</td>
+        </tr>
+        <tr>
+          <th>Floors</th>
+          <td>{{ building.number_of_floors or "-" }}</td>
+          <th>Main Orientation</th>
+          <td>{{ building.main_orientation or "-" }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if zones %}
+    <div style="margin-top: 16px;">
+      <div class="metric-label" style="margin-bottom: 8px;">Functional Zones</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Zone</th>
+            <th>Type</th>
+            <th>Orientation</th>
+            <th>Area</th>
+            <th>Rooms</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for zone in zones %}
+          <tr>
+            <td>{{ zone.name }}</td>
+            <td>{{ zone.zone_type }}</td>
+            <td>{{ zone.orientation }}</td>
+            <td>{{ "%.0f"|format(zone.area_m2) }} m2</td>
+            <td>{{ zone.room_count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</section>

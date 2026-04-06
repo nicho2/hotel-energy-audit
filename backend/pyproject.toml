@@ -7,6 +7,7 @@ dependencies = [
   "alembic",
   "email-validator",
   "fastapi",
+  "jinja2",
   "pydantic-settings",
   "psycopg[binary]",
   "python-jose[cryptography]",
