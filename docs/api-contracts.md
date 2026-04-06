@@ -40,6 +40,9 @@
 - `/api/v1/calculations/{id}`
 - `/api/v1/reports`
 - `/api/v1/reports/executive/{calculationRunId}/html`
+- `/api/v1/reports/executive/{calculationRunId}/generate`
+- `/api/v1/reports/{reportId}`
+- `/api/v1/reports/{reportId}/download`
 
 ## Main enums
 ### building_type

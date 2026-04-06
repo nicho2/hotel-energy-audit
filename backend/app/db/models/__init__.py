@@ -5,6 +5,7 @@ from app.db.models.calculation_run import CalculationRun
 from app.db.models.building import Building
 from app.db.models.building_zone import BuildingZone
 from app.db.models.economic_result import EconomicResult
+from app.db.models.generated_report import GeneratedReport
 from app.db.models.organization import Organization
 from app.db.models.project import Project
 from app.db.models.result_by_use import ResultByUse
@@ -22,6 +23,7 @@ __all__ = [
     "Building",
     "BuildingZone",
     "EconomicResult",
+    "GeneratedReport",
     "Organization",
     "Project",
     "ResultByUse",

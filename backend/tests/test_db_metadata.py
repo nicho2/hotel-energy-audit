@@ -7,6 +7,7 @@ from app.db.models import (  # noqa: F401
     Building,
     BuildingZone,
     EconomicResult,
+    GeneratedReport,
     Organization,
     Project,
     ResultByUse,
@@ -33,6 +34,7 @@ def test_base_metadata_registers_core_tables() -> None:
         "calculation_runs",
         "result_summaries",
         "economic_results",
+        "generated_reports",
         "result_by_use",
         "result_by_zone",
     }

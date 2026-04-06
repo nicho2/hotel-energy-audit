@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(default_factory=lambda: secrets.token_urlsafe(32), alias="SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    report_storage_dir: str = Field(default="storage/reports", alias="REPORT_STORAGE_DIR")
 
     model_config = SettingsConfigDict(
         env_file=".env",
