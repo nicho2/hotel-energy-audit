@@ -1,3 +1,10 @@
 *.zip
 /codex-task-pack/
 /.idea/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+pytest-cache-files-*/
+.venv/
+backend/.env

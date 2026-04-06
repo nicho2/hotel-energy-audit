@@ -1,12 +1,34 @@
 # Backend
 
+Socle backend FastAPI du MVP `hotel-energy-audit`.
+
+## Prerequisites
+
+- Python 3.12+
+- PostgreSQL 15+ pour les prochaines taches de persistence
+
+## Installation
+
+```bash
+py -3.12 -m venv .venv
+.venv\Scripts\activate
+pip install -e ".[dev]"
+Copy-Item .env.example .env
+```
+
 ## Run
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-alembic upgrade head
-python scripts/seed_all.py
 uvicorn app.main:app --reload
+```
+
+L'API expose:
+
+- `GET /health`
+- base path versionnee `GET /api/v1/...` pour les routeurs principaux encore vides
+
+## Test
+
+```bash
+pytest
 ```
