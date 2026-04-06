@@ -1,7 +1,9 @@
 from fastapi.testclient import TestClient
 
 from app.db.models.calculation_run import CalculationRun
+from app.db.models.economic_result import EconomicResult
 from app.db.models.project import Project
+from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
@@ -136,6 +138,75 @@ def test_get_latest_result_returns_latest_persisted_payload(client: TestClient) 
     assert body["summary"]["scenario_energy_kwh_year"] == 980000
     assert body["economic"]["annual_cost_savings"] == 28000
     assert body["messages"] == ["Starter output from placeholder engine."]
+
+
+def test_get_latest_result_returns_404_when_no_run_exists(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+
+    response = client.get(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/results/latest",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_get_latest_result_selects_most_recent_run(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+
+    first_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert first_response.status_code == 200
+    first_run_id = first_response.json()["data"]["calculation_run_id"]
+
+    with SessionLocal() as db:
+        latest_run = CalculationRun(
+            project_id=project_id,
+            scenario_id=scenario_id,
+            status="completed",
+            engine_version="placeholder-v2",
+            input_snapshot={"project_id": project_id, "scenario_id": scenario_id},
+            messages_json=["Most recent persisted output."],
+            warnings_json=[],
+        )
+        db.add(latest_run)
+        db.flush()
+        db.add(
+            ResultSummary(
+                calculation_run_id=latest_run.id,
+                baseline_energy_kwh_year=1300000,
+                scenario_energy_kwh_year=900000,
+                energy_savings_percent=30.8,
+                baseline_bacs_class="C",
+                scenario_bacs_class="A",
+            )
+        )
+        db.add(
+            EconomicResult(
+                calculation_run_id=latest_run.id,
+                total_capex=110000,
+                annual_cost_savings=36000,
+                simple_payback_years=3.0,
+                npv=120000,
+                irr=0.24,
+            )
+        )
+        db.commit()
+
+    latest_response = client.get(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/results/latest",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert latest_response.status_code == 200
+    body = latest_response.json()["data"]
+    assert body["calculation_run_id"] != first_run_id
+    assert body["engine_version"] == "placeholder-v2"
+    assert body["summary"]["scenario_energy_kwh_year"] == 900000
+    assert body["economic"]["annual_cost_savings"] == 36000
+    assert body["messages"] == ["Most recent persisted output."]
 
 
 def test_calculate_returns_404_when_scenario_missing(client: TestClient) -> None:

@@ -11,6 +11,7 @@ from app.repositories.bacs_repository import BacsRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
 from app.repositories.project_repository import ProjectRepository
+from app.repositories.results_repository import ResultsRepository
 from app.repositories.scenario_repository import ScenarioRepository
 from app.repositories.technical_system_repository import TechnicalSystemRepository
 from app.repositories.zone_repository import ZoneRepository
@@ -20,6 +21,7 @@ from app.schemas.readiness import CalculationReadinessResponse
 from app.services.calculation_service import CalculationService
 from app.services.project_service import ProjectService
 from app.services.readiness_service import ReadinessService
+from app.services.results_service import ResultsService
 
 router = APIRouter()
 
@@ -52,6 +54,15 @@ def get_calculation_service(db: Session) -> CalculationService:
         bacs_repository=BacsRepository(db),
         readiness_service=readiness_service,
         engine=CalculationEngine(),
+    )
+
+
+def get_results_service(db: Session) -> ResultsService:
+    project_service = ProjectService(ProjectRepository(db))
+    return ResultsService(
+        project_service=project_service,
+        scenario_repository=ScenarioRepository(db),
+        results_repository=ResultsRepository(db),
     )
 
 
@@ -92,5 +103,5 @@ def get_latest_result(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ApiResponse[CalculationResultLatestResponse]:
-    service = get_calculation_service(db)
+    service = get_results_service(db)
     return success_response(service.get_latest_result(project_id, scenario_id, current_user))

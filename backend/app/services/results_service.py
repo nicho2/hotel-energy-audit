@@ -1,6 +1,11 @@
 from app.core.exceptions import NotFoundError
 from app.repositories.results_repository import ResultsRepository
 from app.repositories.scenario_repository import ScenarioRepository
+from app.schemas.calculations import (
+    CalculationResultLatestResponse,
+    CalculationSummaryResponse,
+    EconomicResultResponse,
+)
 from app.schemas.results import (
     ResultByUseItemResponse,
     ResultByZoneItemResponse,
@@ -53,6 +58,38 @@ class ResultsService:
                 )
                 for item in run.results_by_zone
             ],
+        )
+
+    def get_latest_result(self, project_id, scenario_id, current_user) -> CalculationResultLatestResponse:
+        run = self._get_latest_run(project_id, scenario_id, current_user)
+        summary = run.result_summary
+        economic = run.economic_result
+        if summary is None or economic is None:
+            raise NotFoundError("Persisted result is incomplete")
+
+        return CalculationResultLatestResponse(
+            calculation_run_id=run.id,
+            project_id=run.project_id,
+            scenario_id=run.scenario_id,
+            status=run.status,
+            engine_version=run.engine_version,
+            summary=CalculationSummaryResponse(
+                baseline_energy_kwh_year=summary.baseline_energy_kwh_year,
+                scenario_energy_kwh_year=summary.scenario_energy_kwh_year,
+                energy_savings_percent=summary.energy_savings_percent,
+                baseline_bacs_class=summary.baseline_bacs_class,
+                scenario_bacs_class=summary.scenario_bacs_class,
+            ),
+            economic=EconomicResultResponse(
+                total_capex=economic.total_capex,
+                annual_cost_savings=economic.annual_cost_savings,
+                simple_payback_years=economic.simple_payback_years,
+                npv=economic.npv,
+                irr=economic.irr,
+            ),
+            messages=run.messages_json,
+            warnings=run.warnings_json,
+            input_snapshot=run.input_snapshot,
         )
 
     def _get_latest_run(self, project_id, scenario_id, current_user):

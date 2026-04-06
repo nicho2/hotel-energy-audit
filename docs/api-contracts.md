@@ -33,6 +33,7 @@
 - `/api/v1/projects/{id}/bacs`
 - `/api/v1/projects/{id}/scenarios`
 - `/api/v1/projects/{id}/scenarios/{scenarioId}/calculate`
+- `/api/v1/projects/{id}/scenarios/{scenarioId}/results/latest`
 - `/api/v1/projects/{id}/scenarios/{scenarioId}/results/by-use`
 - `/api/v1/projects/{id}/scenarios/{scenarioId}/results/by-zone`
 - `/api/v1/calculations/{id}`
