@@ -42,13 +42,27 @@ alembic upgrade head
 Par defaut, l'exemple de configuration cible un PostgreSQL local sur `localhost:5432`
 avec l'utilisateur `postgres`, le mot de passe `admin` et la base `hotel_audit`.
 
-## Dev auth seed
+## Demo seed
 
 ```bash
 py -3.12 scripts/seed_all.py
 ```
 
-Utilisateur de dev cree ou mis a jour :
+Le script charge en une seule commande :
 
-- email : `demo@hotel-energy-audit.example.com`
-- mot de passe : `admin1234`
+- l'organisation de demonstration principale
+- les comptes demo admin, commercial et partenaire
+- 3 projets demonstration prets a visualiser
+- des donnees batiment, zones, systemes, BACS, scenarios et resultats persistants
+
+Comptes disponibles :
+
+- admin : `demo@hotel-energy-audit.example.com` / `admin1234`
+- commercial : `sales@hotel-energy-audit.example.com` / `sales1234`
+- partenaire : `partner@hotel-energy-audit.example.com` / `partner1234`
+
+Cas de demonstration charges :
+
+- `DEMO-HOTEL-001` : Hotel Lumiere Paris
+- `DEMO-APARTHOTEL-001` : Canal Suites Aparthotel
+- `DEMO-RESIDENCE-001` : Residence Azur Seaside
