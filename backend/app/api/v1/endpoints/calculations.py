@@ -63,6 +63,7 @@ def get_results_service(db: Session) -> ResultsService:
         project_service=project_service,
         scenario_repository=ScenarioRepository(db),
         results_repository=ResultsRepository(db),
+        technical_system_repository=TechnicalSystemRepository(db),
     )
 
 

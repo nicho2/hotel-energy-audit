@@ -9,6 +9,7 @@ from app.db.models.user import User
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.results_repository import ResultsRepository
 from app.repositories.scenario_repository import ScenarioRepository
+from app.repositories.technical_system_repository import TechnicalSystemRepository
 from app.schemas.common import ApiResponse, success_response
 from app.schemas.results import ResultsByUseResponse, ResultsByZoneResponse
 from app.services.project_service import ProjectService
@@ -23,6 +24,7 @@ def get_results_service(db: Session) -> ResultsService:
         project_service=project_service,
         scenario_repository=ScenarioRepository(db),
         results_repository=ResultsRepository(db),
+        technical_system_repository=TechnicalSystemRepository(db),
     )
 
 

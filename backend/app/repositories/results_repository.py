@@ -24,3 +24,28 @@ class ResultsRepository:
             .order_by(CalculationRun.created_at.desc())
         )
         return self.db.execute(statement).unique().scalars().first()
+
+    def get_latest_by_scenario_ids(
+        self,
+        scenario_ids: list[UUID],
+        project_id: UUID,
+    ) -> list[CalculationRun]:
+        statement = (
+            select(CalculationRun)
+            .where(
+                CalculationRun.project_id == project_id,
+                CalculationRun.scenario_id.in_(scenario_ids),
+            )
+            .options(
+                joinedload(CalculationRun.result_summary),
+                joinedload(CalculationRun.economic_result),
+                joinedload(CalculationRun.scenario),
+            )
+            .order_by(CalculationRun.scenario_id.asc(), CalculationRun.created_at.desc())
+        )
+        runs = self.db.execute(statement).unique().scalars().all()
+        latest_by_scenario: dict[UUID, CalculationRun] = {}
+        for run in runs:
+            if run.scenario_id not in latest_by_scenario:
+                latest_by_scenario[run.scenario_id] = run
+        return list(latest_by_scenario.values())

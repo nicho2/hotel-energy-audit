@@ -16,3 +16,14 @@ class ScenarioRepository:
             Scenario.project_id == project_id,
         )
         return self.db.scalar(statement)
+
+    def list_by_ids(self, scenario_ids: list[UUID], project_id: UUID) -> list[Scenario]:
+        statement = (
+            select(Scenario)
+            .where(
+                Scenario.project_id == project_id,
+                Scenario.id.in_(scenario_ids),
+            )
+            .order_by(Scenario.created_at.asc(), Scenario.name.asc())
+        )
+        return list(self.db.scalars(statement).all())
