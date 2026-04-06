@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -6,10 +8,14 @@ from app.api.deps.db import get_db
 from app.db.models.user import User
 from app.repositories.project_repository import ProjectRepository
 from app.schemas.common import ApiResponse, success_response
-from app.schemas.projects import ProjectResponse
+from app.schemas.projects import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services.project_service import ProjectService
 
 router = APIRouter()
+
+
+def get_project_service(db: Session) -> ProjectService:
+    return ProjectService(ProjectRepository(db))
 
 
 @router.get("", response_model=ApiResponse[list[ProjectResponse]])
@@ -17,7 +23,41 @@ def list_projects(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[ProjectResponse]]:
-    service = ProjectService(ProjectRepository(db))
+    service = get_project_service(db)
     projects = service.list_projects(current_user)
     data = [ProjectResponse.model_validate(project) for project in projects]
     return success_response(data)
+
+
+@router.post("", response_model=ApiResponse[ProjectResponse])
+def create_project(
+    payload: ProjectCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[ProjectResponse]:
+    service = get_project_service(db)
+    project = service.create_project(payload, current_user)
+    return success_response(ProjectResponse.model_validate(project))
+
+
+@router.get("/{project_id}", response_model=ApiResponse[ProjectResponse])
+def get_project(
+    project_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[ProjectResponse]:
+    service = get_project_service(db)
+    project = service.get_project(project_id, current_user)
+    return success_response(ProjectResponse.model_validate(project))
+
+
+@router.patch("/{project_id}", response_model=ApiResponse[ProjectResponse])
+def update_project(
+    project_id: UUID,
+    payload: ProjectUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[ProjectResponse]:
+    service = get_project_service(db)
+    project = service.update_project(project_id, payload, current_user)
+    return success_response(ProjectResponse.model_validate(project))

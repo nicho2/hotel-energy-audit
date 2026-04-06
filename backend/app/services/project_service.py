@@ -12,6 +12,8 @@ class ProjectService:
             created_by_user_id=current_user.id,
             name=payload.name,
             client_name=payload.client_name,
+            reference_code=payload.reference_code,
+            description=payload.description,
             status="draft",
             wizard_step=1,
             building_type=payload.building_type,
@@ -26,3 +28,10 @@ class ProjectService:
 
     def list_projects(self, current_user):
         return self.repo.list(current_user.organization_id)
+
+    def update_project(self, project_id, payload, current_user):
+        project = self.get_project(project_id, current_user)
+        updates = payload.model_dump(exclude_unset=True)
+        if not updates:
+            return project
+        return self.repo.update(project, **updates)
