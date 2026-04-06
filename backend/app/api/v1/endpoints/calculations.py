@@ -7,6 +7,7 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.calculation.engine import CalculationEngine
 from app.db.models.user import User
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.bacs_repository import BacsRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
@@ -27,7 +28,7 @@ router = APIRouter()
 
 
 def get_readiness_service(db: Session) -> ReadinessService:
-    project_service = ProjectService(ProjectRepository(db))
+    project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
     return ReadinessService(
         project_service=project_service,
         building_repository=BuildingRepository(db),
@@ -37,7 +38,7 @@ def get_readiness_service(db: Session) -> ReadinessService:
 
 
 def get_calculation_service(db: Session) -> CalculationService:
-    project_service = ProjectService(ProjectRepository(db))
+    project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
     readiness_service = ReadinessService(
         project_service=project_service,
         building_repository=BuildingRepository(db),
@@ -58,7 +59,7 @@ def get_calculation_service(db: Session) -> CalculationService:
 
 
 def get_results_service(db: Session) -> ResultsService:
-    project_service = ProjectService(ProjectRepository(db))
+    project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
     return ResultsService(
         project_service=project_service,
         scenario_repository=ScenarioRepository(db),

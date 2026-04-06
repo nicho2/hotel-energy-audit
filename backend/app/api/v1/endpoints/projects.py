@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.project_repository import ProjectRepository
 from app.schemas.common import ApiResponse, success_response
 from app.schemas.projects import ProjectCreate, ProjectResponse, ProjectUpdate
@@ -15,7 +16,7 @@ router = APIRouter()
 
 
 def get_project_service(db: Session) -> ProjectService:
-    return ProjectService(ProjectRepository(db))
+    return ProjectService(ProjectRepository(db), BrandingRepository(db))
 
 
 @router.get("", response_model=ApiResponse[list[ProjectResponse]])

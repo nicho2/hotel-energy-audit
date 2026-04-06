@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.project_repository import ProjectRepository
 from app.schemas.buildings import BuildingResponse, BuildingUpsert
@@ -17,7 +18,7 @@ router = APIRouter()
 
 
 def get_building_service(db: Session) -> BuildingService:
-    project_service = ProjectService(ProjectRepository(db))
+    project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
     return BuildingService(BuildingRepository(db), project_service)
 
 

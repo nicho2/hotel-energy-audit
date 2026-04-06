@@ -25,3 +25,7 @@ class Organization(Base):
 
     users: Mapped[list["User"]] = relationship(back_populates="organization")
     projects: Mapped[list["Project"]] = relationship(back_populates="organization")
+    branding_profiles: Mapped[list["BrandingProfile"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )

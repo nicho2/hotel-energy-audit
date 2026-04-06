@@ -44,6 +44,8 @@
 - `/api/v1/reports/{reportId}`
 - `/api/v1/reports/{reportId}/download`
 
+Generated report metadata now retains the optional `branding_profile_id` used during rendering.
+
 ## Main enums
 ### building_type
 - hotel

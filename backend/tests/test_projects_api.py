@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.core.security import get_password_hash
+from app.db.models.branding_profile import BrandingProfile
 from app.db.models.organization import Organization
 from app.db.models.project import Project
 from app.db.models.user import User
@@ -168,3 +169,36 @@ def test_patch_project_updates_partial_fields(client: TestClient) -> None:
     assert body["data"]["wizard_step"] == 3
     assert body["data"]["description"] == "Updated description"
     assert body["data"]["client_name"] == "Client A"
+
+
+def test_create_project_persists_branding_profile_id(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        branding_profile = BrandingProfile(
+            organization_id=user["organization_id"],
+            name="Default brand",
+            company_name="Legrand Hospitality",
+            accent_color="#ff5a1f",
+            logo_text="LG",
+            contact_email="sales@legrand.example.com",
+            is_default=True,
+        )
+        db.add(branding_profile)
+        db.commit()
+        db.refresh(branding_profile)
+
+    response = client.post(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Branded Project",
+            "building_type": "hotel",
+            "project_goal": "reduce_energy",
+            "branding_profile_id": str(branding_profile.id),
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert body["branding_profile_id"] == str(branding_profile.id)

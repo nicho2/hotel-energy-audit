@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.project import Project
 
@@ -18,9 +18,13 @@ class ProjectRepository:
         return project
 
     def get_by_id(self, project_id: UUID, organization_id: UUID) -> Project | None:
-        statement = select(Project).where(
-            Project.id == project_id,
-            Project.organization_id == organization_id,
+        statement = (
+            select(Project)
+            .where(
+                Project.id == project_id,
+                Project.organization_id == organization_id,
+            )
+            .options(joinedload(Project.branding_profile))
         )
         return self.db.scalar(statement)
 

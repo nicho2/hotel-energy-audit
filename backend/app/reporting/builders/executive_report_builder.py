@@ -18,12 +18,20 @@ class ExecutiveReportBuilder:
             raise ValueError("Calculation run is missing summary or economic results")
 
         default_branding = {
+            "id": None,
+            "source": "fallback",
             "company_name": "Hotel Energy Audit",
             "accent_color": "#0f766e",
             "logo_text": "HEA",
             "contact_email": "contact@hotel-energy-audit.example.com",
+            "cover_tagline": "Executive energy performance summary",
+            "footer_note": "Prepared for pre-audit and scenario comparison.",
         }
         merged_branding = {**default_branding, **(branding or {})}
+        if not merged_branding.get("contact_email"):
+            merged_branding["contact_email"] = "contact@hotel-energy-audit.example.com"
+        if not merged_branding.get("cover_tagline"):
+            merged_branding["cover_tagline"] = "Executive energy performance summary"
         recommendations = self._build_recommendations(summary, economic)
         zones_payload = [
             {

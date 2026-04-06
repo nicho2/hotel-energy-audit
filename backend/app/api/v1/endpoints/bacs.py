@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.bacs_repository import BacsRepository
 from app.repositories.project_repository import ProjectRepository
 from app.schemas.bacs import (
@@ -22,7 +23,7 @@ router = APIRouter()
 
 
 def get_bacs_service(db: Session) -> BacsService:
-    project_service = ProjectService(ProjectRepository(db))
+    project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
     return BacsService(BacsRepository(db), project_service)
 
 

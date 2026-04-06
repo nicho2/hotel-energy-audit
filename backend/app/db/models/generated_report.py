@@ -32,6 +32,11 @@ class GeneratedReport(Base):
         ForeignKey("calculation_runs.id", ondelete="CASCADE"),
         nullable=False,
     )
+    branding_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("branding_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     report_type: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="generated")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -48,6 +53,7 @@ class GeneratedReport(Base):
     )
 
     calculation_run: Mapped["CalculationRun"] = relationship()
+    branding_profile: Mapped["BrandingProfile | None"] = relationship()
     organization: Mapped["Organization"] = relationship()
     project: Mapped["Project"] = relationship()
     scenario: Mapped["Scenario"] = relationship()

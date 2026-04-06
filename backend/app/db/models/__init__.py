@@ -1,6 +1,7 @@
 from app.db.models.bacs_assessment import BacsAssessment
 from app.db.models.bacs_function_definition import BacsFunctionDefinition
 from app.db.models.bacs_selected_function import BacsSelectedFunction
+from app.db.models.branding_profile import BrandingProfile
 from app.db.models.calculation_run import CalculationRun
 from app.db.models.building import Building
 from app.db.models.building_zone import BuildingZone
@@ -19,6 +20,7 @@ __all__ = [
     "BacsAssessment",
     "BacsFunctionDefinition",
     "BacsSelectedFunction",
+    "BrandingProfile",
     "CalculationRun",
     "Building",
     "BuildingZone",

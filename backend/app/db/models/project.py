@@ -30,6 +30,11 @@ class Project(Base):
     wizard_step: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     building_type: Mapped[str] = mapped_column(String(50), nullable=False)
     project_goal: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    branding_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("branding_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -46,6 +51,7 @@ class Project(Base):
 
     organization: Mapped["Organization"] = relationship(back_populates="projects")
     created_by_user: Mapped["User"] = relationship(back_populates="projects_created")
+    branding_profile: Mapped["BrandingProfile | None"] = relationship(back_populates="projects")
     building: Mapped["Building"] = relationship(back_populates="project", uselist=False)
     bacs_assessment: Mapped["BacsAssessment | None"] = relationship(
         back_populates="project",

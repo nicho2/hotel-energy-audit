@@ -8,6 +8,7 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
 from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
 from app.repositories.project_repository import ProjectRepository
@@ -26,6 +27,7 @@ def get_report_service(db: Session) -> ReportService:
         calculation_repository=CalculationRepository(db),
         building_repository=BuildingRepository(db),
         zone_repository=ZoneRepository(db),
+        branding_repository=BrandingRepository(db),
         report_repository=ReportRepository(db),
         builder=ExecutiveReportBuilder(get_reporting_templates_dir()),
     )

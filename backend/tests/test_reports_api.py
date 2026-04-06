@@ -1,5 +1,9 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
+from app.db.models.branding_profile import BrandingProfile
+from app.db.models.project import Project
+from app.db.session import SessionLocal
 from test_calculations_api import _create_ready_project_with_scenario
 
 
@@ -27,6 +31,7 @@ def test_generate_report_persists_metadata_and_stores_file(client: TestClient) -
     assert body["mime_type"] == "application/pdf"
     assert body["file_name"].endswith(".pdf")
     assert body["file_size_bytes"] > 0
+    assert body["branding_profile_id"] is None
     assert body["generator_version"] == "placeholder_pdf_v1"
 
 
@@ -107,6 +112,7 @@ def test_get_executive_report_html_returns_rendered_document(client: TestClient)
     assert "Scenario Energy" in body["html"]
     assert body["context"]["project"]["name"] == "Calculation Project"
     assert body["context"]["scenario"]["id"] == scenario_id
+    assert body["context"]["branding"]["source"] == "fallback"
     assert body["context"]["results"]["summary"]["scenario_energy_kwh_year"] == 980000
 
 
@@ -130,3 +136,97 @@ def test_get_generated_report_returns_404_for_missing_report(client: TestClient)
     )
 
     assert response.status_code == 404
+
+
+def test_report_uses_project_branding_when_available(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+
+    with SessionLocal() as db:
+        project = db.scalar(select(Project).where(Project.id == project_id))
+        assert project is not None
+        branding_profile = BrandingProfile(
+            organization_id=project.organization_id,
+            name="Project brand",
+            company_name="Legrand Hospitality",
+            accent_color="#ff5a1f",
+            logo_text="LG",
+            contact_email="contact@legrand-hospitality.example.com",
+            cover_tagline="Branded executive summary",
+            footer_note="Confidential commercial proposal.",
+            is_default=False,
+        )
+        db.add(branding_profile)
+        db.flush()
+        project.branding_profile_id = branding_profile.id
+        db.add(project)
+        db.commit()
+        db.refresh(branding_profile)
+        branding_profile_id = str(branding_profile.id)
+
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    html_response = client.get(
+        f"/api/v1/reports/executive/{calculation_run_id}/html",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    generate_response = client.post(
+        f"/api/v1/reports/executive/{calculation_run_id}/generate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert html_response.status_code == 200
+    html_body = html_response.json()["data"]
+    assert html_body["context"]["branding"]["id"] == branding_profile_id
+    assert html_body["context"]["branding"]["source"] == "project"
+    assert html_body["context"]["branding"]["company_name"] == "Legrand Hospitality"
+    assert html_body["context"]["branding"]["accent_color"] == "#ff5a1f"
+    assert "Legrand Hospitality" in html_body["html"]
+    assert "Branded executive summary" in html_body["html"]
+    assert "LG" in html_body["html"]
+
+    assert generate_response.status_code == 200
+    generated_report = generate_response.json()["data"]
+    assert generated_report["branding_profile_id"] == branding_profile_id
+
+
+def test_report_uses_organization_default_branding_as_fallback(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+
+    with SessionLocal() as db:
+        project = db.scalar(select(Project).where(Project.id == project_id))
+        assert project is not None
+        branding_profile = BrandingProfile(
+            organization_id=project.organization_id,
+            name="Org default brand",
+            company_name="Demo Organization Energy Services",
+            accent_color="#0057b8",
+            logo_text="DO",
+            contact_email="demo-brand@example.com",
+            cover_tagline="Organization branded summary",
+            is_default=True,
+        )
+        db.add(branding_profile)
+        db.commit()
+        db.refresh(branding_profile)
+        branding_profile_id = str(branding_profile.id)
+
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    response = client.get(
+        f"/api/v1/reports/executive/{calculation_run_id}/html",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert body["context"]["branding"]["id"] == branding_profile_id
+    assert body["context"]["branding"]["source"] == "organization_default"
+    assert body["context"]["branding"]["company_name"] == "Demo Organization Energy Services"

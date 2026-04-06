@@ -1,8 +1,20 @@
 <section class="hero">
-  <div class="eyebrow">{{ branding.company_name }}</div>
+  <div class="hero-top">
+    <div>
+      <div class="eyebrow">{{ branding.company_name }}</div>
+      {% if branding.source == "project" %}
+      <div class="tag">Project branding</div>
+      {% elif branding.source == "organization_default" %}
+      <div class="tag">Organization branding</div>
+      {% endif %}
+    </div>
+    {% if branding.logo_text %}
+    <div class="logo-mark">{{ branding.logo_text }}</div>
+    {% endif %}
+  </div>
   <h1>{{ project.name }}</h1>
   <p class="subtitle">
-    Executive energy performance summary for scenario <strong>{{ scenario.name }}</strong>.
+    {{ branding.cover_tagline }} for scenario <strong>{{ scenario.name }}</strong>.
   </p>
   <p class="meta">
     {% if project.client_name %}Client: {{ project.client_name }} | {% endif %}

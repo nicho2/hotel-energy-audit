@@ -20,6 +20,7 @@ class GeneratedReportResponse(BaseModel):
     project_id: UUID
     scenario_id: UUID
     calculation_run_id: UUID
+    branding_profile_id: UUID | None
     report_type: str
     status: str
     title: str

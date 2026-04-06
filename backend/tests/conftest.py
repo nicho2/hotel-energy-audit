@@ -3,9 +3,13 @@ import shutil
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 
 from app.core.config import settings
+from app.db.models.branding_profile import BrandingProfile
+from app.db.models.generated_report import GeneratedReport
 from app.main import app
+from app.db.session import SessionLocal
 from scripts.seed_all import seed_dev_auth_data
 
 
@@ -13,6 +17,10 @@ from scripts.seed_all import seed_dev_auth_data
 def client() -> TestClient:
     settings.secret_key = "test-secret-key"
     seed_dev_auth_data()
+    with SessionLocal() as db:
+        db.execute(delete(GeneratedReport))
+        db.execute(delete(BrandingProfile))
+        db.commit()
     return TestClient(app)
 
 

@@ -3,9 +3,11 @@ from uuid import UUID, uuid4
 
 from app.core.config import settings
 from app.core.exceptions import NotFoundError
+from app.db.models.branding_profile import BrandingProfile
 from app.db.models.generated_report import GeneratedReport
 from app.db.models.user import User
 from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
+from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
 from app.repositories.project_repository import ProjectRepository
@@ -23,6 +25,7 @@ class ReportService:
         calculation_repository: CalculationRepository,
         building_repository: BuildingRepository,
         zone_repository: ZoneRepository,
+        branding_repository: BrandingRepository,
         report_repository: ReportRepository,
         builder: ExecutiveReportBuilder,
     ):
@@ -30,6 +33,7 @@ class ReportService:
         self.calculation_repository = calculation_repository
         self.building_repository = building_repository
         self.zone_repository = zone_repository
+        self.branding_repository = branding_repository
         self.report_repository = report_repository
         self.builder = builder
 
@@ -48,12 +52,14 @@ class ReportService:
 
         building = self.building_repository.get_by_project_id(project.id)
         zones = self.zone_repository.list_by_project_id(project.id)
+        branding_profile, branding_payload = self._resolve_branding(project)
         context = self.builder.build_context(
             project=project,
             scenario=run.scenario,
             calculation_run=run,
             building=building,
             zones=zones,
+            branding=branding_payload,
         )
         html = self.builder.render_html(context)
         return ExecutiveReportHtmlResponse(
@@ -87,6 +93,9 @@ class ReportService:
             calculation_run_id=html_report.calculation_run_id,
         )
         absolute_storage_path.write_bytes(pdf_bytes)
+        branding_profile, _ = self._resolve_branding(
+            self.project_repository.get_by_id(html_report.project_id, current_user.organization_id)
+        )
 
         report = self.report_repository.create(
             id=report_id,
@@ -94,6 +103,7 @@ class ReportService:
             project_id=html_report.project_id,
             scenario_id=html_report.scenario_id,
             calculation_run_id=html_report.calculation_run_id,
+            branding_profile_id=branding_profile.id if branding_profile is not None else None,
             report_type="executive",
             status="generated",
             title=html_report.title,
@@ -130,6 +140,7 @@ class ReportService:
             project_id=report.project_id,
             scenario_id=report.scenario_id,
             calculation_run_id=report.calculation_run_id,
+            branding_profile_id=report.branding_profile_id,
             report_type=report.report_type,
             status=report.status,
             title=report.title,
@@ -159,6 +170,38 @@ class ReportService:
             "A richer PDF renderer can replace this placeholder without changing the API contract.",
         ]
         return _build_simple_pdf("\n".join(lines))
+
+    def _resolve_branding(self, project) -> tuple[BrandingProfile | None, dict]:
+        if project is None:
+            return None, {}
+
+        branding_profile = None
+        source = "fallback"
+        if project.branding_profile_id is not None:
+            branding_profile = self.branding_repository.get_by_id(
+                project.branding_profile_id,
+                project.organization_id,
+            )
+            source = "project" if branding_profile is not None else "fallback"
+
+        if branding_profile is None:
+            branding_profile = self.branding_repository.get_default_for_organization(project.organization_id)
+            if branding_profile is not None:
+                source = "organization_default"
+
+        if branding_profile is None:
+            return None, {"source": source}
+
+        return branding_profile, {
+            "id": str(branding_profile.id),
+            "source": source,
+            "company_name": branding_profile.company_name,
+            "accent_color": branding_profile.accent_color,
+            "logo_text": branding_profile.logo_text,
+            "contact_email": branding_profile.contact_email,
+            "cover_tagline": branding_profile.cover_tagline,
+            "footer_note": branding_profile.footer_note,
+        }
 
 
 def get_reporting_templates_dir() -> Path:
