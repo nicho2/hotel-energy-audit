@@ -9,3 +9,5 @@ pytest-cache-files-*/
 .venv/
 backend/.env
 backend/test-artifacts/
+/frontend/.next/
+/frontend/node_modules/

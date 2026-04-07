@@ -5,10 +5,11 @@ import { listProjects } from "../api/list-projects";
 import { useAuthContext } from "@/providers/auth-provider";
 
 export function useProjects() {
-  const { token } = useAuthContext();
+  const { isReady, token } = useAuthContext();
 
   return useQuery({
     queryKey: ["projects"],
     queryFn: () => listProjects(token),
+    enabled: isReady,
   });
 }

@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useProjects } from "../hooks/use-projects";
+import type { ProjectListItem } from "@/types/project";
 
 export function ProjectTable() {
   const { data, isLoading, error } = useProjects();
 
   if (isLoading) return <div>Chargement...</div>;
-  if (error) return <div>Erreur de chargement.</div>;
+  if (error) return <div>Erreur de chargement des projets.</div>;
 
-  const projects = (data as any)?.data ?? [];
+  const projects = data?.data ?? [];
+
+  if (projects.length === 0) return <div>Aucun projet disponible pour le moment.</div>;
 
   return (
     <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, background: "#fff", overflow: "hidden" }}>
@@ -23,7 +26,7 @@ export function ProjectTable() {
           </tr>
         </thead>
         <tbody>
-          {projects.map((project: any) => (
+          {projects.map((project: ProjectListItem) => (
             <tr key={project.id} style={{ borderTop: "1px solid #e5e7eb" }}>
               <td style={{ padding: 12 }}>
                 <Link href={`/projects/${project.id}`}>{project.name}</Link>

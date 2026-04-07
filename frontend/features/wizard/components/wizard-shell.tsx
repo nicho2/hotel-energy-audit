@@ -4,11 +4,12 @@ import { useWizard } from "../hooks/use-wizard";
 import { WizardStepper } from "@/components/wizard/wizard-stepper";
 
 export function WizardShell({ projectId }: { projectId: string }) {
-  const { data, isLoading } = useWizard(projectId);
+  const { data, error, isLoading } = useWizard(projectId);
 
   if (isLoading) return <div>Chargement du wizard...</div>;
+  if (error) return <div>Erreur de chargement du wizard.</div>;
 
-  const wizard: any = (data as any)?.data;
+  const wizard = data?.data;
   if (!wizard) return <div>Wizard indisponible.</div>;
 
   return (
