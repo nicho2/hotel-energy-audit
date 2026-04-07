@@ -4,4 +4,5 @@ export type ProjectListItem = {
   client_name: string | null;
   status: string;
   wizard_step: number | string;
+  updated_at: string;
 };
