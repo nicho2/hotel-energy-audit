@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProjectTable } from "@/features/projects/components/project-table";
+import { ProjectListTable } from "@/features/projects/components/project-list-table";
 import { Button } from "@/components/ui/button";
 
 export default function ProjectsPage() {
@@ -11,7 +11,7 @@ export default function ProjectsPage() {
           <Button>Nouveau projet</Button>
         </Link>
       </div>
-      <ProjectTable />
+      <ProjectListTable />
     </div>
   );
 }
