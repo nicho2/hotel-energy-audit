@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
+    // Keep auth bootstrap simple for MVP: restore the last client session if present.
     try {
       const storedSession = window.localStorage.getItem(env.authStorageKey);
 

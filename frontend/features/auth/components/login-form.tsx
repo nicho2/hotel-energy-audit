@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormValues } from "../schemas/login-schema";
 import { login } from "../api/login";
-import { ApiError } from "@/lib/api-client/client";
+import { ApiError } from "@/lib/api-client/errors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/providers/auth-provider";

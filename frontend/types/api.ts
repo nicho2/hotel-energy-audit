@@ -10,3 +10,9 @@ export type ApiEnvelope<T> = {
   meta: Record<string, unknown>;
   errors: ApiErrorShape[];
 };
+
+export type ApiRequestOptions = {
+  token?: string | null;
+  body?: unknown;
+  headers?: HeadersInit;
+};
