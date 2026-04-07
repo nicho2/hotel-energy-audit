@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import { useAuthContext } from "@/providers/auth-provider";
 
 export function LoginForm() {
   const router = useRouter();
-  const { setAuth } = useAuthContext();
+  const { isReady, setAuth, token, user } = useAuthContext();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
@@ -22,6 +22,12 @@ export function LoginForm() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
+
+  useEffect(() => {
+    if (isReady && token && user) {
+      router.replace("/projects");
+    }
+  }, [isReady, router, token, user]);
 
   const onSubmit = async (values: LoginFormValues) => {
     setSubmitError(null);
@@ -46,7 +52,9 @@ export function LoginForm() {
         {errors.password ? <p style={{ color: "#dc2626", fontSize: 12 }}>{errors.password.message}</p> : null}
       </div>
       {submitError ? <p style={{ color: "#dc2626", fontSize: 13, margin: 0 }}>{submitError}</p> : null}
-      <Button type="submit" disabled={isSubmitting}>Se connecter</Button>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Connexion..." : "Se connecter"}
+      </Button>
     </form>
   );
 }
