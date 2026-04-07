@@ -34,3 +34,10 @@ export type ProjectResponse = {
   created_at: string;
   updated_at: string;
 };
+
+export type ProjectOverviewCard = {
+  key: string;
+  label: string;
+  value: string;
+  helper: string;
+};
