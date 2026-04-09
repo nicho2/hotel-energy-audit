@@ -121,6 +121,14 @@ class ReportService:
             raise NotFoundError("Generated report not found")
         return self._to_generated_report_response(report)
 
+    def list_generated_reports(self, project_id: UUID, current_user: User) -> list[GeneratedReportResponse]:
+        project = self.project_repository.get_by_id(project_id, current_user.organization_id)
+        if project is None:
+            raise NotFoundError("Project not found")
+
+        reports = self.report_repository.list_by_project_id(project_id, current_user.organization_id)
+        return [self._to_generated_report_response(report) for report in reports]
+
     def get_generated_report_file(self, report_id: UUID, current_user: User) -> tuple[GeneratedReport, Path]:
         report = self.report_repository.get_by_id(report_id, current_user.organization_id)
         if report is None:

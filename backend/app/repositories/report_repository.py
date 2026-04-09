@@ -23,3 +23,14 @@ class ReportRepository:
             GeneratedReport.organization_id == organization_id,
         )
         return self.db.scalar(statement)
+
+    def list_by_project_id(self, project_id: UUID, organization_id: UUID) -> list[GeneratedReport]:
+        statement = (
+            select(GeneratedReport)
+            .where(
+                GeneratedReport.project_id == project_id,
+                GeneratedReport.organization_id == organization_id,
+            )
+            .order_by(GeneratedReport.created_at.desc())
+        )
+        return list(self.db.scalars(statement).all())

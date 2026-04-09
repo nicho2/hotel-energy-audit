@@ -34,6 +34,19 @@ def get_report_service(db: Session) -> ReportService:
 
 
 @router.get(
+    "/projects/{project_id}/reports",
+    response_model=ApiResponse[list[GeneratedReportResponse]],
+)
+def list_generated_reports(
+    project_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[list[GeneratedReportResponse]]:
+    service = get_report_service(db)
+    return success_response(service.list_generated_reports(project_id, current_user))
+
+
+@router.get(
     "/reports/executive/{calculation_run_id}/html",
     response_model=ApiResponse[ExecutiveReportHtmlResponse],
 )

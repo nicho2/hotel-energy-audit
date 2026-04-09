@@ -1,3 +1,10 @@
-export default function Page() {
-  return <div>reports page placeholder.</div>;
+import { ReportsPage } from "@/features/reports/components/reports-page";
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  return <ReportsPage projectId={projectId} />;
 }

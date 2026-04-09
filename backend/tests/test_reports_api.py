@@ -35,6 +35,33 @@ def test_generate_report_persists_metadata_and_stores_file(client: TestClient) -
     assert body["generator_version"] == "placeholder_pdf_v1"
 
 
+def test_list_project_reports_returns_generated_reports(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+    generate_response = client.post(
+        f"/api/v1/reports/executive/{calculation_run_id}/generate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    generated_report_id = generate_response.json()["data"]["id"]
+
+    response = client.get(
+        f"/api/v1/projects/{project_id}/reports",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    reports = response.json()["data"]
+    assert len(reports) == 1
+    assert reports[0]["id"] == generated_report_id
+    assert reports[0]["project_id"] == project_id
+    assert reports[0]["scenario_id"] == scenario_id
+    assert reports[0]["calculation_run_id"] == calculation_run_id
+
+
 def test_get_generated_report_metadata_returns_persisted_report(client: TestClient) -> None:
     token, project_id, scenario_id = _create_ready_project_with_scenario(client)
     calculate_response = client.post(
