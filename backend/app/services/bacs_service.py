@@ -89,8 +89,16 @@ class BacsService:
             assessment_id=assessment.id if assessment is not None else None,
             project_id=project.id,
             version=assessment.version if assessment is not None else "v1",
+            confidence_score=round(
+                scoring.selected_function_count / scoring.total_function_count,
+                2,
+            )
+            if scoring.total_function_count > 0
+            else 0.0,
             overall_score=scoring.overall_score,
-            bacs_class=scoring.bacs_class,
+            estimated_bacs_class=scoring.bacs_class,
+            manual_override_class=assessment.manual_override_class if assessment is not None else None,
+            bacs_class=(assessment.manual_override_class if assessment and assessment.manual_override_class else scoring.bacs_class),
             selected_function_count=scoring.selected_function_count,
             total_function_count=scoring.total_function_count,
             domain_scores=scoring.domain_scores,
@@ -105,6 +113,7 @@ class BacsService:
             project_id=project_id,
             version=assessment.version if assessment is not None else "v1",
             assessor_name=assessment.assessor_name if assessment is not None else None,
+            manual_override_class=assessment.manual_override_class if assessment is not None else None,
             notes=assessment.notes if assessment is not None else None,
             functions=functions,
         )

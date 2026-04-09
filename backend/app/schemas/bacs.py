@@ -9,6 +9,7 @@ BacsClass = Literal["A", "B", "C", "D", "E"]
 
 class BacsAssessmentUpsert(BaseModel):
     assessor_name: str | None = Field(default=None, max_length=255)
+    manual_override_class: BacsClass | None = None
     notes: str | None = None
 
 
@@ -34,6 +35,7 @@ class BacsCurrentResponse(BaseModel):
     project_id: UUID
     version: str
     assessor_name: str | None
+    manual_override_class: BacsClass | None
     notes: str | None
     functions: list[BacsFunctionResponse]
 
@@ -58,7 +60,10 @@ class BacsSummaryResponse(BaseModel):
     assessment_id: UUID | None
     project_id: UUID
     version: str
+    confidence_score: float
     overall_score: float
+    estimated_bacs_class: BacsClass
+    manual_override_class: BacsClass | None
     bacs_class: BacsClass
     selected_function_count: int
     total_function_count: int

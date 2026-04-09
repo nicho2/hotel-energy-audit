@@ -19,6 +19,7 @@ class BacsAssessment(Base):
     )
     version: Mapped[str] = mapped_column(String(20), nullable=False, default="v1")
     assessor_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    manual_override_class: Mapped[str | None] = mapped_column(String(1), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     project: Mapped["Project"] = relationship(back_populates="bacs_assessment")

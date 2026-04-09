@@ -56,11 +56,16 @@ def test_bacs_current_and_functions_persist_and_summary_is_computed(client: Test
     create_response = client.post(
         f"/api/v1/projects/{project_id}/bacs/current",
         headers={"Authorization": f"Bearer {token}"},
-        json={"assessor_name": "Nicolas", "notes": "Initial BACS walk-through"},
+        json={
+            "assessor_name": "Nicolas",
+            "manual_override_class": "C",
+            "notes": "Initial BACS walk-through",
+        },
     )
     assert create_response.status_code == 200
     current_body = create_response.json()
     assert current_body["data"]["assessor_name"] == "Nicolas"
+    assert current_body["data"]["manual_override_class"] == "C"
 
     functions = current_body["data"]["functions"]
     selected_ids = [
@@ -92,7 +97,10 @@ def test_bacs_current_and_functions_persist_and_summary_is_computed(client: Test
     assert summary_response.status_code == 200
     summary = summary_response.json()["data"]
     assert summary["overall_score"] == 35.6
-    assert summary["bacs_class"] == "D"
+    assert summary["estimated_bacs_class"] == "D"
+    assert summary["manual_override_class"] == "C"
+    assert summary["bacs_class"] == "C"
+    assert summary["confidence_score"] == 0.3
     assert summary["selected_function_count"] == 3
     assert summary["total_function_count"] == 10
 
