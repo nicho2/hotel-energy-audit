@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class ScenarioComparisonRequest(BaseModel):
-    scenario_ids: list[UUID] = Field(min_length=2, max_length=4)
+    scenario_ids: list[UUID] = Field(min_length=2, max_length=5)
 
     @model_validator(mode="after")
     def validate_unique_ids(self) -> "ScenarioComparisonRequest":
