@@ -1,6 +1,7 @@
 "use client";
 
 import { BuildingStepForm } from "@/features/building/components/building-step-form";
+import { ZonesStepForm } from "@/features/zones/components/zones-step-form";
 import type { WizardStep } from "@/types/wizard";
 
 type WizardStepRendererProps = {
@@ -12,6 +13,10 @@ type WizardStepRendererProps = {
 export function WizardStepRenderer({ projectId, step, onSaved }: WizardStepRendererProps) {
   if (step.code === "building") {
     return <BuildingStepForm projectId={projectId} onSaved={onSaved} />;
+  }
+
+  if (step.code === "zones") {
+    return <ZonesStepForm projectId={projectId} onSaved={onSaved} />;
   }
 
   return (

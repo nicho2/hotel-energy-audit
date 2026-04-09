@@ -1,17 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ApiError } from "@/lib/api-client/errors";
 import { useWizard } from "../hooks/use-wizard";
 import { validateStep } from "../api/validate-step";
 import { WizardStepper } from "@/components/wizard/wizard-stepper";
 import { WizardNavigation } from "@/components/wizard/wizard-navigation";
 import { WizardSidebarSummary } from "@/components/wizard/wizard-sidebar-summary";
 import { WizardStepRenderer } from "./wizard-step-renderer";
+import { useAuthContext } from "@/providers/auth-provider";
 
 export function WizardShell({ projectId }: { projectId: string }) {
   const { data, error, isLoading, refetch } = useWizard(projectId);
+  const { token } = useAuthContext();
   const [activeStepCode, setActiveStepCode] = useState<string | null>(null);
   const [isMovingNext, setIsMovingNext] = useState(false);
+  const [navigationError, setNavigationError] = useState<string | null>(null);
 
   if (isLoading) return <div>Chargement du wizard...</div>;
   if (error) return <div>Erreur de chargement du wizard.</div>;
@@ -31,16 +35,20 @@ export function WizardShell({ projectId }: { projectId: string }) {
 
   const goPrevious = () => {
     if (!canGoPrevious) return;
+    setNavigationError(null);
     setActiveStepCode(wizard.steps[currentIndex - 1]?.code ?? activeStep.code);
   };
 
   const goNext = async () => {
     if (!canGoNext) return;
 
+    setNavigationError(null);
     setIsMovingNext(true);
     try {
-      await validateStep(projectId, activeStep.code);
+      await validateStep(projectId, activeStep.code, token);
       setActiveStepCode(wizard.steps[currentIndex + 1]?.code ?? activeStep.code);
+    } catch (error) {
+      setNavigationError(error instanceof ApiError ? error.message : "Validation de l'etape impossible.");
     } finally {
       setIsMovingNext(false);
     }
@@ -65,6 +73,12 @@ export function WizardShell({ projectId }: { projectId: string }) {
         </div>
 
         <WizardStepRenderer projectId={projectId} step={activeStep} onSaved={refetch} />
+
+        {navigationError ? (
+          <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+            {navigationError}
+          </div>
+        ) : null}
 
         <WizardNavigation
           canGoPrevious={canGoPrevious}
