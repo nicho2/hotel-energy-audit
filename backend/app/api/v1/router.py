@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     projects,
     reports,
     results,
+    scenario_management,
     scenarios,
     systems,
     wizard,
@@ -22,6 +23,7 @@ api_router.include_router(buildings.router, prefix="/projects", tags=["buildings
 api_router.include_router(zones.router, prefix="/projects", tags=["zones"])
 api_router.include_router(systems.router, prefix="/projects", tags=["systems"])
 api_router.include_router(bacs.router, prefix="/projects", tags=["bacs"])
+api_router.include_router(scenario_management.router, prefix="/projects", tags=["scenario-management"])
 api_router.include_router(scenarios.router, prefix="/projects", tags=["scenarios"])
 api_router.include_router(calculations.router, prefix="/projects", tags=["calculations"])
 api_router.include_router(results.router, tags=["results"])

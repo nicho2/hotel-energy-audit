@@ -27,3 +27,26 @@ class ScenarioRepository:
             .order_by(Scenario.created_at.asc(), Scenario.name.asc())
         )
         return list(self.db.scalars(statement).all())
+
+    def list_by_project_id(self, project_id: UUID) -> list[Scenario]:
+        statement = (
+            select(Scenario)
+            .where(Scenario.project_id == project_id)
+            .order_by(Scenario.created_at.asc(), Scenario.name.asc())
+        )
+        return list(self.db.scalars(statement).all())
+
+    def create(self, **kwargs: object) -> Scenario:
+        scenario = Scenario(**kwargs)
+        self.db.add(scenario)
+        self.db.commit()
+        self.db.refresh(scenario)
+        return scenario
+
+    def update(self, scenario: Scenario, **kwargs: object) -> Scenario:
+        for field, value in kwargs.items():
+            setattr(scenario, field, value)
+        self.db.add(scenario)
+        self.db.commit()
+        self.db.refresh(scenario)
+        return scenario
