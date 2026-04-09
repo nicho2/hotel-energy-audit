@@ -19,6 +19,8 @@ class TechnicalSystem(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     system_type: Mapped[str] = mapped_column(String(50), nullable=False)
     energy_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    technology_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    efficiency_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     serves: Mapped[str | None] = mapped_column(String(255), nullable=True)
     quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     year_installed: Mapped[int | None] = mapped_column(Integer, nullable=True)

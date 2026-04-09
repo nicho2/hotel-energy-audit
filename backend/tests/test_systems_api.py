@@ -44,6 +44,8 @@ def test_system_crud_allows_create_update_delete(client: TestClient) -> None:
             "name": "Main boilers",
             "system_type": "heating",
             "energy_source": "natural_gas",
+            "technology_type": "gas_boiler",
+            "efficiency_level": "standard",
             "serves": "Guest rooms and common areas",
             "quantity": 2,
             "year_installed": 2014,
@@ -57,6 +59,8 @@ def test_system_crud_allows_create_update_delete(client: TestClient) -> None:
     system_id = created_body["data"]["id"]
     assert created_body["data"]["system_type"] == "heating"
     assert created_body["data"]["energy_source"] == "natural_gas"
+    assert created_body["data"]["technology_type"] == "gas_boiler"
+    assert created_body["data"]["efficiency_level"] == "standard"
 
     update_response = client.patch(
         f"/api/v1/projects/{project_id}/systems/{system_id}",
@@ -66,6 +70,8 @@ def test_system_crud_allows_create_update_delete(client: TestClient) -> None:
             "notes": "Condensing boilers with sequencer",
             "system_type": "control",
             "energy_source": "electricity",
+            "technology_type": "bms",
+            "efficiency_level": "high",
         },
     )
     assert update_response.status_code == 200
@@ -73,6 +79,8 @@ def test_system_crud_allows_create_update_delete(client: TestClient) -> None:
     assert updated_body["data"]["name"] == "Main boiler plant"
     assert updated_body["data"]["system_type"] == "control"
     assert updated_body["data"]["energy_source"] == "electricity"
+    assert updated_body["data"]["technology_type"] == "bms"
+    assert updated_body["data"]["efficiency_level"] == "high"
 
     list_response = client.get(
         f"/api/v1/projects/{project_id}/systems",

@@ -19,12 +19,34 @@ export type EnergySource =
   | "ambient"
   | "other";
 
+export type TechnologyType =
+  | "gas_boiler"
+  | "oil_boiler"
+  | "electric_boiler"
+  | "heat_pump"
+  | "chiller"
+  | "dx_unit"
+  | "ahu"
+  | "cmv"
+  | "storage_tank"
+  | "instantaneous_heater"
+  | "led"
+  | "fluorescent"
+  | "pump"
+  | "fan"
+  | "bms"
+  | "other";
+
+export type EfficiencyLevel = "low" | "standard" | "high" | "premium";
+
 export type TechnicalSystemResponse = {
   id: string;
   project_id: string;
   name: string;
   system_type: SystemType;
   energy_source: EnergySource | null;
+  technology_type: TechnologyType | null;
+  efficiency_level: EfficiencyLevel | null;
   serves: string | null;
   quantity: number | null;
   year_installed: number | null;
@@ -37,6 +59,8 @@ export type TechnicalSystemCreatePayload = {
   name: string;
   system_type: SystemType;
   energy_source: EnergySource | null;
+  technology_type: TechnologyType | null;
+  efficiency_level: EfficiencyLevel | null;
   serves: string | null;
   quantity: number | null;
   year_installed: number | null;

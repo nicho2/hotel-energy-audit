@@ -3,7 +3,13 @@
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import type { EnergySource, SystemType, TechnicalSystemResponse } from "@/types/systems";
+import type {
+  EfficiencyLevel,
+  EnergySource,
+  SystemType,
+  TechnicalSystemResponse,
+  TechnologyType,
+} from "@/types/systems";
 import { systemEditorSchema, type SystemEditorFormValues } from "../schemas/system-schema";
 
 const inputStyle = {
@@ -38,11 +44,39 @@ export const energySourceOptions: Array<{ value: EnergySource; label: string }> 
   { value: "other", label: "Other" },
 ];
 
+export const technologyTypeOptions: Array<{ value: TechnologyType; label: string }> = [
+  { value: "gas_boiler", label: "Gas boiler" },
+  { value: "oil_boiler", label: "Oil boiler" },
+  { value: "electric_boiler", label: "Electric boiler" },
+  { value: "heat_pump", label: "Heat pump" },
+  { value: "chiller", label: "Chiller" },
+  { value: "dx_unit", label: "DX unit" },
+  { value: "ahu", label: "AHU" },
+  { value: "cmv", label: "CMV" },
+  { value: "storage_tank", label: "Storage tank" },
+  { value: "instantaneous_heater", label: "Instantaneous heater" },
+  { value: "led", label: "LED" },
+  { value: "fluorescent", label: "Fluorescent" },
+  { value: "pump", label: "Pump" },
+  { value: "fan", label: "Fan" },
+  { value: "bms", label: "BMS" },
+  { value: "other", label: "Other" },
+];
+
+export const efficiencyLevelOptions: Array<{ value: EfficiencyLevel; label: string }> = [
+  { value: "low", label: "Low" },
+  { value: "standard", label: "Standard" },
+  { value: "high", label: "High" },
+  { value: "premium", label: "Premium" },
+];
+
 function toFormValues(system?: Partial<TechnicalSystemResponse> | null): SystemEditorFormValues {
   return {
     name: system?.name ?? "",
     system_type: system?.system_type ?? "heating",
     energy_source: system?.energy_source ?? "",
+    technology_type: system?.technology_type ?? "",
+    efficiency_level: system?.efficiency_level ?? "",
     serves: system?.serves ?? "",
     quantity: system?.quantity?.toString() ?? "",
     year_installed: system?.year_installed?.toString() ?? "",
@@ -112,7 +146,7 @@ export function SystemEditorDialog({
         </div>
 
         <form onSubmit={handleSubmit(async (values) => onSubmit(values))} style={{ display: "grid", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: 12 }}>
             <div style={{ display: "grid", gap: 6 }}>
               <label htmlFor="system_name" style={{ fontSize: 14, fontWeight: 600 }}>Nom / technologie</label>
               <input id="system_name" {...register("name")} style={inputStyle} />
@@ -137,6 +171,16 @@ export function SystemEditorDialog({
                 ))}
               </select>
             </div>
+
+            <div style={{ display: "grid", gap: 6 }}>
+              <label htmlFor="system_technology_type" style={{ fontSize: 14, fontWeight: 600 }}>Technologie</label>
+              <select id="system_technology_type" {...register("technology_type")} style={inputStyle}>
+                <option value="">Non renseigne</option>
+                {technologyTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -150,6 +194,18 @@ export function SystemEditorDialog({
               <input type="checkbox" {...register("is_primary")} />
               Systeme principal
             </label>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+            <div style={{ display: "grid", gap: 6 }}>
+              <label htmlFor="system_efficiency_level" style={{ fontSize: 14, fontWeight: 600 }}>Niveau d&apos;efficacite</label>
+              <select id="system_efficiency_level" {...register("efficiency_level")} style={inputStyle}>
+                <option value="">Non renseigne</option>
+                {efficiencyLevelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <details style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 16 }}>

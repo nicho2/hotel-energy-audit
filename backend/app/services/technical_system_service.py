@@ -36,6 +36,8 @@ class TechnicalSystemService:
             "name": system.name,
             "system_type": system.system_type,
             "energy_source": system.energy_source,
+            "technology_type": system.technology_type,
+            "efficiency_level": system.efficiency_level,
             "serves": system.serves,
             "quantity": system.quantity,
             "year_installed": system.year_installed,

@@ -23,6 +23,8 @@ function toPayload(values: SystemEditorFormValues): TechnicalSystemCreatePayload
     name: values.name.trim(),
     system_type: values.system_type,
     energy_source: values.energy_source || null,
+    technology_type: values.technology_type || null,
+    efficiency_level: values.efficiency_level || null,
     serves: toNullableString(values.serves),
     quantity: toNullableInteger(values.quantity),
     year_installed: toNullableInteger(values.year_installed),

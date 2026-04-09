@@ -1,10 +1,17 @@
 "use client";
 
 import type { SystemType, TechnicalSystemResponse } from "@/types/systems";
-import { energySourceOptions, systemTypeOptions } from "./system-editor-dialog";
+import {
+  efficiencyLevelOptions,
+  energySourceOptions,
+  systemTypeOptions,
+  technologyTypeOptions,
+} from "./system-editor-dialog";
 
 const systemTypeLabels = Object.fromEntries(systemTypeOptions.map((option) => [option.value, option.label])) as Record<SystemType, string>;
 const energySourceLabels = Object.fromEntries(energySourceOptions.map((option) => [option.value, option.label])) as Record<string, string>;
+const technologyTypeLabels = Object.fromEntries(technologyTypeOptions.map((option) => [option.value, option.label])) as Record<string, string>;
+const efficiencyLevelLabels = Object.fromEntries(efficiencyLevelOptions.map((option) => [option.value, option.label])) as Record<string, string>;
 
 type SystemTableProps = {
   systemsByType: Array<{ systemType: SystemType; items: TechnicalSystemResponse[] }>;
@@ -47,7 +54,7 @@ export function SystemTable({ systemsByType, deletingSystemId, onAdd, onEdit, on
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ textAlign: "left", color: "#334155" }}>
-                  {["Ordre", "Nom", "Energie", "Principal", "Quantite", "Annee", "Dessert", "Actions"].map((label) => (
+                  {["Ordre", "Nom", "Energie", "Technologie", "Efficacite", "Principal", "Quantite", "Annee", "Dessert", "Actions"].map((label) => (
                     <th key={label} style={{ padding: "14px 16px", fontSize: 13, fontWeight: 700, borderBottom: "1px solid #e5e7eb" }}>
                       {label}
                     </th>
@@ -66,6 +73,12 @@ export function SystemTable({ systemsByType, deletingSystemId, onAdd, onEdit, on
                     </td>
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 14 }}>
                       {system.energy_source ? energySourceLabels[system.energy_source] ?? system.energy_source : "Non renseigne"}
+                    </td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 14 }}>
+                      {system.technology_type ? technologyTypeLabels[system.technology_type] ?? system.technology_type : "Non renseigne"}
+                    </td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 14 }}>
+                      {system.efficiency_level ? efficiencyLevelLabels[system.efficiency_level] ?? system.efficiency_level : "Non renseigne"}
                     </td>
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 14 }}>{system.is_primary ? "Oui" : "Non"}</td>
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 14 }}>{system.quantity ?? "-"}</td>

@@ -25,12 +25,33 @@ EnergySource = Literal[
     "ambient",
     "other",
 ]
+TechnologyType = Literal[
+    "gas_boiler",
+    "oil_boiler",
+    "electric_boiler",
+    "heat_pump",
+    "chiller",
+    "dx_unit",
+    "ahu",
+    "cmv",
+    "storage_tank",
+    "instantaneous_heater",
+    "led",
+    "fluorescent",
+    "pump",
+    "fan",
+    "bms",
+    "other",
+]
+EfficiencyLevel = Literal["low", "standard", "high", "premium"]
 
 
 class TechnicalSystemCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     system_type: SystemType
     energy_source: EnergySource | None = None
+    technology_type: TechnologyType | None = None
+    efficiency_level: EfficiencyLevel | None = None
     serves: str | None = Field(default=None, max_length=255)
     quantity: int | None = Field(default=None, ge=1)
     year_installed: int | None = Field(default=None, ge=1900, le=datetime.now().year + 1)
@@ -43,6 +64,8 @@ class TechnicalSystemUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     system_type: SystemType | None = None
     energy_source: EnergySource | None = None
+    technology_type: TechnologyType | None = None
+    efficiency_level: EfficiencyLevel | None = None
     serves: str | None = Field(default=None, max_length=255)
     quantity: int | None = Field(default=None, ge=1)
     year_installed: int | None = Field(default=None, ge=1900, le=datetime.now().year + 1)
@@ -59,6 +82,8 @@ class TechnicalSystemResponse(BaseModel):
     name: str
     system_type: SystemType
     energy_source: EnergySource | None
+    technology_type: TechnologyType | None
+    efficiency_level: EfficiencyLevel | None
     serves: str | None
     quantity: int | None
     year_installed: int | None

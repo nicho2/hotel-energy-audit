@@ -25,6 +25,27 @@ export const energySourceSchema = z.enum([
   "other",
 ]);
 
+export const technologyTypeSchema = z.enum([
+  "gas_boiler",
+  "oil_boiler",
+  "electric_boiler",
+  "heat_pump",
+  "chiller",
+  "dx_unit",
+  "ahu",
+  "cmv",
+  "storage_tank",
+  "instantaneous_heater",
+  "led",
+  "fluorescent",
+  "pump",
+  "fan",
+  "bms",
+  "other",
+]);
+
+export const efficiencyLevelSchema = z.enum(["low", "standard", "high", "premium"]);
+
 const nullableIntegerString = z
   .string()
   .trim()
@@ -50,6 +71,8 @@ export const systemEditorSchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis.").max(255, "Le nom est trop long."),
   system_type: systemTypeSchema,
   energy_source: z.union([energySourceSchema, z.literal("")]),
+  technology_type: z.union([technologyTypeSchema, z.literal("")]),
+  efficiency_level: z.union([efficiencyLevelSchema, z.literal("")]),
   serves: z.string().trim().max(255, "Le champ est trop long."),
   quantity: nullableIntegerString,
   year_installed: nullableYearString,
