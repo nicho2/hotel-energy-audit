@@ -30,7 +30,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
     <div
       style={{
         border: "1px solid #e5e7eb",
-        borderRadius: 20,
+        borderRadius: 8,
         background: "#fff",
         padding: 24,
         display: "grid",
@@ -73,7 +73,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
               alignItems: "center",
               justifyContent: "center",
               padding: "10px 14px",
-              borderRadius: 10,
+              borderRadius: 8,
               background: "#14365d",
               color: "#fff",
               fontWeight: 600,

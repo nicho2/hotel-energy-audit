@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useProject } from "@/features/projects/hooks/use-project";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 import { useProjectHistory } from "../hooks/use-project-history";
 import { ProjectHistoryTable } from "./project-history-table";
 
@@ -16,22 +18,23 @@ export function ProjectHistoryPage({ projectId }: ProjectHistoryPageProps) {
   const history = useProjectHistory(projectId);
 
   if (project.isLoading || history.isLoading) {
-    return <div>{t("history.loading")}</div>;
+    return <FeedbackBlock>{t("history.loading")}</FeedbackBlock>;
   }
 
   if (project.error || history.error) {
     return (
-      <div style={{ border: "1px solid #fecaca", borderRadius: 16, background: "#fff", padding: 24, color: "#b91c1c" }}>
+      <FeedbackBlock tone="error">
         {t("history.error")}
-      </div>
+      </FeedbackBlock>
     );
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>
             {t("history.eyebrow")}
           </div>
           <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>

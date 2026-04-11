@@ -10,5 +10,6 @@
   "wizard.readinessStatus": "Readiness status: {{status}}",
   "wizard.canCalculate": "Calculation enabled: {{value}}",
   "wizard.blockingSteps": "Blocking steps: {{steps}}",
+  "wizard.readinessWarning": "Calculation is not ready yet. Resolve blocking steps before generating results or a report.",
   "wizard.placeholder": "This step is prepared in the wizard shell, but its detailed form will be connected in a later task."
 }

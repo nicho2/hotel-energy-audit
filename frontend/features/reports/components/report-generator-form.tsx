@@ -15,6 +15,7 @@ import {
   type ReportGeneratorFormValues,
 } from "../schemas/report-generator-schema";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock, FieldError } from "@/components/ui/feedback";
 
 const inputStyle = {
   width: "100%",
@@ -75,7 +76,7 @@ export function ReportGeneratorForm({
     (selectedBrandingProfileId ? null : getDefaultBrandingProfile(brandingProfiles));
 
   return (
-    <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+    <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gap: 4 }}>
         <div style={{ fontSize: 20, fontWeight: 700 }}>{t("reports.generatorTitle")}</div>
         <div style={{ color: "#627084", fontSize: 14 }}>
@@ -84,7 +85,7 @@ export function ReportGeneratorForm({
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           <label style={{ display: "grid", gap: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{t("reports.scenario")}</span>
             <select
@@ -102,6 +103,7 @@ export function ReportGeneratorForm({
                 </option>
               ))}
             </select>
+            <FieldError>{form.formState.errors.scenario_id?.message}</FieldError>
           </label>
 
           <label style={{ display: "grid", gap: 8 }}>
@@ -112,18 +114,18 @@ export function ReportGeneratorForm({
           </label>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 14, display: "grid", gap: 4 }}>
             <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.branding")}</div>
             <div style={{ fontWeight: 700 }}>{selectedBranding ? selectedBranding.company_name : t("reports.fallbackBranding")}</div>
             <div style={{ fontSize: 13, color: "#627084" }}>{t("reports.brandingHelp")}</div>
           </div>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 14, display: "grid", gap: 4 }}>
             <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.language")}</div>
             <div style={{ fontWeight: 700 }}>{t("reports.defaultBackend")}</div>
             <div style={{ fontSize: 13, color: "#627084" }}>{t("reports.languageHelp")}</div>
           </div>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 14, display: "grid", gap: 4 }}>
             <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.calculation")}</div>
             <div style={{ fontWeight: 700 }}>
               {isLoadingLatestResult ? t("reports.searching") : latestResult ? t("reports.latestAvailable") : t("reports.missing")}
@@ -150,15 +152,15 @@ export function ReportGeneratorForm({
         </label>
 
         {latestResult ? (
-          <div style={{ border: "1px solid #dbeafe", background: "#eff6ff", borderRadius: 12, padding: 14, display: "grid", gap: 6 }}>
+          <div style={{ border: "1px solid #dbeafe", background: "#eff6ff", borderRadius: 8, padding: 14, display: "grid", gap: 6 }}>
             <div style={{ fontWeight: 700, color: "#1d4ed8" }}>{t("reports.latestCalculation")}</div>
             <div style={{ fontSize: 14, color: "#1e3a8a" }}>Engine: {latestResult.engine_version}</div>
             <div style={{ fontSize: 14, color: "#1e3a8a" }}>Status: {latestResult.status}</div>
           </div>
         ) : (
-          <div style={{ border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", borderRadius: 12, padding: 14 }}>
+          <FeedbackBlock tone="warning" compact>
             {t("reports.noCalculation")}
-          </div>
+          </FeedbackBlock>
         )}
 
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -166,7 +168,7 @@ export function ReportGeneratorForm({
             type="submit"
             disabled={!latestResult || isGenerating}
             style={{
-              borderRadius: 10,
+              borderRadius: 8,
               border: "1px solid #14365d",
               background: "#14365d",
               color: "#fff",

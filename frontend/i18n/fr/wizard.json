@@ -10,5 +10,6 @@
   "wizard.readinessStatus": "Statut readiness: {{status}}",
   "wizard.canCalculate": "Calcul activable: {{value}}",
   "wizard.blockingSteps": "Etapes bloquantes: {{steps}}",
+  "wizard.readinessWarning": "Le calcul n'est pas encore pret. Corrigez les etapes bloquantes avant de generer des resultats ou un rapport.",
   "wizard.placeholder": "Cette etape est preparee dans le shell du wizard, mais son formulaire detaille sera branche dans une prochaine tache."
 }

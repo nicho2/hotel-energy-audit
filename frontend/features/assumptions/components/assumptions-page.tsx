@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useProject } from "@/features/projects/hooks/use-project";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 import { useProjectAssumptions } from "../hooks/use-project-assumptions";
 import { AssumptionsSectionCard } from "./assumptions-section-card";
 
@@ -33,22 +35,23 @@ export function AssumptionsPage({ projectId }: AssumptionsPageProps) {
   const data = assumptions.data?.data ?? null;
 
   if (project.isLoading || assumptions.isLoading) {
-    return <div>{t("assumptions.loading")}</div>;
+    return <FeedbackBlock>{t("assumptions.loading")}</FeedbackBlock>;
   }
 
   if (project.error || assumptions.error || !data) {
     return (
-      <div style={{ border: "1px solid #fecaca", borderRadius: 16, background: "#fff", padding: 24, color: "#b91c1c" }}>
+      <FeedbackBlock tone="error">
         {t("assumptions.error")}
-      </div>
+      </FeedbackBlock>
     );
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>
             {t("assumptions.eyebrow")}
           </div>
           <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>
@@ -77,23 +80,23 @@ export function AssumptionsPage({ projectId }: AssumptionsPageProps) {
         </Link>
       </div>
 
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
           <div style={{ color: "#627084", fontSize: 12, textTransform: "uppercase" }}>{t("assumptions.meta.engine")}</div>
           <div style={{ fontWeight: 800 }}>{data.engine_version}</div>
         </div>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
           <div style={{ color: "#627084", fontSize: 12, textTransform: "uppercase" }}>{t("assumptions.meta.scenario")}</div>
           <div style={{ fontWeight: 800 }}>{data.scenario_name ?? t("assumptions.noCalculation")}</div>
         </div>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", padding: 14, display: "grid", gap: 4 }}>
           <div style={{ color: "#627084", fontSize: 12, textTransform: "uppercase" }}>{t("assumptions.meta.generatedAt")}</div>
           <div style={{ fontWeight: 800 }}>{formatDate(data.generated_at, language)}</div>
         </div>
       </section>
 
       {data.warnings.length > 0 ? (
-        <section style={{ border: "1px solid #fde68a", borderRadius: 16, background: "#fffbeb", padding: 16, display: "grid", gap: 8 }}>
+        <section style={{ border: "1px solid #fde68a", borderRadius: 8, background: "#fffbeb", padding: 16, display: "grid", gap: 8 }}>
           <div style={{ color: "#92400e", fontWeight: 800 }}>{t("assumptions.warningsTitle")}</div>
           {data.warnings.map((warning) => (
             <div key={warning} style={{ color: "#92400e", fontSize: 14 }}>

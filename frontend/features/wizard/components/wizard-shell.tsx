@@ -10,6 +10,8 @@ import { WizardSidebarSummary } from "@/components/wizard/wizard-sidebar-summary
 import { WizardStepRenderer } from "./wizard-step-renderer";
 import { useAuthContext } from "@/providers/auth-provider";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 
 export function WizardShell({ projectId }: { projectId: string }) {
   const { data, error, isLoading, refetch } = useWizard(projectId);
@@ -19,11 +21,11 @@ export function WizardShell({ projectId }: { projectId: string }) {
   const [isMovingNext, setIsMovingNext] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
 
-  if (isLoading) return <div>{t("wizard.loading")}</div>;
-  if (error) return <div>{t("wizard.error")}</div>;
+  if (isLoading) return <FeedbackBlock>{t("wizard.loading")}</FeedbackBlock>;
+  if (error) return <FeedbackBlock tone="error">{t("wizard.error")}</FeedbackBlock>;
 
   const wizard = data?.data;
-  if (!wizard) return <div>{t("wizard.unavailable")}</div>;
+  if (!wizard) return <FeedbackBlock tone="warning">{t("wizard.unavailable")}</FeedbackBlock>;
 
   const activeStep =
     wizard.steps.find((step) => step.code === activeStepCode) ??
@@ -57,38 +59,41 @@ export function WizardShell({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "300px minmax(0, 1fr)", gap: 24 }}>
-      <div style={{ display: "grid", gap: 16 }}>
-        <WizardStepper
-          steps={wizard.steps}
-          activeStepCode={activeStep.code}
-          onSelectStep={(stepCode) => setActiveStepCode(stepCode)}
-        />
-        <WizardSidebarSummary currentStep={activeStep} readiness={wizard.readiness} />
-      </div>
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, background: "#fff", padding: 24, display: "grid", gap: 20 }}>
-        <div style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Wizard
-          </div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{stepTitle}</h2>
+    <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
+      <div style={{ display: "grid", gridTemplateColumns: "300px minmax(0, 1fr)", gap: 24 }}>
+        <div style={{ display: "grid", gap: 16 }}>
+          <WizardStepper
+            steps={wizard.steps}
+            activeStepCode={activeStep.code}
+            onSelectStep={(stepCode) => setActiveStepCode(stepCode)}
+          />
+          <WizardSidebarSummary currentStep={activeStep} readiness={wizard.readiness} />
         </div>
-
-        <WizardStepRenderer projectId={projectId} step={activeStep} onSaved={refetch} />
-
-        {navigationError ? (
-          <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
-            {navigationError}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", padding: 24, display: "grid", gap: 20 }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>
+              Wizard
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{stepTitle}</h2>
           </div>
-        ) : null}
 
-        <WizardNavigation
-          canGoPrevious={canGoPrevious}
-          canGoNext={canGoNext}
-          onPrevious={goPrevious}
-          onNext={goNext}
-          isSaving={isMovingNext}
-        />
+          <WizardStepRenderer projectId={projectId} step={activeStep} onSaved={refetch} />
+
+          {navigationError ? (
+            <FeedbackBlock tone="error" compact>
+              {navigationError}
+            </FeedbackBlock>
+          ) : null}
+
+          <WizardNavigation
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+            onPrevious={goPrevious}
+            onNext={goNext}
+            isSaving={isMovingNext}
+          />
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,8 @@ import { useReports } from "../hooks/use-reports";
 import type { ReportGeneratorFormValues } from "../schemas/report-generator-schema";
 import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 
 export function ReportsPage({ projectId }: { projectId: string }) {
   const project = useProject(projectId);
@@ -73,30 +75,37 @@ export function ReportsPage({ projectId }: { projectId: string }) {
   };
 
   if (project.isLoading || reports.scenarios.isLoading || reports.reports.isLoading) {
-    return <div>{t("reports.loading")}</div>;
+    return <FeedbackBlock>{t("reports.loading")}</FeedbackBlock>;
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("reports.title")}</div>
+        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>{t("reports.title")}</div>
         <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>{project.data?.data.name ?? t("reports.projectFallback")}</h1>
       </div>
 
       {submitError ? (
-        <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+        <FeedbackBlock tone="error" compact>
           {submitError}
-        </div>
+        </FeedbackBlock>
       ) : null}
 
       {downloadError ? (
-        <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+        <FeedbackBlock tone="error" compact>
           {downloadError}
-        </div>
+        </FeedbackBlock>
+      ) : null}
+
+      {reports.latestResult.error ? (
+        <FeedbackBlock tone="warning" compact>
+          {t("reports.latestResultError")}
+        </FeedbackBlock>
       ) : null}
 
       {scenarioList.length === 0 ? (
-        <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
+        <section style={{ border: "1px dashed #cbd5e1", borderRadius: 8, padding: 24, textAlign: "center", color: "#627084" }}>
           {t("reports.noScenario")}
         </section>
       ) : (

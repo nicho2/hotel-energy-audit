@@ -6,6 +6,7 @@
   "reports.generateError": "Generation du rapport impossible.",
   "reports.noSessionDownload": "Session indisponible pour le telechargement.",
   "reports.downloadError": "Telechargement impossible.",
+  "reports.latestResultError": "Le dernier calcul du scenario selectionne n'est pas disponible. Relancez le calcul depuis les scenarios avant de generer le rapport.",
   "reports.noScenario": "Aucun scenario disponible. Creez un scenario et lancez un calcul avant de generer un PDF.",
   "reports.generatorTitle": "Generateur de rapport",
   "reports.generatorHelp": "Generez un rapport executif a partir du dernier calcul disponible pour le scenario choisi.",

@@ -10,6 +10,8 @@ import { useZones } from "@/features/zones/hooks/use-zones";
 import type { ScenarioResponse, ScenarioSolutionAssignment, SolutionCatalogItem, TargetScope } from "@/types/scenarios";
 import { useScenarios } from "../hooks/use-scenarios";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock, FieldError } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 import {
   scenarioEditorSchema,
   scenarioSolutionSchema,
@@ -248,28 +250,29 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
   };
 
   if (project.isLoading || scenarios.scenarios.isLoading || scenarios.catalog.isLoading || zones.isLoading || systems.isLoading) {
-    return <div>{t("scenarios.loading")}</div>;
+    return <FeedbackBlock>{t("scenarios.loading")}</FeedbackBlock>;
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("scenarios.title")}</div>
+        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>{t("scenarios.title")}</div>
         <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>{project.data?.data.name ?? t("scenarios.projectFallback")}</h1>
       </div>
 
       {submitError ? (
-        <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+        <FeedbackBlock tone="error" compact>
           {submitError}
-        </div>
+        </FeedbackBlock>
       ) : null}
 
       <div style={{ display: "grid", gridTemplateColumns: "320px minmax(0, 1fr)", gap: 20, alignItems: "start" }}>
         <aside style={{ display: "grid", gap: 16 }}>
-          <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 12 }}>
+          <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16, display: "grid", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{t("scenarios.listTitle")}</div>
-              <button type="button" onClick={handleCreateScenario} style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "8px 12px", fontWeight: 700 }}>
+              <button type="button" onClick={handleCreateScenario} disabled={scenarios.createScenario.isPending} style={{ borderRadius: 8, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "8px 12px", fontWeight: 700, opacity: scenarios.createScenario.isPending ? 0.65 : 1 }}>
                 {t("common.add")}
               </button>
             </div>
@@ -285,7 +288,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                     onClick={() => setSelectedScenarioId(scenario.id)}
                     style={{
                       textAlign: "left",
-                      borderRadius: 12,
+                      borderRadius: 8,
                       border: `1px solid ${selectedScenario?.id === scenario.id ? "#14365d" : "#e5e7eb"}`,
                       background: selectedScenario?.id === scenario.id ? "#eff6ff" : "#fff",
                       padding: 14,
@@ -307,7 +310,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
             )}
           </section>
 
-          <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 12 }}>
+          <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16, display: "grid", gap: 12 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{t("scenarios.catalogTitle")}</div>
             {groupedCatalog.map(([family, items]) => (
               <div key={family} style={{ display: "grid", gap: 8 }}>
@@ -318,7 +321,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                     type="button"
                     onClick={() => handleAddSolution(item)}
                     disabled={!selectedScenario}
-                    style={{ textAlign: "left", borderRadius: 12, border: "1px solid #e5e7eb", background: "#fff", padding: 12, display: "grid", gap: 4 }}
+                    style={{ textAlign: "left", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", padding: 12, display: "grid", gap: 4, opacity: selectedScenario ? 1 : 0.6 }}
                   >
                     <div style={{ fontWeight: 700 }}>{item.name}</div>
                     <div style={{ fontSize: 13, color: "#627084" }}>{item.description}</div>
@@ -331,22 +334,25 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
 
         <div style={{ display: "grid", gap: 20 }}>
           {!selectedScenario ? (
-            <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
+            <section style={{ border: "1px dashed #cbd5e1", borderRadius: 8, padding: 24, textAlign: "center", color: "#627084" }}>
               {t("scenarios.selectOrCreate")}
             </section>
           ) : (
             <>
-              <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+              <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
                   <div style={{ fontSize: 20, fontWeight: 700 }}>{t("scenarios.editorTitle")}</div>
-                  <button type="button" onClick={handleDuplicateScenario} style={{ borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700 }}>
+                  <button type="button" onClick={handleDuplicateScenario} disabled={scenarios.duplicateScenario.isPending} style={{ borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700, opacity: scenarios.duplicateScenario.isPending ? 0.65 : 1 }}>
                     {t("common.duplicate")}
                   </button>
                 </div>
 
                 <form onSubmit={handleSaveScenario} style={{ display: "grid", gap: 16 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: 12 }}>
-                    <input {...scenarioForm.register("name")} style={inputStyle} placeholder={t("scenarios.namePlaceholder")} />
+                    <label style={{ display: "grid", gap: 6 }}>
+                      <input {...scenarioForm.register("name")} style={inputStyle} placeholder={t("scenarios.namePlaceholder")} />
+                      <FieldError>{scenarioForm.formState.errors.name?.message}</FieldError>
+                    </label>
                     <select {...scenarioForm.register("scenario_type")} style={inputStyle}>
                       <option value="baseline">baseline</option>
                       <option value="improved">improved</option>
@@ -368,21 +374,21 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                   </label>
 
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button type="submit" style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>
+                    <button type="submit" disabled={scenarios.updateScenario.isPending} style={{ borderRadius: 8, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700, opacity: scenarios.updateScenario.isPending ? 0.65 : 1 }}>
                       {t("scenarios.saveScenario")}
                     </button>
                   </div>
                 </form>
               </section>
 
-              <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+              <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{t("scenarios.selectedSolutions")}</div>
                 {assignments.length === 0 ? (
                   <div style={{ color: "#627084" }}>{t("scenarios.noAssignments")}</div>
                 ) : (
                   <div style={{ display: "grid", gap: 10 }}>
                     {assignments.map((assignment) => (
-                      <div key={assignment.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 8 }}>
+                      <div key={assignment.id} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 14, display: "grid", gap: 8 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                           <div>
                             <div style={{ fontWeight: 700 }}>{assignment.solution_name}</div>
@@ -405,7 +411,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
               </section>
 
               {(selectedCatalogItem || editingAssignment) ? (
-                <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+                <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
                   <div style={{ fontSize: 20, fontWeight: 700 }}>
                     {editingAssignment ? t("scenarios.editAssignment") : t("scenarios.addAssignment", { name: selectedCatalogItem?.name ?? "" })}
                   </div>
@@ -433,15 +439,30 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                       </select>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-                      <input {...assignmentForm.register("quantity")} style={inputStyle} placeholder={t("scenarios.quantity")} />
-                      <input {...assignmentForm.register("unit_cost_override")} style={inputStyle} placeholder={t("scenarios.unitCostOverride")} />
-                      <input {...assignmentForm.register("capex_override")} style={inputStyle} placeholder={t("scenarios.capexOverride")} />
-                      <input {...assignmentForm.register("maintenance_override")} style={inputStyle} placeholder={t("scenarios.maintenanceOverride")} />
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+                      <label style={{ display: "grid", gap: 6 }}>
+                        <input {...assignmentForm.register("quantity")} style={inputStyle} placeholder={t("scenarios.quantity")} />
+                        <FieldError>{assignmentForm.formState.errors.quantity?.message}</FieldError>
+                      </label>
+                      <label style={{ display: "grid", gap: 6 }}>
+                        <input {...assignmentForm.register("unit_cost_override")} style={inputStyle} placeholder={t("scenarios.unitCostOverride")} />
+                        <FieldError>{assignmentForm.formState.errors.unit_cost_override?.message}</FieldError>
+                      </label>
+                      <label style={{ display: "grid", gap: 6 }}>
+                        <input {...assignmentForm.register("capex_override")} style={inputStyle} placeholder={t("scenarios.capexOverride")} />
+                        <FieldError>{assignmentForm.formState.errors.capex_override?.message}</FieldError>
+                      </label>
+                      <label style={{ display: "grid", gap: 6 }}>
+                        <input {...assignmentForm.register("maintenance_override")} style={inputStyle} placeholder={t("scenarios.maintenanceOverride")} />
+                        <FieldError>{assignmentForm.formState.errors.maintenance_override?.message}</FieldError>
+                      </label>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <input {...assignmentForm.register("gain_override_percent")} style={inputStyle} placeholder={t("scenarios.gainOverride")} />
+                      <label style={{ display: "grid", gap: 6 }}>
+                        <input {...assignmentForm.register("gain_override_percent")} style={inputStyle} placeholder={t("scenarios.gainOverride")} />
+                        <FieldError>{assignmentForm.formState.errors.gain_override_percent?.message}</FieldError>
+                      </label>
                       <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
                         <input type="checkbox" {...assignmentForm.register("is_selected")} />
                         {t("scenarios.activeSelection")}
@@ -458,11 +479,11 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                           setSelectedCatalogItem(null);
                           assignmentForm.reset(toAssignmentFormValues(null));
                         }}
-                        style={{ borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700 }}
+                        style={{ borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700 }}
                       >
                         {t("common.cancel")}
                       </button>
-                      <button type="submit" style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>
+                      <button type="submit" disabled={scenarios.createAssignment.isPending || scenarios.updateAssignment.isPending} style={{ borderRadius: 8, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700, opacity: scenarios.createAssignment.isPending || scenarios.updateAssignment.isPending ? 0.65 : 1 }}>
                         {editingAssignment ? t("scenarios.saveAssignment") : t("scenarios.addToScenario")}
                       </button>
                     </div>

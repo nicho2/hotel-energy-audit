@@ -6,6 +6,7 @@
   "reports.generateError": "Unable to generate report.",
   "reports.noSessionDownload": "Session unavailable for download.",
   "reports.downloadError": "Unable to download.",
+  "reports.latestResultError": "The latest calculation for the selected scenario is not available. Run the calculation from scenarios before generating the report.",
   "reports.noScenario": "No scenario available. Create a scenario and run a calculation before generating a PDF.",
   "reports.generatorTitle": "Report generator",
   "reports.generatorHelp": "Generate an executive report from the latest calculation available for the selected scenario.",

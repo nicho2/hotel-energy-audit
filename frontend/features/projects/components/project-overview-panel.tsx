@@ -2,6 +2,8 @@
 
 import { ProjectHeader } from "./project-header";
 import { ProjectOverviewCards } from "./project-overview-cards";
+import { ProjectSectionNav } from "./project-section-nav";
+import { FeedbackBlock } from "@/components/ui/feedback";
 import { useProject } from "../hooks/use-project";
 import type { ProjectOverviewCard } from "@/types/project";
 import { useI18n } from "@/providers/i18n-provider";
@@ -45,17 +47,17 @@ export function ProjectOverviewPanel({ projectId }: ProjectOverviewPanelProps) {
 
   if (isLoading) {
     return (
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, background: "#fff", padding: 24 }}>
+      <FeedbackBlock>
         {t("projects.loadingProject")}
-      </div>
+      </FeedbackBlock>
     );
   }
 
   if (error) {
     return (
-      <div style={{ border: "1px solid #fecaca", borderRadius: 16, background: "#fff", padding: 24, color: "#b91c1c" }}>
+      <FeedbackBlock tone="error">
         {t("projects.projectError")}
-      </div>
+      </FeedbackBlock>
     );
   }
 
@@ -63,15 +65,16 @@ export function ProjectOverviewPanel({ projectId }: ProjectOverviewPanelProps) {
 
   if (!project) {
     return (
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, background: "#fff", padding: 24 }}>
+      <FeedbackBlock>
         {t("projects.notFound")}
-      </div>
+      </FeedbackBlock>
     );
   }
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <ProjectHeader project={project} />
+      <ProjectSectionNav projectId={project.id} />
       <ProjectOverviewCards cards={buildOverviewCards(project.wizard_step, t)} />
     </div>
   );

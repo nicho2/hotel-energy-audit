@@ -7,6 +7,8 @@ import { useScenarios } from "@/features/scenarios/hooks/use-scenarios";
 import { useScenarioComparison } from "../hooks/use-scenario-comparison";
 import { formatCo2, formatCurrency, formatEnergy, formatPercent } from "../utils/formatters";
 import { useI18n } from "@/providers/i18n-provider";
+import { FeedbackBlock } from "@/components/ui/feedback";
+import { ProjectSectionNav } from "@/features/projects/components/project-section-nav";
 
 function toggleSelection(current: string[], scenarioId: string) {
   return current.includes(scenarioId)
@@ -53,19 +55,20 @@ export function ComparePage({ projectId }: { projectId: string }) {
   };
 
   if (project.isLoading || scenarios.scenarios.isLoading) {
-    return <div>{t("compare.loading")}</div>;
+    return <FeedbackBlock>{t("compare.loading")}</FeedbackBlock>;
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      <ProjectSectionNav projectId={projectId} />
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("compare.title")}</div>
+        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>{t("compare.title")}</div>
         <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>
           {project.data?.data.name ?? t("compare.projectFallback")}
         </h1>
       </div>
 
-      <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+      <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
           <div style={{ display: "grid", gap: 4 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{t("compare.selectorTitle")}</div>
@@ -85,6 +88,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
               padding: "10px 14px",
               fontWeight: 700,
               cursor: comparison.isPending ? "not-allowed" : "pointer",
+              opacity: selectedScenarioIds.length < 2 || selectedScenarioIds.length > 5 || comparison.isPending ? 0.65 : 1,
             }}
           >
             {comparison.isPending ? t("compare.comparing") : t("compare.compare")}
@@ -92,7 +96,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
         </div>
 
         {scenarioList.length === 0 ? (
-          <div style={{ color: "#627084" }}>{t("compare.emptyScenarios")}</div>
+          <FeedbackBlock compact>{t("compare.emptyScenarios")}</FeedbackBlock>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             {scenarioList.map((scenario) => {
@@ -104,7 +108,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
                   style={{
                     border: `1px solid ${selected ? "#14365d" : "#e5e7eb"}`,
                     background: selected ? "#eff6ff" : "#fff",
-                    borderRadius: 12,
+                    borderRadius: 8,
                     padding: 14,
                     display: "grid",
                     gap: 6,
@@ -130,19 +134,19 @@ export function ComparePage({ projectId }: { projectId: string }) {
       </section>
 
       {submitError ? (
-        <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+        <FeedbackBlock tone="error" compact>
           {submitError}
-        </div>
+        </FeedbackBlock>
       ) : null}
 
       {!comparisonData ? (
-        <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
+        <section style={{ border: "1px dashed #cbd5e1", borderRadius: 8, padding: 24, textAlign: "center", color: "#627084" }}>
           {t("compare.emptyResults")}
         </section>
       ) : (
         <>
           {summary ? (
-            <section style={{ border: "1px solid #bbf7d0", borderRadius: 16, padding: 20, background: "#f0fdf4", display: "grid", gap: 10 }}>
+            <section style={{ border: "1px solid #bbf7d0", borderRadius: 8, padding: 20, background: "#f0fdf4", display: "grid", gap: 10 }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: "#166534" }}>
                 {t("compare.recommendedScenario", { name: comparisonData.recommended_scenario.scenario_name })}
               </div>
@@ -154,17 +158,17 @@ export function ComparePage({ projectId }: { projectId: string }) {
 
           {summary ? (
             <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
-              <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16, display: "grid", gap: 6 }}>
                 <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.recommended")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.recommended.scenario_name}</div>
                 <div>{formatPercent(summary.recommended.roi_percent)}</div>
               </div>
-              <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16, display: "grid", gap: 6 }}>
                 <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.lowestEnergy")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.lowestEnergy.scenario_name}</div>
                 <div>{formatEnergy(summary.lowestEnergy.scenario_energy_kwh_year)}</div>
               </div>
-              <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16, display: "grid", gap: 6 }}>
                 <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.highestRoi")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.highestROI.scenario_name}</div>
                 <div>{formatPercent(summary.highestROI.roi_percent)}</div>
@@ -172,7 +176,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
             </section>
           ) : null}
 
-          <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
+          <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 20, display: "grid", gap: 16 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{t("compare.energyChart")}</div>
             <div style={{ display: "grid", gap: 12 }}>
               {comparisonData.items.map((item) => (
@@ -198,7 +202,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
             </div>
           </section>
 
-          <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+          <section style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb", fontSize: 18, fontWeight: 700 }}>{t("compare.matrix")}</div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>

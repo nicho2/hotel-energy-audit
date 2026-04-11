@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ApiError } from "@/lib/api-client/errors";
+import { FeedbackBlock, FieldError } from "@/components/ui/feedback";
 import { useBuilding } from "../hooks/use-building";
 import type { BuildingPayload, Orientation } from "@/types/building";
 
@@ -93,7 +94,7 @@ type BuildingStepFormProps = {
 export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) {
   const { data, isLoading, saveBuilding } = useBuilding(projectId);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { register, handleSubmit, reset } = useForm<BuildingStepFormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<BuildingStepFormValues>({
     defaultValues: toFormValues(null),
   });
 
@@ -113,7 +114,7 @@ export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) 
   };
 
   if (isLoading) {
-    return <div>Chargement du batiment...</div>;
+    return <FeedbackBlock>Chargement du batiment...</FeedbackBlock>;
   }
 
   return (
@@ -132,15 +133,18 @@ export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="gross_floor_area_m2" style={{ fontSize: 14, fontWeight: 600 }}>Surface brute (m2)</label>
-          <input id="gross_floor_area_m2" type="number" step="0.1" {...register("gross_floor_area_m2")} style={inputStyle} />
+          <input id="gross_floor_area_m2" type="number" min="0" step="0.1" {...register("gross_floor_area_m2", { validate: (value) => !value || Number(value) > 0 || "La surface doit etre positive." })} style={inputStyle} />
+          <FieldError>{errors.gross_floor_area_m2?.message}</FieldError>
         </div>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="heated_area_m2" style={{ fontSize: 14, fontWeight: 600 }}>Surface chauffee (m2)</label>
-          <input id="heated_area_m2" type="number" step="0.1" {...register("heated_area_m2")} style={inputStyle} />
+          <input id="heated_area_m2" type="number" min="0" step="0.1" {...register("heated_area_m2", { validate: (value) => !value || Number(value) >= 0 || "La surface doit etre positive." })} style={inputStyle} />
+          <FieldError>{errors.heated_area_m2?.message}</FieldError>
         </div>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="cooled_area_m2" style={{ fontSize: 14, fontWeight: 600 }}>Surface refroidie (m2)</label>
-          <input id="cooled_area_m2" type="number" step="0.1" {...register("cooled_area_m2")} style={inputStyle} />
+          <input id="cooled_area_m2" type="number" min="0" step="0.1" {...register("cooled_area_m2", { validate: (value) => !value || Number(value) >= 0 || "La surface doit etre positive." })} style={inputStyle} />
+          <FieldError>{errors.cooled_area_m2?.message}</FieldError>
         </div>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="compactness_level" style={{ fontSize: 14, fontWeight: 600 }}>Niveau de compacite</label>
@@ -151,11 +155,13 @@ export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="number_of_floors" style={{ fontSize: 14, fontWeight: 600 }}>Nombre d'etages</label>
-          <input id="number_of_floors" type="number" step="1" {...register("number_of_floors")} style={inputStyle} />
+          <input id="number_of_floors" type="number" min="0" step="1" {...register("number_of_floors", { validate: (value) => !value || Number(value) >= 0 || "Le nombre doit etre positif." })} style={inputStyle} />
+          <FieldError>{errors.number_of_floors?.message}</FieldError>
         </div>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="number_of_rooms" style={{ fontSize: 14, fontWeight: 600 }}>Nombre de chambres</label>
-          <input id="number_of_rooms" type="number" step="1" {...register("number_of_rooms")} style={inputStyle} />
+          <input id="number_of_rooms" type="number" min="0" step="1" {...register("number_of_rooms", { validate: (value) => !value || Number(value) >= 0 || "Le nombre doit etre positif." })} style={inputStyle} />
+          <FieldError>{errors.number_of_rooms?.message}</FieldError>
         </div>
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="main_orientation" style={{ fontSize: 14, fontWeight: 600 }}>Orientation principale</label>
@@ -183,9 +189,9 @@ export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) 
       </div>
 
       {submitError ? (
-        <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
+        <FeedbackBlock tone="error" compact>
           {submitError}
-        </div>
+        </FeedbackBlock>
       ) : null}
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -193,7 +199,7 @@ export function BuildingStepForm({ projectId, onSaved }: BuildingStepFormProps) 
           type="submit"
           disabled={saveBuilding.isPending}
           style={{
-            borderRadius: 10,
+            borderRadius: 8,
             border: "1px solid #14365d",
             background: "#14365d",
             color: "#fff",
