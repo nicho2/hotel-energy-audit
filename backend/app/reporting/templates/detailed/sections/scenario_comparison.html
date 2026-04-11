@@ -1,0 +1,56 @@
+<section class="section">
+  <h2>Scenario Comparison</h2>
+  <div class="card">
+    {% if comparison %}
+    <table>
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Energy</th>
+          <th>Savings</th>
+          <th>BACS</th>
+          <th>CAPEX</th>
+          <th>Payback</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in comparison %}
+        <tr>
+          <td>{{ item.scenario_name }}</td>
+          <td>{{ "%.0f"|format(item.scenario_energy_kwh_year) }} kWh/year</td>
+          <td>{{ "%.1f"|format(item.energy_savings_percent) }}%</td>
+          <td>{{ item.scenario_bacs_class or "-" }}</td>
+          <td>{{ "%.0f"|format(item.total_capex) }}</td>
+          <td>{{ "%.1f"|format(item.simple_payback_years) }} years</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No comparable calculated scenarios are available.</p>
+    {% endif %}
+    {% if scenario.solutions %}
+    <h3>Selected Solutions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Solution</th>
+          <th>Scope</th>
+          <th>Gain Override</th>
+          <th>CAPEX Override</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for solution in scenario.solutions %}
+        <tr>
+          <td>{{ solution.solution_code }}</td>
+          <td>{{ solution.target_scope }}</td>
+          <td>{{ "%.1f"|format(solution.gain_override_percent) if solution.gain_override_percent else "-" }}%</td>
+          <td>{{ "%.0f"|format(solution.capex_override) if solution.capex_override else "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</section>

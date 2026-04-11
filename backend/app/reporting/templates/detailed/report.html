@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="{{ report.language }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ report.title }}</title>
+    <style>
+      :root {
+        --accent: {{ branding.accent_color }};
+        --ink: #163038;
+        --muted: #5c6f75;
+        --line: #d7e2df;
+        --panel: #f5f8f7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--ink);
+        background: #ffffff;
+      }
+      .page {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 36px 56px;
+      }
+      .hero {
+        border-bottom: 3px solid var(--accent);
+        padding-bottom: 24px;
+        margin-bottom: 28px;
+      }
+      .hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .logo-mark {
+        min-width: 68px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 800;
+        text-align: center;
+        letter-spacing: 0.08em;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1, h2, h3 { margin: 0; }
+      h1 { margin-top: 8px; font-size: 34px; line-height: 1.15; }
+      h2 { font-size: 22px; margin-bottom: 14px; }
+      h3 { font-size: 16px; margin-bottom: 10px; }
+      .subtitle, .meta, .muted { color: var(--muted); }
+      .section { margin-top: 28px; break-inside: avoid; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+      .metric-label {
+        color: var(--muted);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .metric-value {
+        display: block;
+        margin-top: 8px;
+        font-size: 30px;
+        font-weight: 700;
+      }
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      ul { margin: 0; padding-left: 20px; }
+      .tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #e7f5f2;
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 12px;
+      }
+      .technical-value {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      {% include "executive/sections/cover.html" %}
+      {% include "executive/sections/summary.html" %}
+      {% include "detailed/sections/building_description.html" %}
+      {% include "detailed/sections/zones.html" %}
+      {% include "detailed/sections/systems.html" %}
+      {% include "detailed/sections/bacs.html" %}
+      {% include "detailed/sections/scenario_comparison.html" %}
+      {% include "detailed/sections/economics.html" %}
+      {% if report.include_assumptions %}
+      {% include "detailed/sections/assumptions.html" %}
+      {% endif %}
+      {% if report.include_regulatory_section %}
+      {% include "detailed/sections/regulatory.html" %}
+      {% endif %}
+      {% if report.include_annexes %}
+      {% include "detailed/sections/annexes.html" %}
+      {% endif %}
+      <footer class="footer">
+        <div>{{ branding.company_name }} | {{ branding.contact_email }}</div>
+        {% if branding.footer_note %}<div>{{ branding.footer_note }}</div>{% endif %}
+        <div>Generated {{ report.generated_at }}</div>
+      </footer>
+    </main>
+  </body>
+</html>

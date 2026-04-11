@@ -106,19 +106,8 @@ class CalculationRepository:
                 joinedload(CalculationRun.economic_result),
                 joinedload(CalculationRun.scenario),
                 joinedload(CalculationRun.project),
-            )
-        )
-        return self.db.scalar(statement)
-
-    def get_by_id(self, calculation_run_id: UUID) -> CalculationRun | None:
-        statement = (
-            select(CalculationRun)
-            .where(CalculationRun.id == calculation_run_id)
-            .options(
-                joinedload(CalculationRun.result_summary),
-                joinedload(CalculationRun.economic_result),
-                joinedload(CalculationRun.scenario),
-                joinedload(CalculationRun.project),
+                joinedload(CalculationRun.results_by_use),
+                joinedload(CalculationRun.results_by_zone),
             )
         )
         return self.db.scalar(statement)
