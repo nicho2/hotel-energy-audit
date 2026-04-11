@@ -1,0 +1,21 @@
+<section class="section">
+  <h2>Economic Analysis</h2>
+  <div class="grid">
+    <article class="card">
+      <div class="metric-label">Total CAPEX</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.total_capex) }}</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Annual Cost Savings</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.annual_cost_savings) }}</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Simple Payback</div>
+      <span class="metric-value">{{ "%.1f"|format(results.economic.simple_payback_years) }} years</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">NPV / IRR</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.npv) }} / {{ "%.2f"|format(results.economic.irr) }}</span>
+    </article>
+  </div>
+</section>

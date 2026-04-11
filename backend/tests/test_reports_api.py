@@ -35,6 +35,40 @@ def test_generate_report_persists_metadata_and_stores_file(client: TestClient) -
     assert body["generator_version"] == "placeholder_pdf_v1"
 
 
+def test_generate_detailed_report_persists_distinct_metadata_and_file(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/reports",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "scenario_id": scenario_id,
+            "calculation_run_id": calculation_run_id,
+            "report_type": "detailed",
+            "language": "fr",
+            "include_assumptions": True,
+            "include_regulatory_section": True,
+            "include_annexes": True,
+        },
+    )
+
+    assert response.status_code == 201
+    body = response.json()["data"]
+    assert body["project_id"] == project_id
+    assert body["scenario_id"] == scenario_id
+    assert body["calculation_run_id"] == calculation_run_id
+    assert body["report_type"] == "detailed"
+    assert body["status"] == "generated"
+    assert body["mime_type"] == "application/pdf"
+    assert body["file_name"] == f"detailed-report-{calculation_run_id}.pdf"
+    assert body["file_size_bytes"] > 0
+
+
 def test_list_project_reports_returns_generated_reports(client: TestClient) -> None:
     token, project_id, scenario_id = _create_ready_project_with_scenario(client)
     calculate_response = client.post(
@@ -141,6 +175,69 @@ def test_get_executive_report_html_returns_rendered_document(client: TestClient)
     assert body["context"]["scenario"]["id"] == scenario_id
     assert body["context"]["branding"]["source"] == "fallback"
     assert body["context"]["results"]["summary"]["scenario_energy_kwh_year"] == 980000
+
+
+def test_get_detailed_report_html_returns_extended_sections(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    executive_response = client.get(
+        f"/api/v1/reports/executive/{calculation_run_id}/html",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    detailed_response = client.get(
+        f"/api/v1/reports/detailed/{calculation_run_id}/html",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert detailed_response.status_code == 200
+    body = detailed_response.json()["data"]
+    assert body["report_type"] == "detailed"
+    assert body["title"] == "Detailed report - Calculation Project"
+    assert "Executive Summary" in body["html"]
+    assert "Building Description" in body["html"]
+    assert "Zone Detail" in body["html"]
+    assert "System Detail" in body["html"]
+    assert "BACS Analysis By Domain" in body["html"]
+    assert "Scenario Comparison" in body["html"]
+    assert "Economic Analysis" in body["html"]
+    assert "Assumptions And Limits" in body["html"]
+    assert "Technical Annexes" in body["html"]
+    assert "Main heating plant" in body["html"]
+    assert len(body["html"]) > len(executive_response.json()["data"]["html"])
+    assert body["context"]["report"]["report_type"] == "detailed"
+    assert {system["name"] for system in body["context"]["systems"]} >= {"Main heating plant", "DHW generation"}
+
+
+def test_detailed_report_html_honors_optional_section_flags(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    response = client.get(
+        (
+            f"/api/v1/reports/detailed/{calculation_run_id}/html"
+            "?include_assumptions=false&include_regulatory_section=true&include_annexes=false&language=fr"
+        ),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert 'lang="fr"' in body["html"]
+    assert "Assumptions And Limits" not in body["html"]
+    assert "Technical Annexes" not in body["html"]
+    assert "Regulatory Context" in body["html"]
+    assert body["context"]["report"]["include_assumptions"] is False
+    assert body["context"]["report"]["include_regulatory_section"] is True
+    assert body["context"]["report"]["include_annexes"] is False
 
 
 def test_get_executive_report_html_returns_404_for_missing_run(client: TestClient) -> None:

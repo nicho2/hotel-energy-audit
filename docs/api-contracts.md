@@ -53,10 +53,13 @@
 - `/api/v1/reports`
 - `/api/v1/reports/executive/{calculationRunId}/html`
 - `/api/v1/reports/executive/{calculationRunId}/generate`
+- `/api/v1/reports/detailed/{calculationRunId}/html`
+- `/api/v1/reports/detailed/{calculationRunId}/generate`
 - `/api/v1/reports/{reportId}`
 - `/api/v1/reports/{reportId}/download`
 
 Generated report metadata now retains the optional `branding_profile_id` used during rendering.
+Detailed generation also supports `include_assumptions`, `include_regulatory_section`, and `include_annexes`.
 
 ## Main enums
 ### branding profile fields

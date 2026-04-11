@@ -1,0 +1,79 @@
+<section class="section">
+  <h2>Technical Annexes</h2>
+  <div class="card">
+    <h3>Calculation Messages</h3>
+    {% if results.messages %}
+    <ul>
+      {% for message in results.messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No calculation messages were emitted.</p>
+    {% endif %}
+    <h3 style="margin-top: 18px;">Warnings</h3>
+    {% if results.warnings %}
+    <ul>
+      {% for warning in results.warnings %}
+      <li>{{ warning }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No calculation warnings were emitted.</p>
+    {% endif %}
+    <h3 style="margin-top: 18px;">By-Use Results</h3>
+    {% if results.by_use %}
+    <table>
+      <thead>
+        <tr>
+          <th>Use</th>
+          <th>Baseline</th>
+          <th>Scenario</th>
+          <th>Savings</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results.by_use %}
+        <tr>
+          <td>{{ item.usage_type }}</td>
+          <td>{{ "%.0f"|format(item.baseline_energy_kwh_year) }}</td>
+          <td>{{ "%.0f"|format(item.scenario_energy_kwh_year) }}</td>
+          <td>{{ "%.1f"|format(item.energy_savings_percent) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No by-use results are available.</p>
+    {% endif %}
+    <h3 style="margin-top: 18px;">By-Zone Results</h3>
+    {% if results.by_zone %}
+    <table>
+      <thead>
+        <tr>
+          <th>Zone</th>
+          <th>Type</th>
+          <th>Orientation</th>
+          <th>Baseline</th>
+          <th>Scenario</th>
+          <th>Savings</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results.by_zone %}
+        <tr>
+          <td>{{ item.zone_name }}</td>
+          <td>{{ item.zone_type }}</td>
+          <td>{{ item.orientation }}</td>
+          <td>{{ "%.0f"|format(item.baseline_energy_kwh_year) }}</td>
+          <td>{{ "%.0f"|format(item.scenario_energy_kwh_year) }}</td>
+          <td>{{ "%.1f"|format(item.energy_savings_percent) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No by-zone results are available.</p>
+    {% endif %}
+  </div>
+</section>

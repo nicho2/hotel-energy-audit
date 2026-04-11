@@ -1,0 +1,28 @@
+<section class="section">
+  <h2>Assumptions And Limits</h2>
+  <div class="card">
+    <h3>Limits</h3>
+    <ul>
+      {% for item in limits %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <h3 style="margin-top: 18px;">Calculation Snapshot</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Section</th>
+          <th>Captured Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in assumptions %}
+        <tr>
+          <td>{{ item.label }}</td>
+          <td><pre class="technical-value">{{ item.value | tojson(indent=2) }}</pre></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>

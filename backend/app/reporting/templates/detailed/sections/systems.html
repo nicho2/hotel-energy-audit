@@ -1,0 +1,33 @@
+<section class="section">
+  <h2>System Detail</h2>
+  <div class="card">
+    {% if systems %}
+    <table>
+      <thead>
+        <tr>
+          <th>System</th>
+          <th>Type</th>
+          <th>Energy</th>
+          <th>Technology</th>
+          <th>Efficiency</th>
+          <th>Serves</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for system in systems %}
+        <tr>
+          <td>{{ system.name }}{% if system.is_primary %} <span class="tag">Primary</span>{% endif %}</td>
+          <td>{{ system.system_type }}</td>
+          <td>{{ system.energy_source or "-" }}</td>
+          <td>{{ system.technology_type or "-" }}</td>
+          <td>{{ system.efficiency_level or "-" }}</td>
+          <td>{{ system.serves or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No technical systems are available for this project.</p>
+    {% endif %}
+  </div>
+</section>
