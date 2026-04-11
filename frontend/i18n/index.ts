@@ -1,4 +1,5 @@
 import frAssumptions from "./fr/assumptions.json";
+import frAdmin from "./fr/admin.json";
 import frAuth from "./fr/auth.json";
 import frCommon from "./fr/common.json";
 import frCompare from "./fr/compare.json";
@@ -8,6 +9,7 @@ import frReports from "./fr/reports.json";
 import frScenarios from "./fr/scenarios.json";
 import frWizard from "./fr/wizard.json";
 import enAssumptions from "./en/assumptions.json";
+import enAdmin from "./en/admin.json";
 import enAuth from "./en/auth.json";
 import enCommon from "./en/common.json";
 import enCompare from "./en/compare.json";
@@ -25,6 +27,7 @@ export type TranslationDictionary = Record<string, string>;
 export const dictionaries: Record<Language, TranslationDictionary> = {
   fr: {
     ...frAssumptions,
+    ...frAdmin,
     ...frCommon,
     ...frAuth,
     ...frProjects,
@@ -36,6 +39,7 @@ export const dictionaries: Record<Language, TranslationDictionary> = {
   },
   en: {
     ...enAssumptions,
+    ...enAdmin,
     ...enCommon,
     ...enAuth,
     ...enProjects,

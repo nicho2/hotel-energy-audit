@@ -6,6 +6,7 @@ import { env } from "@/lib/config/env";
 import { BrandMark } from "@/features/branding/components/brand-mark";
 import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
 import { getDefaultBrandingProfile } from "@/features/branding/utils/branding";
+import { useAuthContext } from "@/providers/auth-provider";
 import { useI18n } from "@/providers/i18n-provider";
 
 const navItems = [
@@ -13,14 +14,16 @@ const navItems = [
   { href: "/templates", labelKey: "nav.templates" },
   { href: "/reports", labelKey: "nav.reports" },
   { href: "/catalog", labelKey: "nav.catalog" },
-  { href: "/admin", labelKey: "nav.admin" },
+  { href: "/admin", labelKey: "nav.admin", adminOnly: true },
 ];
 
 export function DashboardSidebarNav() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const { user } = useAuthContext();
   const brandingProfiles = useBrandingProfiles();
   const activeBranding = getDefaultBrandingProfile(brandingProfiles.data?.data ?? []);
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || user?.role === "org_admin");
 
   return (
     <nav style={{ padding: 16, display: "grid", gap: 24 }}>
@@ -29,7 +32,7 @@ export function DashboardSidebarNav() {
           style={{
             fontSize: 12,
             fontWeight: 700,
-            letterSpacing: "0.08em",
+            letterSpacing: 0,
             color: "#627084",
             textTransform: "uppercase",
           }}
@@ -44,7 +47,7 @@ export function DashboardSidebarNav() {
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
@@ -54,7 +57,7 @@ export function DashboardSidebarNav() {
               style={{
                 display: "block",
                 padding: "10px 12px",
-                borderRadius: 10,
+                borderRadius: 8,
                 background: isActive ? "#14365d" : "transparent",
                 color: isActive ? "#ffffff" : "#142033",
                 fontWeight: isActive ? 600 : 500,

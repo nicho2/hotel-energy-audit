@@ -1,3 +1,5 @@
+import { AdminLandingPage } from "@/features/admin/components/admin-landing-page";
+
 export default function Page() {
-  return <div>admin page placeholder.</div>;
+  return <AdminLandingPage />;
 }

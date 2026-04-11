@@ -45,3 +45,9 @@ class UnauthorizedError(AppError):
     code = "UNAUTHORIZED"
     message = "Authentication required"
     status_code = HTTPStatus.UNAUTHORIZED
+
+
+class ForbiddenError(AppError):
+    code = "FORBIDDEN"
+    message = "Forbidden"
+    status_code = HTTPStatus.FORBIDDEN

@@ -25,6 +25,10 @@
 
 ## Main endpoint groups
 - `/api/v1/auth`
+- `/api/v1/admin/users`
+- `/api/v1/admin/users/{id}/deactivate`
+- `/api/v1/admin/branding`
+- `/api/v1/admin/branding/{id}`
 - `/api/v1/branding`
 - `/api/v1/projects`
 - `/api/v1/projects/{id}/assumptions`

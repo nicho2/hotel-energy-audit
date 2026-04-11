@@ -25,6 +25,21 @@ class BrandingRepository:
         )
         return list(self.db.scalars(statement).all())
 
+    def create(self, **kwargs: object) -> BrandingProfile:
+        profile = BrandingProfile(**kwargs)
+        self.db.add(profile)
+        self.db.commit()
+        self.db.refresh(profile)
+        return profile
+
+    def update(self, profile: BrandingProfile, **kwargs: object) -> BrandingProfile:
+        for field, value in kwargs.items():
+            setattr(profile, field, value)
+        self.db.add(profile)
+        self.db.commit()
+        self.db.refresh(profile)
+        return profile
+
     def get_default_for_organization(self, organization_id: UUID) -> BrandingProfile | None:
         statement = (
             select(BrandingProfile)
