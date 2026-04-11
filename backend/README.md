@@ -27,6 +27,9 @@ L'API expose:
 - `GET /health`
 - base path versionnee `GET /api/v1/...` pour les routeurs principaux encore vides
 
+En developpement, l'origine frontend Next.js est autorisee via `CORS_ALLOWED_ORIGINS`.
+La valeur par defaut couvre `http://localhost:3000` et `http://127.0.0.1:3000`.
+
 ## Test
 
 ```bash
