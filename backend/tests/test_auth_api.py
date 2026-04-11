@@ -27,6 +27,24 @@ def test_login_returns_bearer_token(client: TestClient) -> None:
     assert body["errors"] == []
 
 
+def test_oauth_token_endpoint_supports_swagger_authorize(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": DEV_USER_EMAIL, "password": DEV_USER_PASSWORD},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["token_type"] == "bearer"
+    assert body["access_token"]
+
+    projects_response = client.get(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {body['access_token']}"},
+    )
+    assert projects_response.status_code == 200
+
+
 def test_protected_projects_route_rejects_request_without_token(client: TestClient) -> None:
     response = client.get("/api/v1/projects")
 

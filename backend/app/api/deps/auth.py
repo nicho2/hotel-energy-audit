@@ -14,7 +14,7 @@ from app.repositories.project_repository import ProjectRepository
 from app.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.api_v1_prefix}/auth/login",
+    tokenUrl=f"{settings.api_v1_prefix}/auth/token",
     auto_error=False,
 )
 
