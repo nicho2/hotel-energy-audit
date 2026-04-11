@@ -57,6 +57,8 @@ def test_create_project_rejects_unknown_branding_profile() -> None:
 
 def test_create_project_passes_resolved_branding_profile_id_to_repository() -> None:
     branding_profile_id = uuid4()
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
     project_repo = _FakeProjectRepository()
     service = ProjectService(project_repo, _FakeBrandingRepository(branding_profile_id))
     current_user = SimpleNamespace(id=uuid4(), organization_id=uuid4())
@@ -65,6 +67,8 @@ def test_create_project_passes_resolved_branding_profile_id_to_repository() -> N
         name="Demo Project",
         building_type="hotel",
         project_goal="reduce_energy",
+        country_profile_id=country_profile_id,
+        climate_zone_id=climate_zone_id,
         branding_profile_id=branding_profile_id,
     )
 
@@ -72,6 +76,8 @@ def test_create_project_passes_resolved_branding_profile_id_to_repository() -> N
 
     assert created.branding_profile_id == branding_profile_id
     assert project_repo.created_kwargs["branding_profile_id"] == branding_profile_id
+    assert project_repo.created_kwargs["country_profile_id"] == country_profile_id
+    assert project_repo.created_kwargs["climate_zone_id"] == climate_zone_id
 
 
 def test_update_project_without_changes_returns_existing_project() -> None:

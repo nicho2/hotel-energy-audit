@@ -29,6 +29,8 @@ class ProjectUpdate(BaseModel):
     wizard_step: int | None = Field(default=None, ge=1)
     building_type: BuildingType | None = None
     project_goal: str | None = Field(default=None, max_length=100)
+    country_profile_id: UUID | None = None
+    climate_zone_id: UUID | None = None
     branding_profile_id: UUID | None = None
 
 
@@ -46,6 +48,8 @@ class ProjectResponse(BaseModel):
     wizard_step: int
     building_type: str
     project_goal: str | None
+    country_profile_id: UUID | None
+    climate_zone_id: UUID | None
     branding_profile_id: UUID | None
     created_at: datetime
     updated_at: datetime

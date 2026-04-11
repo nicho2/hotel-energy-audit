@@ -25,6 +25,8 @@ class ProjectService:
             wizard_step=1,
             building_type=payload.building_type,
             project_goal=payload.project_goal,
+            country_profile_id=payload.country_profile_id,
+            climate_zone_id=payload.climate_zone_id,
             branding_profile_id=branding_profile_id,
         )
         self._audit(
@@ -89,6 +91,8 @@ def _project_audit_payload(project, *, changed_fields: list[str] | None = None) 
         "building_type": project.building_type,
         "wizard_step": project.wizard_step,
         "reference_code": project.reference_code,
+        "country_profile_id": project.country_profile_id,
+        "climate_zone_id": project.climate_zone_id,
         "branding_profile_id": project.branding_profile_id,
     }
     if changed_fields is not None:

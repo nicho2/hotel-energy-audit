@@ -32,6 +32,8 @@ class Project(Base):
     wizard_step: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     building_type: Mapped[str] = mapped_column(String(50), nullable=False)
     project_goal: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    country_profile_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    climate_zone_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     branding_profile_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("branding_profiles.id", ondelete="SET NULL"),
