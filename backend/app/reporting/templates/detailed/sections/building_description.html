@@ -1,0 +1,47 @@
+<section class="section">
+  <h2>Building Description</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr>
+          <th>Building Name</th>
+          <td>{{ building.name or project.name }}</td>
+          <th>Construction Period</th>
+          <td>{{ building.construction_period or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Gross Area</th>
+          <td>{{ "%.0f"|format(building.gross_floor_area_m2) if building.gross_floor_area_m2 else "-" }} m2</td>
+          <th>Heated Area</th>
+          <td>{{ "%.0f"|format(building.heated_area_m2) if building.heated_area_m2 else "-" }} m2</td>
+        </tr>
+        <tr>
+          <th>Cooled Area</th>
+          <td>{{ "%.0f"|format(building.cooled_area_m2) if building.cooled_area_m2 else "-" }} m2</td>
+          <th>Compactness</th>
+          <td>{{ building.compactness_level or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Floors</th>
+          <td>{{ building.number_of_floors or "-" }}</td>
+          <th>Rooms</th>
+          <td>{{ building.number_of_rooms or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Main Orientation</th>
+          <td>{{ building.main_orientation or "-" }}</td>
+          <th>Functions</th>
+          <td>
+            Restaurant: {{ "yes" if building.has_restaurant else "no" }},
+            Meeting: {{ "yes" if building.has_meeting_rooms else "no" }},
+            Spa: {{ "yes" if building.has_spa else "no" }},
+            Pool: {{ "yes" if building.has_pool else "no" }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    {% if project.description %}
+    <p class="muted">Project note: {{ project.description }}</p>
+    {% endif %}
+  </div>
+</section>

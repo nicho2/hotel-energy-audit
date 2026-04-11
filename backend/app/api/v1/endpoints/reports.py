@@ -7,15 +7,21 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.reporting.builders.detailed_report_builder import DetailedReportBuilder
 from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
+from app.repositories.bacs_repository import BacsRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.report_repository import ReportRepository
+from app.repositories.results_repository import ResultsRepository
+from app.repositories.scenario_repository import ScenarioRepository
+from app.repositories.scenario_solution_repository import ScenarioSolutionRepository
+from app.repositories.technical_system_repository import TechnicalSystemRepository
 from app.repositories.zone_repository import ZoneRepository
 from app.schemas.common import ApiResponse, success_response
-from app.schemas.reports import ExecutiveReportHtmlResponse, GeneratedReportResponse
+from app.schemas.reports import ExecutiveReportHtmlResponse, GenerateReportRequest, GeneratedReportResponse
 from app.services.report_service import ReportService, get_reporting_templates_dir
 
 router = APIRouter()
@@ -27,9 +33,15 @@ def get_report_service(db: Session) -> ReportService:
         calculation_repository=CalculationRepository(db),
         building_repository=BuildingRepository(db),
         zone_repository=ZoneRepository(db),
+        technical_system_repository=TechnicalSystemRepository(db),
+        bacs_repository=BacsRepository(db),
+        scenario_repository=ScenarioRepository(db),
+        scenario_solution_repository=ScenarioSolutionRepository(db),
+        results_repository=ResultsRepository(db),
         branding_repository=BrandingRepository(db),
         report_repository=ReportRepository(db),
-        builder=ExecutiveReportBuilder(get_reporting_templates_dir()),
+        executive_builder=ExecutiveReportBuilder(get_reporting_templates_dir()),
+        detailed_builder=DetailedReportBuilder(get_reporting_templates_dir()),
     )
 
 
@@ -44,6 +56,33 @@ def list_generated_reports(
 ) -> ApiResponse[list[GeneratedReportResponse]]:
     service = get_report_service(db)
     return success_response(service.list_generated_reports(project_id, current_user))
+
+
+@router.post(
+    "/projects/{project_id}/reports",
+    response_model=ApiResponse[GeneratedReportResponse],
+    status_code=201,
+)
+def generate_project_report(
+    project_id: UUID,
+    payload: GenerateReportRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[GeneratedReportResponse]:
+    service = get_report_service(db)
+    return success_response(
+        service.generate_project_report(
+            project_id=project_id,
+            scenario_id=payload.scenario_id,
+            calculation_run_id=payload.calculation_run_id,
+            current_user=current_user,
+            report_type=payload.report_type,
+            include_assumptions=payload.include_assumptions,
+            include_regulatory_section=payload.include_regulatory_section,
+            include_annexes=payload.include_annexes,
+            language=payload.language,
+        )
+    )
 
 
 @router.get(
@@ -70,6 +109,58 @@ def generate_executive_report(
 ) -> ApiResponse[GeneratedReportResponse]:
     service = get_report_service(db)
     return success_response(service.generate_executive_report(calculation_run_id, current_user))
+
+
+@router.get(
+    "/reports/detailed/{calculation_run_id}/html",
+    response_model=ApiResponse[ExecutiveReportHtmlResponse],
+)
+def get_detailed_report_html(
+    calculation_run_id: UUID,
+    include_assumptions: bool = True,
+    include_regulatory_section: bool = False,
+    include_annexes: bool = True,
+    language: str = "en",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[ExecutiveReportHtmlResponse]:
+    service = get_report_service(db)
+    return success_response(
+        service.build_detailed_report_html(
+            calculation_run_id,
+            current_user,
+            include_assumptions=include_assumptions,
+            include_regulatory_section=include_regulatory_section,
+            include_annexes=include_annexes,
+            language=language,
+        )
+    )
+
+
+@router.post(
+    "/reports/detailed/{calculation_run_id}/generate",
+    response_model=ApiResponse[GeneratedReportResponse],
+)
+def generate_detailed_report(
+    calculation_run_id: UUID,
+    include_assumptions: bool = True,
+    include_regulatory_section: bool = False,
+    include_annexes: bool = True,
+    language: str = "en",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[GeneratedReportResponse]:
+    service = get_report_service(db)
+    return success_response(
+        service.generate_detailed_report(
+            calculation_run_id,
+            current_user,
+            include_assumptions=include_assumptions,
+            include_regulatory_section=include_regulatory_section,
+            include_annexes=include_annexes,
+            language=language,
+        )
+    )
 
 
 @router.get("/reports/{report_id}", response_model=ApiResponse[GeneratedReportResponse])
