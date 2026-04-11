@@ -1,0 +1,14 @@
+{
+  "wizard.loading": "Chargement du wizard...",
+  "wizard.error": "Erreur de chargement du wizard.",
+  "wizard.unavailable": "Wizard indisponible.",
+  "wizard.validationError": "Validation de l'etape impossible.",
+  "wizard.previous": "Precedent",
+  "wizard.next": "Suivant",
+  "wizard.saving": "Enregistrement...",
+  "wizard.summary": "Resume",
+  "wizard.readinessStatus": "Statut readiness: {{status}}",
+  "wizard.canCalculate": "Calcul activable: {{value}}",
+  "wizard.blockingSteps": "Etapes bloquantes: {{steps}}",
+  "wizard.placeholder": "Cette etape est preparee dans le shell du wizard, mais son formulaire detaille sera branche dans une prochaine tache."
+}

@@ -1,10 +1,10 @@
 "use client";
 
-import { formatCurrency } from "@/features/results/utils/formatters";
 import type { GeneratedReportResponse } from "@/types/reports";
+import { useI18n } from "@/providers/i18n-provider";
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
+function formatDate(value: string, language: string) {
+  return new Intl.DateTimeFormat(language === "en" ? "en-US" : "fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
@@ -45,21 +45,31 @@ export function ReportHistoryTable({
   onDownload,
   isDownloadingReportId,
 }: ReportHistoryTableProps) {
+  const { language, t } = useI18n();
+
   return (
     <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
       <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb", display: "grid", gap: 4 }}>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Report history</div>
-        <div style={{ color: "#627084", fontSize: 14 }}>Historique des PDF deja generes pour ce projet.</div>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>{t("reports.historyTitle")}</div>
+        <div style={{ color: "#627084", fontSize: 14 }}>{t("reports.historyHelp")}</div>
       </div>
 
       {reports.length === 0 ? (
-        <div style={{ padding: 24, color: "#627084" }}>Aucun rapport genere pour le moment.</div>
+        <div style={{ padding: 24, color: "#627084" }}>{t("reports.historyEmpty")}</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                {["Title", "Scenario", "Type", "Status", "Created", "Size", "Actions"].map((label) => (
+                {[
+                  t("reports.headers.title"),
+                  t("reports.headers.scenario"),
+                  t("reports.headers.type"),
+                  t("reports.headers.status"),
+                  t("reports.headers.created"),
+                  t("reports.headers.size"),
+                  t("reports.headers.actions"),
+                ].map((label) => (
                   <th key={label} style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 13, fontWeight: 700 }}>
                     {label}
                   </th>
@@ -98,7 +108,7 @@ export function ReportHistoryTable({
                         {report.status}
                       </span>
                     </td>
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatDate(report.created_at)}</td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatDate(report.created_at, language)}</td>
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatFileSize(report.file_size_bytes)}</td>
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>
                       <button
@@ -115,7 +125,7 @@ export function ReportHistoryTable({
                           cursor: report.status === "generated" ? "pointer" : "not-allowed",
                         }}
                       >
-                        {isDownloadingReportId === report.id ? "Telechargement..." : "Telecharger"}
+                        {isDownloadingReportId === report.id ? t("common.downloading") : t("common.download")}
                       </button>
                     </td>
                   </tr>

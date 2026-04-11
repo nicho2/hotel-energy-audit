@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useI18n } from "@/providers/i18n-provider";
 
 export default function HomePage() {
+  const { t } = useI18n();
+
   return (
     <main
       style={{
@@ -23,11 +29,14 @@ export default function HomePage() {
           gap: 16,
         }}
       >
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <LanguageSwitcher />
+        </div>
         <div style={{ display: "grid", gap: 8 }}>
-          <span style={{ color: "#627084", fontSize: 14 }}>Frontend MVP</span>
+          <span style={{ color: "#627084", fontSize: 14 }}>{t("app.frontendMvp")}</span>
           <h1 style={{ margin: 0, fontSize: 36, lineHeight: 1.1 }}>Hotel Energy Audit</h1>
           <p style={{ margin: 0, color: "#627084", fontSize: 16 }}>
-            Base Next.js du parcours MVP avec providers globaux, App Router et placeholders propres pour les modules backend encore en cours.
+            {t("app.homeDescription")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -44,7 +53,7 @@ export default function HomePage() {
               fontWeight: 600,
             }}
           >
-            Aller a la connexion
+            {t("app.goToLogin")}
           </Link>
           <Link
             href="/projects"
@@ -60,7 +69,7 @@ export default function HomePage() {
               fontWeight: 600,
             }}
           >
-            Ouvrir les projets
+            {t("app.openProjects")}
           </Link>
         </div>
       </div>

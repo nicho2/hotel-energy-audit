@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ProjectResponse } from "@/types/project";
+import { useI18n } from "@/providers/i18n-provider";
 
 const quickLinks = [
-  { segment: "wizard", label: "Ouvrir le wizard" },
-  { segment: "scenarios", label: "Voir les scenarios" },
-  { segment: "compare", label: "Ouvrir le comparateur" },
-  { segment: "reports", label: "Voir les rapports" },
+  { segment: "wizard", labelKey: "projects.header.openWizard" },
+  { segment: "scenarios", labelKey: "projects.header.viewScenarios" },
+  { segment: "compare", labelKey: "projects.header.openCompare" },
+  { segment: "reports", labelKey: "projects.header.viewReports" },
 ];
 
 type ProjectHeaderProps = {
@@ -13,6 +14,8 @@ type ProjectHeaderProps = {
 };
 
 export function ProjectHeader({ project }: ProjectHeaderProps) {
+  const { t } = useI18n();
+
   return (
     <div
       style={{
@@ -26,12 +29,12 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "flex-start" }}>
         <div style={{ display: "grid", gap: 8 }}>
-          <div style={{ fontSize: 13, color: "#627084" }}>Projet</div>
+          <div style={{ fontSize: 13, color: "#627084" }}>{t("projects.header.label")}</div>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700 }}>{project.name}</h1>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", color: "#627084", fontSize: 14 }}>
-            <span>Client: {project.client_name ?? "-"}</span>
-            <span>Statut: {project.status}</span>
-            <span>Etape wizard: {project.wizard_step}</span>
+            <span>{t("projects.header.client")}: {project.client_name ?? t("common.emptyDash")}</span>
+            <span>{t("common.status")}: {project.status}</span>
+            <span>{t("projects.table.wizardStep")}: {project.wizard_step}</span>
           </div>
         </div>
 
@@ -66,7 +69,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
               fontWeight: 600,
             }}
           >
-            {link.label}
+            {t(link.labelKey)}
           </Link>
         ))}
       </div>

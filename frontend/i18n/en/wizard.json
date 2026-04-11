@@ -1,0 +1,14 @@
+{
+  "wizard.loading": "Loading wizard...",
+  "wizard.error": "Unable to load wizard.",
+  "wizard.unavailable": "Wizard unavailable.",
+  "wizard.validationError": "Unable to validate this step.",
+  "wizard.previous": "Previous",
+  "wizard.next": "Next",
+  "wizard.saving": "Saving...",
+  "wizard.summary": "Summary",
+  "wizard.readinessStatus": "Readiness status: {{status}}",
+  "wizard.canCalculate": "Calculation enabled: {{value}}",
+  "wizard.blockingSteps": "Blocking steps: {{steps}}",
+  "wizard.placeholder": "This step is prepared in the wizard shell, but its detailed form will be connected in a later task."
+}

@@ -10,6 +10,7 @@ import {
   reportGeneratorSchema,
   type ReportGeneratorFormValues,
 } from "../schemas/report-generator-schema";
+import { useI18n } from "@/providers/i18n-provider";
 
 const inputStyle = {
   width: "100%",
@@ -41,6 +42,7 @@ export function ReportGeneratorForm({
   onScenarioChange,
   onSubmit,
 }: ReportGeneratorFormProps) {
+  const { t } = useI18n();
   const form = useForm<ReportGeneratorFormValues>({
     resolver: zodResolver(reportGeneratorSchema),
     defaultValues: {
@@ -58,16 +60,16 @@ export function ReportGeneratorForm({
   return (
     <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gap: 4 }}>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Report generator</div>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>{t("reports.generatorTitle")}</div>
         <div style={{ color: "#627084", fontSize: 14 }}>
-          Generez un rapport executif a partir du dernier calcul disponible pour le scenario choisi.
+          {t("reports.generatorHelp")}
         </div>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr", gap: 12 }}>
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>Scenario</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{t("reports.scenario")}</span>
             <select
               {...form.register("scenario_id")}
               style={inputStyle}
@@ -76,7 +78,7 @@ export function ReportGeneratorForm({
                 onScenarioChange(event.target.value);
               }}
             >
-              <option value="">Selectionnez un scenario</option>
+              <option value="">{t("reports.selectScenario")}</option>
               {scenarios.map((scenario) => (
                 <option key={scenario.id} value={scenario.id}>
                   {scenario.name}
@@ -86,7 +88,7 @@ export function ReportGeneratorForm({
           </label>
 
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>Report type</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{t("reports.reportType")}</span>
             <select {...form.register("report_type")} style={inputStyle} disabled>
               <option value="executive">executive</option>
             </select>
@@ -95,35 +97,35 @@ export function ReportGeneratorForm({
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
-            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>Branding</div>
-            <div style={{ fontWeight: 700 }}>{project?.branding_profile_id ? "Project profile" : "Fallback branding"}</div>
-            <div style={{ fontSize: 13, color: "#627084" }}>Le backend reprend le branding associe au projet si disponible.</div>
+            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.branding")}</div>
+            <div style={{ fontWeight: 700 }}>{project?.branding_profile_id ? t("reports.projectProfile") : t("reports.fallbackBranding")}</div>
+            <div style={{ fontSize: 13, color: "#627084" }}>{t("reports.brandingHelp")}</div>
           </div>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
-            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>Language</div>
-            <div style={{ fontWeight: 700 }}>Default backend</div>
-            <div style={{ fontSize: 13, color: "#627084" }}>Aucun choix de langue n&apos;est expose par l&apos;API actuelle.</div>
+            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.language")}</div>
+            <div style={{ fontWeight: 700 }}>{t("reports.defaultBackend")}</div>
+            <div style={{ fontSize: 13, color: "#627084" }}>{t("reports.languageHelp")}</div>
           </div>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
-            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>Calculation</div>
+            <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.calculation")}</div>
             <div style={{ fontWeight: 700 }}>
-              {isLoadingLatestResult ? "Recherche..." : latestResult ? "Latest available" : "Missing"}
+              {isLoadingLatestResult ? t("reports.searching") : latestResult ? t("reports.latestAvailable") : t("reports.missing")}
             </div>
             <div style={{ fontSize: 13, color: "#627084" }}>
-              {latestResult ? latestResult.calculation_run_id : "Calculez le scenario avant de generer un rapport."}
+              {latestResult ? latestResult.calculation_run_id : t("reports.calculateFirst")}
             </div>
           </div>
         </div>
 
         {latestResult ? (
           <div style={{ border: "1px solid #dbeafe", background: "#eff6ff", borderRadius: 12, padding: 14, display: "grid", gap: 6 }}>
-            <div style={{ fontWeight: 700, color: "#1d4ed8" }}>Dernier calcul selectionne</div>
+            <div style={{ fontWeight: 700, color: "#1d4ed8" }}>{t("reports.latestCalculation")}</div>
             <div style={{ fontSize: 14, color: "#1e3a8a" }}>Engine: {latestResult.engine_version}</div>
             <div style={{ fontSize: 14, color: "#1e3a8a" }}>Status: {latestResult.status}</div>
           </div>
         ) : (
           <div style={{ border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", borderRadius: 12, padding: 14 }}>
-            Aucun calcul disponible pour ce scenario. La generation du PDF reste desactivee tant qu&apos;un run n&apos;existe pas.
+            {t("reports.noCalculation")}
           </div>
         )}
 
@@ -142,7 +144,7 @@ export function ReportGeneratorForm({
               opacity: !latestResult || isGenerating ? 0.7 : 1,
             }}
           >
-            {isGenerating ? "Generation..." : "Generer le rapport"}
+            {isGenerating ? t("reports.generating") : t("reports.generate")}
           </button>
         </div>
       </form>

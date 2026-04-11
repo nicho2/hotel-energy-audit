@@ -1,3 +1,9 @@
+"use client";
+
+import { useI18n } from "@/providers/i18n-provider";
+
 export default function Page() {
-  return <div>reports page placeholder.</div>;
+  const { t } = useI18n();
+
+  return <div>{t("reports.globalPlaceholder")}</div>;
 }

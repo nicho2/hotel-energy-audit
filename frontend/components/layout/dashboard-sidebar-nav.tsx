@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { env } from "@/lib/config/env";
+import { useI18n } from "@/providers/i18n-provider";
 
 const navItems = [
-  { href: "/projects", label: "Projets" },
-  { href: "/templates", label: "Modeles" },
-  { href: "/reports", label: "Rapports" },
-  { href: "/catalog", label: "Catalogue" },
-  { href: "/admin", label: "Administration" },
+  { href: "/projects", labelKey: "nav.projects" },
+  { href: "/templates", labelKey: "nav.templates" },
+  { href: "/reports", labelKey: "nav.reports" },
+  { href: "/catalog", labelKey: "nav.catalog" },
+  { href: "/admin", labelKey: "nav.admin" },
 ];
 
 export function DashboardSidebarNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <nav style={{ padding: 16, display: "grid", gap: 24 }}>
@@ -49,7 +51,7 @@ export function DashboardSidebarNav() {
                 fontWeight: isActive ? 600 : 500,
               }}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}

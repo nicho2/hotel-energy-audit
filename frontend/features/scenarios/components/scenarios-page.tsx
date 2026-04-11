@@ -9,6 +9,7 @@ import { useSystems } from "@/features/systems/hooks/use-systems";
 import { useZones } from "@/features/zones/hooks/use-zones";
 import type { ScenarioResponse, ScenarioSolutionAssignment, SolutionCatalogItem, TargetScope } from "@/types/scenarios";
 import { useScenarios } from "../hooks/use-scenarios";
+import { useI18n } from "@/providers/i18n-provider";
 import {
   scenarioEditorSchema,
   scenarioSolutionSchema,
@@ -57,6 +58,7 @@ function toNullableNumber(value: string) {
 
 export function ScenariosPage({ projectId }: { projectId: string }) {
   const project = useProject(projectId);
+  const { t } = useI18n();
   const zones = useZones(projectId);
   const systems = useSystems(projectId);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
       });
       setSelectedScenarioId(response.data.id);
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Creation du scenario impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("scenarios.createError"));
     }
   };
 
@@ -129,7 +131,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
       });
       setSelectedScenarioId(response.data.id);
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Duplication du scenario impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("scenarios.duplicateError"));
     }
   };
 
@@ -148,7 +150,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
         },
       });
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Enregistrement du scenario impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("scenarios.saveError"));
     }
   });
 
@@ -222,13 +224,13 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
       setSelectedCatalogItem(null);
       assignmentForm.reset(toAssignmentFormValues(null));
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Enregistrement de la solution impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("scenarios.assignmentSaveError"));
     }
   });
 
   const handleDeleteAssignment = async (assignment: ScenarioSolutionAssignment) => {
     if (!selectedScenario) return;
-    if (!window.confirm(`Supprimer ${assignment.solution_name} ?`)) return;
+    if (!window.confirm(t("scenarios.deleteConfirm", { name: assignment.solution_name }))) return;
     setSubmitError(null);
     try {
       await scenarios.deleteAssignment.mutateAsync({
@@ -241,19 +243,19 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
         assignmentForm.reset(toAssignmentFormValues(null));
       }
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Suppression de la solution impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("scenarios.assignmentDeleteError"));
     }
   };
 
   if (project.isLoading || scenarios.scenarios.isLoading || scenarios.catalog.isLoading || zones.isLoading || systems.isLoading) {
-    return <div>Chargement des scenarios...</div>;
+    return <div>{t("scenarios.loading")}</div>;
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>Scenarios</div>
-        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>{project.data?.data.name ?? "Project scenarios"}</h1>
+        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("scenarios.title")}</div>
+        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>{project.data?.data.name ?? t("scenarios.projectFallback")}</h1>
       </div>
 
       {submitError ? (
@@ -266,14 +268,14 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
         <aside style={{ display: "grid", gap: 16 }}>
           <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Scenario list</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{t("scenarios.listTitle")}</div>
               <button type="button" onClick={handleCreateScenario} style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "8px 12px", fontWeight: 700 }}>
-                Ajouter
+                {t("common.add")}
               </button>
             </div>
 
             {scenarioList.length === 0 ? (
-              <div style={{ color: "#627084", fontSize: 14 }}>Aucun scenario. Creez le premier pour commencer.</div>
+              <div style={{ color: "#627084", fontSize: 14 }}>{t("scenarios.empty")}</div>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
                 {scenarioList.map((scenario) => (
@@ -294,11 +296,11 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                       <span style={{ fontWeight: 700 }}>{scenario.name}</span>
                       {scenario.is_reference ? (
-                        <span style={{ fontSize: 12, color: "#14365d", fontWeight: 700 }}>Reference</span>
+                        <span style={{ fontSize: 12, color: "#14365d", fontWeight: 700 }}>{t("common.reference")}</span>
                       ) : null}
                     </div>
                     <div style={{ fontSize: 13, color: "#627084" }}>{scenario.scenario_type} · {scenario.status}</div>
-                    <div style={{ fontSize: 13, color: "#334155" }}>{scenario.description ?? "Sans description"}</div>
+                    <div style={{ fontSize: 13, color: "#334155" }}>{scenario.description ?? t("common.noDescription")}</div>
                   </button>
                 ))}
               </div>
@@ -306,7 +308,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
           </section>
 
           <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Solution catalog</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{t("scenarios.catalogTitle")}</div>
             {groupedCatalog.map(([family, items]) => (
               <div key={family} style={{ display: "grid", gap: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#627084", textTransform: "uppercase" }}>{family}</div>
@@ -330,21 +332,21 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
         <div style={{ display: "grid", gap: 20 }}>
           {!selectedScenario ? (
             <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
-              Selectionnez ou creez un scenario pour voir ses details.
+              {t("scenarios.selectOrCreate")}
             </section>
           ) : (
             <>
               <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                  <div style={{ fontSize: 20, fontWeight: 700 }}>Scenario editor</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{t("scenarios.editorTitle")}</div>
                   <button type="button" onClick={handleDuplicateScenario} style={{ borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700 }}>
-                    Dupliquer
+                    {t("common.duplicate")}
                   </button>
                 </div>
 
                 <form onSubmit={handleSaveScenario} style={{ display: "grid", gap: 16 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: 12 }}>
-                    <input {...scenarioForm.register("name")} style={inputStyle} placeholder="Nom du scenario" />
+                    <input {...scenarioForm.register("name")} style={inputStyle} placeholder={t("scenarios.namePlaceholder")} />
                     <select {...scenarioForm.register("scenario_type")} style={inputStyle}>
                       <option value="baseline">baseline</option>
                       <option value="improved">improved</option>
@@ -358,25 +360,25 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                     </select>
                   </div>
 
-                  <textarea {...scenarioForm.register("description")} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Description du scenario" />
+                  <textarea {...scenarioForm.register("description")} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder={t("scenarios.descriptionPlaceholder")} />
 
                   <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
                     <input type="checkbox" {...scenarioForm.register("is_reference")} />
-                    Scenario de reference
+                    {t("scenarios.referenceCheckbox")}
                   </label>
 
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <button type="submit" style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>
-                      Enregistrer le scenario
+                      {t("scenarios.saveScenario")}
                     </button>
                   </div>
                 </form>
               </section>
 
               <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>Selected solutions</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>{t("scenarios.selectedSolutions")}</div>
                 {assignments.length === 0 ? (
-                  <div style={{ color: "#627084" }}>Aucune solution affectee a ce scenario.</div>
+                  <div style={{ color: "#627084" }}>{t("scenarios.noAssignments")}</div>
                 ) : (
                   <div style={{ display: "grid", gap: 10 }}>
                     {assignments.map((assignment) => (
@@ -388,10 +390,10 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button type="button" onClick={() => handleEditAssignment(assignment)} style={{ borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", padding: "8px 12px" }}>
-                              Editer
+                              {t("common.edit")}
                             </button>
                             <button type="button" onClick={() => handleDeleteAssignment(assignment)} style={{ borderRadius: 8, border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", padding: "8px 12px" }}>
-                              Supprimer
+                              {t("common.delete")}
                             </button>
                           </div>
                         </div>
@@ -405,7 +407,7 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
               {(selectedCatalogItem || editingAssignment) ? (
                 <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
                   <div style={{ fontSize: 20, fontWeight: 700 }}>
-                    {editingAssignment ? "Editer l'affectation" : `Ajouter ${selectedCatalogItem?.name}`}
+                    {editingAssignment ? t("scenarios.editAssignment") : t("scenarios.addAssignment", { name: selectedCatalogItem?.name ?? "" })}
                   </div>
 
                   <form onSubmit={handleSaveAssignment} style={{ display: "grid", gap: 16 }}>
@@ -417,14 +419,14 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                       </select>
 
                       <select {...assignmentForm.register("target_zone_id")} style={inputStyle}>
-                        <option value="">Zone cible</option>
+                        <option value="">{t("scenarios.targetZone")}</option>
                         {(zones.data?.data ?? []).map((zone) => (
                           <option key={zone.id} value={zone.id}>{zone.name}</option>
                         ))}
                       </select>
 
                       <select {...assignmentForm.register("target_system_id")} style={inputStyle}>
-                        <option value="">Systeme cible</option>
+                        <option value="">{t("scenarios.targetSystem")}</option>
                         {(systems.data?.data ?? []).map((system) => (
                           <option key={system.id} value={system.id}>{system.name}</option>
                         ))}
@@ -432,21 +434,21 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-                      <input {...assignmentForm.register("quantity")} style={inputStyle} placeholder="Quantity" />
-                      <input {...assignmentForm.register("unit_cost_override")} style={inputStyle} placeholder="Unit cost override" />
-                      <input {...assignmentForm.register("capex_override")} style={inputStyle} placeholder="CAPEX override" />
-                      <input {...assignmentForm.register("maintenance_override")} style={inputStyle} placeholder="Maintenance override" />
+                      <input {...assignmentForm.register("quantity")} style={inputStyle} placeholder={t("scenarios.quantity")} />
+                      <input {...assignmentForm.register("unit_cost_override")} style={inputStyle} placeholder={t("scenarios.unitCostOverride")} />
+                      <input {...assignmentForm.register("capex_override")} style={inputStyle} placeholder={t("scenarios.capexOverride")} />
+                      <input {...assignmentForm.register("maintenance_override")} style={inputStyle} placeholder={t("scenarios.maintenanceOverride")} />
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <input {...assignmentForm.register("gain_override_percent")} style={inputStyle} placeholder="Gain override (0-1)" />
+                      <input {...assignmentForm.register("gain_override_percent")} style={inputStyle} placeholder={t("scenarios.gainOverride")} />
                       <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
                         <input type="checkbox" {...assignmentForm.register("is_selected")} />
-                        Selection active
+                        {t("scenarios.activeSelection")}
                       </label>
                     </div>
 
-                    <textarea {...assignmentForm.register("notes")} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Notes" />
+                    <textarea {...assignmentForm.register("notes")} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder={t("scenarios.notes")} />
 
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
                       <button
@@ -458,10 +460,10 @@ export function ScenariosPage({ projectId }: { projectId: string }) {
                         }}
                         style={{ borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 700 }}
                       >
-                        Annuler
+                        {t("common.cancel")}
                       </button>
                       <button type="submit" style={{ borderRadius: 10, border: "1px solid #14365d", background: "#14365d", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>
-                        {editingAssignment ? "Enregistrer l'affectation" : "Ajouter au scenario"}
+                        {editingAssignment ? t("scenarios.saveAssignment") : t("scenarios.addToScenario")}
                       </button>
                     </div>
                   </form>

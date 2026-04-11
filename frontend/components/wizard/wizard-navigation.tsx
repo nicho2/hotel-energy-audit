@@ -1,3 +1,5 @@
+import { useI18n } from "@/providers/i18n-provider";
+
 type WizardNavigationProps = {
   canGoPrevious: boolean;
   canGoNext: boolean;
@@ -13,6 +15,8 @@ export function WizardNavigation({
   onNext,
   isSaving = false,
 }: WizardNavigationProps) {
+  const { t } = useI18n();
+
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
       <button
@@ -28,7 +32,7 @@ export function WizardNavigation({
           cursor: !canGoPrevious || isSaving ? "not-allowed" : "pointer",
         }}
       >
-        Precedent
+        {t("wizard.previous")}
       </button>
 
       <button
@@ -45,7 +49,7 @@ export function WizardNavigation({
           cursor: !canGoNext || isSaving ? "not-allowed" : "pointer",
         }}
       >
-        {isSaving ? "Enregistrement..." : "Suivant"}
+        {isSaving ? t("wizard.saving") : t("wizard.next")}
       </button>
     </div>
   );

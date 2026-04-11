@@ -6,6 +6,7 @@ import { useProject } from "@/features/projects/hooks/use-project";
 import { useScenarios } from "@/features/scenarios/hooks/use-scenarios";
 import { useScenarioComparison } from "../hooks/use-scenario-comparison";
 import { formatCo2, formatCurrency, formatEnergy, formatPercent } from "../utils/formatters";
+import { useI18n } from "@/providers/i18n-provider";
 
 function toggleSelection(current: string[], scenarioId: string) {
   return current.includes(scenarioId)
@@ -17,6 +18,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
   const project = useProject(projectId);
   const scenarios = useScenarios(projectId, null);
   const comparison = useScenarioComparison(projectId);
+  const { t } = useI18n();
   const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -46,29 +48,29 @@ export function ComparePage({ projectId }: { projectId: string }) {
     try {
       await comparison.mutateAsync(selectedScenarioIds);
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Comparaison impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("compare.error"));
     }
   };
 
   if (project.isLoading || scenarios.scenarios.isLoading) {
-    return <div>Chargement de la comparaison...</div>;
+    return <div>{t("compare.loading")}</div>;
   }
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>Compare</div>
+        <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("compare.title")}</div>
         <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>
-          {project.data?.data.name ?? "Comparaison de scenarios"}
+          {project.data?.data.name ?? t("compare.projectFallback")}
         </h1>
       </div>
 
       <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
           <div style={{ display: "grid", gap: 4 }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Scenario selector</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{t("compare.selectorTitle")}</div>
             <div style={{ color: "#627084", fontSize: 14 }}>
-              Selectionnez entre 2 et 5 scenarios pour lancer la comparaison.
+              {t("compare.selectorHelp")}
             </div>
           </div>
           <button
@@ -85,12 +87,12 @@ export function ComparePage({ projectId }: { projectId: string }) {
               cursor: comparison.isPending ? "not-allowed" : "pointer",
             }}
           >
-            {comparison.isPending ? "Comparaison..." : "Comparer"}
+            {comparison.isPending ? t("compare.comparing") : t("compare.compare")}
           </button>
         </div>
 
         {scenarioList.length === 0 ? (
-          <div style={{ color: "#627084" }}>Aucun scenario disponible.</div>
+          <div style={{ color: "#627084" }}>{t("compare.emptyScenarios")}</div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             {scenarioList.map((scenario) => {
@@ -111,7 +113,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                     <span style={{ fontWeight: 700 }}>{scenario.name}</span>
-                    {scenario.is_reference ? <span style={{ fontSize: 12, color: "#14365d", fontWeight: 700 }}>Reference</span> : null}
+                    {scenario.is_reference ? <span style={{ fontSize: 12, color: "#14365d", fontWeight: 700 }}>{t("common.reference")}</span> : null}
                   </div>
                   <div style={{ fontSize: 13, color: "#627084" }}>{scenario.scenario_type} · {scenario.status}</div>
                   <input
@@ -135,14 +137,14 @@ export function ComparePage({ projectId }: { projectId: string }) {
 
       {!comparisonData ? (
         <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
-          Lancez une comparaison pour afficher les KPI, la matrice et la recommandation.
+          {t("compare.emptyResults")}
         </section>
       ) : (
         <>
           {summary ? (
             <section style={{ border: "1px solid #bbf7d0", borderRadius: 16, padding: 20, background: "#f0fdf4", display: "grid", gap: 10 }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: "#166534" }}>
-                Scenario recommande: {comparisonData.recommended_scenario.scenario_name}
+                {t("compare.recommendedScenario", { name: comparisonData.recommended_scenario.scenario_name })}
               </div>
               {comparisonData.recommended_scenario.reasons.map((reason) => (
                 <div key={reason} style={{ color: "#166534" }}>{reason}</div>
@@ -153,17 +155,17 @@ export function ComparePage({ projectId }: { projectId: string }) {
           {summary ? (
             <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
-                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>Recommande</div>
+                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.recommended")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.recommended.scenario_name}</div>
                 <div>{formatPercent(summary.recommended.roi_percent)}</div>
               </div>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
-                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>Energie la plus basse</div>
+                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.lowestEnergy")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.lowestEnergy.scenario_name}</div>
                 <div>{formatEnergy(summary.lowestEnergy.scenario_energy_kwh_year)}</div>
               </div>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, display: "grid", gap: 6 }}>
-                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>ROI le plus fort</div>
+                <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("compare.summary.highestRoi")}</div>
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{summary.highestROI.scenario_name}</div>
                 <div>{formatPercent(summary.highestROI.roi_percent)}</div>
               </div>
@@ -171,14 +173,14 @@ export function ComparePage({ projectId }: { projectId: string }) {
           ) : null}
 
           <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Energy chart</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{t("compare.energyChart")}</div>
             <div style={{ display: "grid", gap: 12 }}>
               {comparisonData.items.map((item) => (
                 <div key={item.scenario_id} style={{ display: "grid", gap: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14 }}>
                     <span>
                       {item.scenario_name}
-                      {item.scenario_id === recommendedScenarioId ? " (recommande)" : ""}
+                      {item.scenario_id === recommendedScenarioId ? t("compare.recommendedSuffix") : ""}
                     </span>
                     <span>{formatEnergy(item.scenario_energy_kwh_year)}</span>
                   </div>
@@ -197,12 +199,22 @@ export function ComparePage({ projectId }: { projectId: string }) {
           </section>
 
           <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
-            <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb", fontSize: 18, fontWeight: 700 }}>Comparison matrix</div>
+            <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb", fontSize: 18, fontWeight: 700 }}>{t("compare.matrix")}</div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                    {["Scenario", "Energy", "CO2", "BACS", "CAPEX", "Annual savings", "ROI", "Payback", "Score"].map((label) => (
+                    {[
+                      t("compare.headers.scenario"),
+                      t("compare.headers.energy"),
+                      t("compare.headers.co2"),
+                      t("compare.headers.bacs"),
+                      t("compare.headers.capex"),
+                      t("compare.headers.annualSavings"),
+                      t("compare.headers.roi"),
+                      t("compare.headers.payback"),
+                      t("compare.headers.score"),
+                    ].map((label) => (
                       <th key={label} style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontSize: 13, fontWeight: 700 }}>
                         {label}
                       </th>
@@ -215,7 +227,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>
                         <div style={{ display: "grid", gap: 4 }}>
                           <div style={{ fontWeight: 700 }}>{item.scenario_name}</div>
-                          <div style={{ fontSize: 13, color: "#627084" }}>{item.is_reference ? "Reference" : item.engine_version}</div>
+                          <div style={{ fontSize: 13, color: "#627084" }}>{item.is_reference ? t("common.reference") : item.engine_version}</div>
                         </div>
                       </td>
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatEnergy(item.scenario_energy_kwh_year)}</td>
@@ -224,7 +236,7 @@ export function ComparePage({ projectId }: { projectId: string }) {
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatCurrency(item.total_capex)}</td>
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatCurrency(item.annual_cost_savings)}</td>
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{formatPercent(item.roi_percent)}</td>
-                      <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{item.simple_payback_years.toFixed(1)} ans</td>
+                      <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>{t("compare.years", { value: item.simple_payback_years.toFixed(1) })}</td>
                       <td style={{ padding: "14px 16px", borderBottom: "1px solid #e5e7eb", fontWeight: 700 }}>{item.score.toFixed(1)}</td>
                     </tr>
                   ))}

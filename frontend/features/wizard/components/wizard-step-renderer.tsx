@@ -5,6 +5,7 @@ import { BacsStepForm } from "@/features/bacs/components/bacs-step-form";
 import { SystemsStepForm } from "@/features/systems/components/systems-step-form";
 import { ZonesStepForm } from "@/features/zones/components/zones-step-form";
 import type { WizardStep } from "@/types/wizard";
+import { useI18n } from "@/providers/i18n-provider";
 
 type WizardStepRendererProps = {
   projectId: string;
@@ -13,6 +14,8 @@ type WizardStepRendererProps = {
 };
 
 export function WizardStepRenderer({ projectId, step, onSaved }: WizardStepRendererProps) {
+  const { t } = useI18n();
+
   if (step.code === "building") {
     return <BuildingStepForm projectId={projectId} onSaved={onSaved} />;
   }
@@ -33,7 +36,7 @@ export function WizardStepRenderer({ projectId, step, onSaved }: WizardStepRende
     <div style={{ display: "grid", gap: 12 }}>
       <div style={{ fontSize: 16, fontWeight: 600 }}>{step.name}</div>
       <div style={{ color: "#627084" }}>
-        Cette etape est preparee dans le shell du wizard, mais son formulaire detaille sera branche dans une prochaine tache.
+        {t("wizard.placeholder")}
       </div>
     </div>
   );

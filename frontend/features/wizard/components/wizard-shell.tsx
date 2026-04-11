@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ApiError } from "@/lib/api-client/errors";
 import { useWizard } from "../hooks/use-wizard";
 import { validateStep } from "../api/validate-step";
@@ -9,19 +9,21 @@ import { WizardNavigation } from "@/components/wizard/wizard-navigation";
 import { WizardSidebarSummary } from "@/components/wizard/wizard-sidebar-summary";
 import { WizardStepRenderer } from "./wizard-step-renderer";
 import { useAuthContext } from "@/providers/auth-provider";
+import { useI18n } from "@/providers/i18n-provider";
 
 export function WizardShell({ projectId }: { projectId: string }) {
   const { data, error, isLoading, refetch } = useWizard(projectId);
   const { token } = useAuthContext();
+  const { t } = useI18n();
   const [activeStepCode, setActiveStepCode] = useState<string | null>(null);
   const [isMovingNext, setIsMovingNext] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
 
-  if (isLoading) return <div>Chargement du wizard...</div>;
-  if (error) return <div>Erreur de chargement du wizard.</div>;
+  if (isLoading) return <div>{t("wizard.loading")}</div>;
+  if (error) return <div>{t("wizard.error")}</div>;
 
   const wizard = data?.data;
-  if (!wizard) return <div>Wizard indisponible.</div>;
+  if (!wizard) return <div>{t("wizard.unavailable")}</div>;
 
   const activeStep =
     wizard.steps.find((step) => step.code === activeStepCode) ??
@@ -31,7 +33,7 @@ export function WizardShell({ projectId }: { projectId: string }) {
   const currentIndex = wizard.steps.findIndex((step) => step.code === activeStep.code);
   const canGoPrevious = currentIndex > 0;
   const canGoNext = currentIndex < wizard.steps.length - 1;
-  const stepTitle = useMemo(() => `${activeStep.step}. ${activeStep.name}`, [activeStep]);
+  const stepTitle = `${activeStep.step}. ${activeStep.name}`;
 
   const goPrevious = () => {
     if (!canGoPrevious) return;
@@ -48,7 +50,7 @@ export function WizardShell({ projectId }: { projectId: string }) {
       await validateStep(projectId, activeStep.code, token);
       setActiveStepCode(wizard.steps[currentIndex + 1]?.code ?? activeStep.code);
     } catch (error) {
-      setNavigationError(error instanceof ApiError ? error.message : "Validation de l'etape impossible.");
+      setNavigationError(error instanceof ApiError ? error.message : t("wizard.validationError"));
     } finally {
       setIsMovingNext(false);
     }
