@@ -27,6 +27,11 @@
 - `/api/v1/auth`
 - `/api/v1/admin/users`
 - `/api/v1/admin/users/{id}/deactivate`
+- `/api/v1/admin/assumption-sets`
+- `/api/v1/admin/assumption-sets/{id}`
+- `/api/v1/admin/assumption-sets/{id}/clone`
+- `/api/v1/admin/assumption-sets/{id}/activate`
+- `/api/v1/admin/assumption-sets/{id}/deactivate`
 - `/api/v1/admin/branding`
 - `/api/v1/admin/branding/{id}`
 - `/api/v1/branding`
@@ -94,6 +99,35 @@ Generated report metadata now retains the optional `branding_profile_id` used du
 - `sections[].items[].source`
 - `sections[].items[].note`
 - `sections[].items[].warning`
+
+### calculation assumption set fields
+- `id`
+- `organization_id`
+- `country_profile_id`
+- `cloned_from_id`
+- `name`
+- `version`
+- `scope`
+- `heating_model_json`
+- `cooling_model_json`
+- `ventilation_model_json`
+- `dhw_model_json`
+- `lighting_model_json`
+- `auxiliaries_model_json`
+- `economic_defaults_json`
+- `bacs_rules_json`
+- `co2_factors_json`
+- `notes`
+- `is_active`
+- `is_locked`
+- `historical_calculation_count`
+- `created_at`
+- `updated_at`
+
+### calculation_assumption_set_scope
+- platform_default
+- country_default
+- organization_override
 
 ### building_type
 - hotel

@@ -7,6 +7,7 @@ from sqlalchemy import delete
 
 from app.core.config import settings
 from app.db.models.branding_profile import BrandingProfile
+from app.db.models.calculation_assumption_set import CalculationAssumptionSet
 from app.db.models.generated_report import GeneratedReport
 from app.main import app
 from app.db.session import SessionLocal
@@ -20,6 +21,7 @@ def client() -> TestClient:
     with SessionLocal() as db:
         db.execute(delete(GeneratedReport))
         db.execute(delete(BrandingProfile))
+        db.execute(delete(CalculationAssumptionSet))
         db.commit()
     return TestClient(app)
 

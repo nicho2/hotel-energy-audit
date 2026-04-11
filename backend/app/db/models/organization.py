@@ -29,3 +29,7 @@ class Organization(Base):
         back_populates="organization",
         cascade="all, delete-orphan",
     )
+    calculation_assumption_sets: Mapped[list["CalculationAssumptionSet"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )
