@@ -1,0 +1,23 @@
+{
+  "history.eyebrow": "Historique projet",
+  "history.projectFallback": "Historique du projet",
+  "history.description": "Evenements principaux du projet, affiches du plus recent au plus ancien pour faciliter la tracabilite.",
+  "history.loading": "Chargement de l'historique...",
+  "history.error": "Erreur de chargement de l'historique.",
+  "history.empty": "Aucun evenement d'historique disponible pour le moment.",
+  "history.backToProject": "Retour au projet",
+  "history.table.action": "Action",
+  "history.table.summary": "Resume",
+  "history.table.actor": "Acteur",
+  "history.table.time": "Date",
+  "history.actions.project_created": "Projet cree",
+  "history.actions.project_updated": "Projet modifie",
+  "history.actions.scenario_created": "Scenario cree",
+  "history.actions.scenario_updated": "Scenario modifie",
+  "history.actions.report_generated": "Rapport genere",
+  "history.summaries.project_created": "Projet cree : {{summary}}",
+  "history.summaries.project_updated": "Projet modifie : {{summary}}",
+  "history.summaries.scenario_created": "Scenario cree : {{summary}}",
+  "history.summaries.scenario_updated": "Scenario modifie : {{summary}}",
+  "history.summaries.report_generated": "Rapport genere : {{summary}}"
+}

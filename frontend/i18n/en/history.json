@@ -1,0 +1,23 @@
+{
+  "history.eyebrow": "Project history",
+  "history.projectFallback": "Project history",
+  "history.description": "Main project events, shown from newest to oldest for traceability.",
+  "history.loading": "Loading history...",
+  "history.error": "Unable to load history.",
+  "history.empty": "No history event available yet.",
+  "history.backToProject": "Back to project",
+  "history.table.action": "Action",
+  "history.table.summary": "Summary",
+  "history.table.actor": "Actor",
+  "history.table.time": "Date",
+  "history.actions.project_created": "Project created",
+  "history.actions.project_updated": "Project updated",
+  "history.actions.scenario_created": "Scenario created",
+  "history.actions.scenario_updated": "Scenario updated",
+  "history.actions.report_generated": "Report generated",
+  "history.summaries.project_created": "Project created: {{summary}}",
+  "history.summaries.project_updated": "Project updated: {{summary}}",
+  "history.summaries.scenario_created": "Scenario created: {{summary}}",
+  "history.summaries.scenario_updated": "Scenario updated: {{summary}}",
+  "history.summaries.report_generated": "Report generated: {{summary}}"
+}

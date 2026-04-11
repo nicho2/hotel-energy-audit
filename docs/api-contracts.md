@@ -27,6 +27,7 @@
 - `/api/v1/auth`
 - `/api/v1/branding`
 - `/api/v1/projects`
+- `/api/v1/projects/{id}/history`
 - `/api/v1/projects/{id}/wizard`
 - `/api/v1/projects/{id}/building`
 - `/api/v1/projects/{id}/zones`
@@ -59,6 +60,19 @@ Generated report metadata now retains the optional `branding_profile_id` used du
 - `cover_tagline`
 - `footer_note`
 - `is_default`
+
+### project history event fields
+- `action`
+- `actor`
+- `occurred_at`
+- `summary`
+
+### project_history_action
+- project_created
+- project_updated
+- scenario_created
+- scenario_updated
+- report_generated
 
 ### building_type
 - hotel

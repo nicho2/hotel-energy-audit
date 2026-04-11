@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     branding,
     buildings,
     calculations,
+    history,
     projects,
     reports,
     results,
@@ -20,6 +21,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(branding.router, prefix="/branding", tags=["branding"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
+api_router.include_router(history.router, prefix="/projects", tags=["history"])
 api_router.include_router(wizard.router, prefix="/projects", tags=["wizard"])
 api_router.include_router(buildings.router, prefix="/projects", tags=["buildings"])
 api_router.include_router(zones.router, prefix="/projects", tags=["zones"])

@@ -1,6 +1,7 @@
 import frAuth from "./fr/auth.json";
 import frCommon from "./fr/common.json";
 import frCompare from "./fr/compare.json";
+import frHistory from "./fr/history.json";
 import frProjects from "./fr/projects.json";
 import frReports from "./fr/reports.json";
 import frScenarios from "./fr/scenarios.json";
@@ -8,6 +9,7 @@ import frWizard from "./fr/wizard.json";
 import enAuth from "./en/auth.json";
 import enCommon from "./en/common.json";
 import enCompare from "./en/compare.json";
+import enHistory from "./en/history.json";
 import enProjects from "./en/projects.json";
 import enReports from "./en/reports.json";
 import enScenarios from "./en/scenarios.json";
@@ -26,6 +28,7 @@ export const dictionaries: Record<Language, TranslationDictionary> = {
     ...frWizard,
     ...frScenarios,
     ...frCompare,
+    ...frHistory,
     ...frReports,
   },
   en: {
@@ -35,6 +38,7 @@ export const dictionaries: Record<Language, TranslationDictionary> = {
     ...enWizard,
     ...enScenarios,
     ...enCompare,
+    ...enHistory,
     ...enReports,
   },
 };

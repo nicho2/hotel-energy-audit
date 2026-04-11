@@ -10,6 +10,7 @@ const quickLinks = [
   { segment: "scenarios", labelKey: "projects.header.viewScenarios" },
   { segment: "compare", labelKey: "projects.header.openCompare" },
   { segment: "reports", labelKey: "projects.header.viewReports" },
+  { segment: "history", labelKey: "projects.header.viewHistory" },
 ];
 
 type ProjectHeaderProps = {
