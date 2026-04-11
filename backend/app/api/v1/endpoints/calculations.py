@@ -7,6 +7,7 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.calculation.engine import CalculationEngine
 from app.db.models.user import User
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.bacs_repository import BacsRepository
 from app.repositories.building_repository import BuildingRepository
@@ -19,6 +20,7 @@ from app.repositories.zone_repository import ZoneRepository
 from app.schemas.calculations import CalculationResultLatestResponse
 from app.schemas.common import ApiResponse, success_response
 from app.schemas.readiness import CalculationReadinessResponse
+from app.services.audit_service import AuditService
 from app.services.calculation_service import CalculationService
 from app.services.project_service import ProjectService
 from app.services.readiness_service import ReadinessService
@@ -55,6 +57,7 @@ def get_calculation_service(db: Session) -> CalculationService:
         bacs_repository=BacsRepository(db),
         readiness_service=readiness_service,
         engine=CalculationEngine(),
+        audit_service=AuditService(AuditRepository(db)),
     )
 
 

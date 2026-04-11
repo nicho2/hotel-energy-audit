@@ -10,6 +10,7 @@ from app.db.models.user import User
 from app.reporting.builders.detailed_report_builder import DetailedReportBuilder
 from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
 from app.repositories.bacs_repository import BacsRepository
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
@@ -22,6 +23,7 @@ from app.repositories.technical_system_repository import TechnicalSystemReposito
 from app.repositories.zone_repository import ZoneRepository
 from app.schemas.common import ApiResponse, success_response
 from app.schemas.reports import ExecutiveReportHtmlResponse, GenerateReportRequest, GeneratedReportResponse
+from app.services.audit_service import AuditService
 from app.services.report_service import ReportService, get_reporting_templates_dir
 
 router = APIRouter()
@@ -42,6 +44,7 @@ def get_report_service(db: Session) -> ReportService:
         report_repository=ReportRepository(db),
         executive_builder=ExecutiveReportBuilder(get_reporting_templates_dir()),
         detailed_builder=DetailedReportBuilder(get_reporting_templates_dir()),
+        audit_service=AuditService(AuditRepository(db)),
     )
 
 

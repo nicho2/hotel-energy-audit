@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.scenario_repository import ScenarioRepository
@@ -23,6 +24,7 @@ from app.schemas.scenarios import (
     ScenarioUpdate,
     SolutionCatalogItemResponse,
 )
+from app.services.audit_service import AuditService
 from app.services.project_service import ProjectService
 from app.services.scenario_service import ScenarioService
 from app.services.solution_catalog_service import SolutionCatalogService
@@ -32,11 +34,13 @@ router = APIRouter()
 
 def get_scenario_service(db: Session) -> ScenarioService:
     project_service = ProjectService(ProjectRepository(db), BrandingRepository(db))
+    audit_service = AuditService(AuditRepository(db))
     return ScenarioService(
         scenario_repository=ScenarioRepository(db),
         scenario_solution_repository=ScenarioSolutionRepository(db),
         project_service=project_service,
         solution_catalog_service=SolutionCatalogService(SolutionCatalogRepository(db)),
+        audit_service=audit_service,
     )
 
 
@@ -86,6 +90,18 @@ def duplicate_scenario(
 ) -> ApiResponse[ScenarioResponse]:
     service = get_scenario_service(db)
     scenario = service.duplicate_scenario(project_id, scenario_id, payload, current_user)
+    return success_response(ScenarioResponse.model_validate(scenario))
+
+
+@router.delete("/{project_id}/scenarios/{scenario_id}", response_model=ApiResponse[ScenarioResponse])
+def delete_scenario(
+    project_id: UUID,
+    scenario_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[ScenarioResponse]:
+    service = get_scenario_service(db)
+    scenario = service.delete_scenario(project_id, scenario_id, current_user)
     return success_response(ScenarioResponse.model_validate(scenario))
 
 

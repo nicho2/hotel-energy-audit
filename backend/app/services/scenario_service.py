@@ -12,11 +12,13 @@ class ScenarioService:
         scenario_solution_repository: ScenarioSolutionRepository,
         project_service: ProjectService,
         solution_catalog_service: SolutionCatalogService,
+        audit_service=None,
     ):
         self.scenario_repository = scenario_repository
         self.scenario_solution_repository = scenario_solution_repository
         self.project_service = project_service
         self.solution_catalog_service = solution_catalog_service
+        self.audit_service = audit_service
 
     def list_scenarios(self, project_id, current_user):
         project = self.project_service.get_project(project_id, current_user)
@@ -27,7 +29,7 @@ class ScenarioService:
         data = payload.model_dump()
         if data.get("is_reference"):
             self._clear_reference_flag(project.id)
-        return self.scenario_repository.create(
+        scenario = self.scenario_repository.create(
             project_id=project.id,
             name=data["name"],
             description=data.get("description"),
@@ -36,6 +38,13 @@ class ScenarioService:
             derived_from_scenario_id=data.get("derived_from_scenario_id"),
             is_reference=data.get("is_reference", False),
         )
+        self._audit_scenario(
+            action="scenario_created",
+            scenario=scenario,
+            current_user=current_user,
+            after_json=_scenario_audit_payload(scenario),
+        )
+        return scenario
 
     def update_scenario(self, project_id, scenario_id, payload, current_user):
         project = self.project_service.get_project(project_id, current_user)
@@ -47,7 +56,16 @@ class ScenarioService:
             return scenario
         if updates.get("is_reference"):
             self._clear_reference_flag(project.id, keep_id=scenario.id)
-        return self.scenario_repository.update(scenario, **updates)
+        before_json = _scenario_audit_payload(scenario)
+        updated = self.scenario_repository.update(scenario, **updates)
+        self._audit_scenario(
+            action="scenario_updated",
+            scenario=updated,
+            current_user=current_user,
+            before_json=before_json,
+            after_json=_scenario_audit_payload(updated, changed_fields=sorted(updates)),
+        )
+        return updated
 
     def duplicate_scenario(self, project_id, scenario_id, payload, current_user):
         project = self.project_service.get_project(project_id, current_user)
@@ -63,6 +81,15 @@ class ScenarioService:
             status="draft",
             derived_from_scenario_id=scenario.id,
             is_reference=False,
+        )
+        self._audit_scenario(
+            action="scenario_created",
+            scenario=duplicated,
+            current_user=current_user,
+            after_json={
+                **_scenario_audit_payload(duplicated),
+                "duplicated_from_scenario_id": scenario.id,
+            },
         )
 
         for assignment in self.scenario_solution_repository.list_by_scenario_id(scenario.id):
@@ -82,6 +109,22 @@ class ScenarioService:
             )
 
         return duplicated
+
+    def delete_scenario(self, project_id, scenario_id, current_user):
+        project = self.project_service.get_project(project_id, current_user)
+        scenario = self.scenario_repository.get_by_id(scenario_id, project.id)
+        if scenario is None:
+            raise NotFoundError("Scenario not found")
+        before_json = _scenario_audit_payload(scenario)
+        self._audit_scenario(
+            action="scenario_deleted",
+            scenario=scenario,
+            current_user=current_user,
+            before_json=before_json,
+            after_json=None,
+        )
+        self.scenario_repository.delete(scenario)
+        return scenario
 
     def list_catalog(
         self,
@@ -176,3 +219,38 @@ class ScenarioService:
                 field="solution_code",
                 details={"reason": "solution_code must exist in the active catalog"},
             )
+
+    def _audit_scenario(
+        self,
+        *,
+        action: str,
+        scenario,
+        current_user,
+        before_json: dict | None = None,
+        after_json: dict | None = None,
+    ) -> None:
+        if self.audit_service is not None:
+            self.audit_service.log(
+                entity_type="scenario",
+                entity_id=scenario.id,
+                action=action,
+                current_user=current_user,
+                before_json=before_json,
+                after_json=after_json,
+                project_id=scenario.project_id,
+                scenario_id=scenario.id,
+            )
+
+
+def _scenario_audit_payload(scenario, *, changed_fields: list[str] | None = None) -> dict:
+    data = {
+        "id": scenario.id,
+        "project_id": scenario.project_id,
+        "name": scenario.name,
+        "status": scenario.status,
+        "scenario_type": scenario.scenario_type,
+        "is_reference": scenario.is_reference,
+    }
+    if changed_fields is not None:
+        data["changed_fields"] = changed_fields
+    return data

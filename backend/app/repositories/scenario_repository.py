@@ -50,3 +50,7 @@ class ScenarioRepository:
         self.db.commit()
         self.db.refresh(scenario)
         return scenario
+
+    def delete(self, scenario: Scenario) -> None:
+        self.db.delete(scenario)
+        self.db.commit()

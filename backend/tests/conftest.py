@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
+from app.db.models.audit_log import AuditLog
 from app.core.config import settings
 from app.db.models.branding_profile import BrandingProfile
 from app.db.models.calculation_assumption_set import CalculationAssumptionSet
@@ -19,6 +20,7 @@ def client() -> TestClient:
     settings.secret_key = "test-secret-key"
     seed_dev_auth_data()
     with SessionLocal() as db:
+        db.execute(delete(AuditLog))
         db.execute(delete(GeneratedReport))
         db.execute(delete(BrandingProfile))
         db.execute(delete(CalculationAssumptionSet))

@@ -28,6 +28,7 @@ class CalculationService:
         bacs_repository: BacsRepository,
         readiness_service: ReadinessService,
         engine: CalculationEngine,
+        audit_service=None,
     ):
         self.project_service = project_service
         self.scenario_repository = scenario_repository
@@ -38,6 +39,7 @@ class CalculationService:
         self.bacs_repository = bacs_repository
         self.readiness_service = readiness_service
         self.engine = engine
+        self.audit_service = audit_service
 
     def calculate(self, project_id, scenario_id, current_user) -> CalculationResultLatestResponse:
         project = self.project_service.get_project(project_id, current_user)
@@ -69,6 +71,25 @@ class CalculationService:
         self.calculation_repository.create_economic_result(run.id, **output.economic)
         self.calculation_repository.create_results_by_use(run.id, output.by_use)
         self.calculation_repository.create_results_by_zone(run.id, output.by_zone)
+        if self.audit_service is not None:
+            self.audit_service.log(
+                entity_type="calculation_run",
+                entity_id=run.id,
+                action="scenario_calculated",
+                current_user=current_user,
+                after_json={
+                    "id": run.id,
+                    "project_id": project.id,
+                    "scenario_id": scenario.id,
+                    "status": run.status,
+                    "engine_version": run.engine_version,
+                    "baseline_energy_kwh_year": output.summary["baseline_energy_kwh_year"],
+                    "scenario_energy_kwh_year": output.summary["scenario_energy_kwh_year"],
+                    "energy_savings_percent": output.summary["energy_savings_percent"],
+                },
+                project_id=project.id,
+                scenario_id=scenario.id,
+            )
         latest = self.calculation_repository.get_latest_by_scenario(scenario.id, project.id)
         if latest is None:
             raise NotFoundError("Calculation result not found")

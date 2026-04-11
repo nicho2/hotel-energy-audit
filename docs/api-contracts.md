@@ -34,6 +34,7 @@
 - `/api/v1/admin/assumption-sets/{id}/deactivate`
 - `/api/v1/admin/branding`
 - `/api/v1/admin/branding/{id}`
+- `/api/v1/admin/audit-logs`
 - `/api/v1/admin/solution-catalogs`
 - `/api/v1/admin/solutions`
 - `/api/v1/admin/solutions/{id}`
@@ -42,6 +43,7 @@
 - `/api/v1/projects`
 - `/api/v1/projects/{id}/assumptions`
 - `/api/v1/projects/{id}/history`
+- `/api/v1/projects/{id}/scenarios/{scenarioId}/history`
 - `/api/v1/projects/{id}/wizard`
 - `/api/v1/projects/{id}/building`
 - `/api/v1/projects/{id}/zones`
@@ -88,9 +90,40 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 ### project_history_action
 - project_created
 - project_updated
+- project_archived
 - scenario_created
 - scenario_updated
+- scenario_deleted
+- scenario_calculated
 - report_generated
+- assumption_set_updated
+- solution_created
+- solution_updated
+- solution_deactivated
+
+### audit log fields
+- `id`
+- `entity_type`
+- `entity_id`
+- `action`
+- `before_json`
+- `after_json`
+- `user_id`
+- `organization_id`
+- `project_id`
+- `scenario_id`
+- `timestamp`
+
+### audit log filters
+- `entity_type`
+- `entity_id`
+- `action`
+- `project_id`
+- `scenario_id`
+- `user_id`
+- `date_from`
+- `date_to`
+- `limit`
 
 ### project assumptions fields
 - `project_id`

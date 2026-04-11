@@ -40,6 +40,7 @@ class ReportService:
         report_repository: ReportRepository,
         executive_builder: ExecutiveReportBuilder,
         detailed_builder: DetailedReportBuilder,
+        audit_service=None,
     ):
         self.project_repository = project_repository
         self.calculation_repository = calculation_repository
@@ -54,6 +55,7 @@ class ReportService:
         self.report_repository = report_repository
         self.executive_builder = executive_builder
         self.detailed_builder = detailed_builder
+        self.audit_service = audit_service
 
     def build_executive_report_html(
         self,
@@ -242,6 +244,25 @@ class ReportService:
             file_size_bytes=len(pdf_bytes),
             generator_version=self.PLACEHOLDER_PDF_VERSION,
         )
+        if self.audit_service is not None:
+            self.audit_service.log(
+                entity_type="generated_report",
+                entity_id=report.id,
+                action="report_generated",
+                current_user=current_user,
+                after_json={
+                    "id": report.id,
+                    "project_id": report.project_id,
+                    "scenario_id": report.scenario_id,
+                    "calculation_run_id": report.calculation_run_id,
+                    "report_type": report.report_type,
+                    "status": report.status,
+                    "title": report.title,
+                    "file_name": report.file_name,
+                },
+                project_id=report.project_id,
+                scenario_id=report.scenario_id,
+            )
         return self._to_generated_report_response(report)
 
     def generate_project_report(

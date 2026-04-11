@@ -31,8 +31,9 @@ LOCKED_FIELDS = {
 class AssumptionSetService:
     ADMIN_ROLES = {"org_admin"}
 
-    def __init__(self, repository: AssumptionSetRepository):
+    def __init__(self, repository: AssumptionSetRepository, audit_service=None):
         self.repository = repository
+        self.audit_service = audit_service
 
     def ensure_admin(self, current_user) -> None:
         if current_user.role not in self.ADMIN_ROLES:
@@ -111,7 +112,15 @@ class AssumptionSetService:
         if "scope" in updates:
             update_data["organization_id"] = merged["organization_id"]
             update_data["country_profile_id"] = merged["country_profile_id"]
+        before_json = _assumption_set_audit_payload(item)
         updated = self.repository.update(item, **update_data)
+        self._audit_assumption_set(
+            action="assumption_set_updated",
+            item=updated,
+            current_user=current_user,
+            before_json=before_json,
+            after_json=_assumption_set_audit_payload(updated, changed_fields=sorted(updates)),
+        )
         return self._to_response(updated)
 
     def clone_assumption_set(
@@ -165,13 +174,22 @@ class AssumptionSetService:
     ) -> AssumptionSetResponse:
         self.ensure_admin(current_user)
         item = self._get_visible_or_404(assumption_set_id, current_user)
+        before_json = _assumption_set_audit_payload(item)
         self.repository.deactivate_active_for_scope(
             scope=item.scope,
             organization_id=item.organization_id,
             country_profile_id=item.country_profile_id,
             except_id=item.id,
         )
-        return self._to_response(self.repository.update(item, is_active=True))
+        updated = self.repository.update(item, is_active=True)
+        self._audit_assumption_set(
+            action="assumption_set_updated",
+            item=updated,
+            current_user=current_user,
+            before_json=before_json,
+            after_json=_assumption_set_audit_payload(updated, changed_fields=["is_active"]),
+        )
+        return self._to_response(updated)
 
     def deactivate_assumption_set(
         self,
@@ -180,7 +198,35 @@ class AssumptionSetService:
     ) -> AssumptionSetResponse:
         self.ensure_admin(current_user)
         item = self._get_visible_or_404(assumption_set_id, current_user)
-        return self._to_response(self.repository.update(item, is_active=False))
+        before_json = _assumption_set_audit_payload(item)
+        updated = self.repository.update(item, is_active=False)
+        self._audit_assumption_set(
+            action="assumption_set_updated",
+            item=updated,
+            current_user=current_user,
+            before_json=before_json,
+            after_json=_assumption_set_audit_payload(updated, changed_fields=["is_active"]),
+        )
+        return self._to_response(updated)
+
+    def _audit_assumption_set(
+        self,
+        *,
+        action: str,
+        item,
+        current_user,
+        before_json: dict | None = None,
+        after_json: dict | None = None,
+    ) -> None:
+        if self.audit_service is not None:
+            self.audit_service.log(
+                entity_type="calculation_assumption_set",
+                entity_id=item.id,
+                action=action,
+                current_user=current_user,
+                before_json=before_json,
+                after_json=after_json,
+            )
 
     def _get_visible_or_404(self, assumption_set_id: UUID, current_user):
         item = self.repository.get_visible(assumption_set_id, current_user.organization_id)
@@ -273,3 +319,19 @@ class AssumptionSetService:
                 field="version",
                 details={"reason": "version already exists for this scope"},
             )
+
+
+def _assumption_set_audit_payload(item, *, changed_fields: list[str] | None = None) -> dict:
+    data = {
+        "id": item.id,
+        "name": item.name,
+        "version": item.version,
+        "scope": item.scope,
+        "country_profile_id": item.country_profile_id,
+        "organization_id": item.organization_id,
+        "is_active": item.is_active,
+        "notes": item.notes,
+    }
+    if changed_fields is not None:
+        data["changed_fields"] = changed_fields
+    return data

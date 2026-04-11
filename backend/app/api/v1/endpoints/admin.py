@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.db.models.user import User
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.assumption_set_repository import AssumptionSetRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.solution_catalog_repository import SolutionCatalogRepository
@@ -22,6 +24,7 @@ from app.schemas.assumption_sets import (
     AssumptionSetResponse,
     AssumptionSetUpdate,
 )
+from app.schemas.audit import AuditLogResponse
 from app.schemas.branding import BrandingProfileResponse
 from app.schemas.common import ApiResponse, success_response
 from app.schemas.solutions import (
@@ -32,6 +35,7 @@ from app.schemas.solutions import (
 )
 from app.services.assumption_set_service import AssumptionSetService
 from app.services.admin_service import AdminService
+from app.services.audit_service import AuditService
 from app.services.solution_catalog_service import SolutionCatalogService
 
 router = APIRouter()
@@ -42,11 +46,21 @@ def get_admin_service(db: Session) -> AdminService:
 
 
 def get_assumption_set_service(db: Session) -> AssumptionSetService:
-    return AssumptionSetService(AssumptionSetRepository(db))
+    return AssumptionSetService(
+        AssumptionSetRepository(db),
+        AuditService(AuditRepository(db)),
+    )
 
 
 def get_solution_catalog_service(db: Session) -> SolutionCatalogService:
-    return SolutionCatalogService(SolutionCatalogRepository(db))
+    return SolutionCatalogService(
+        SolutionCatalogRepository(db),
+        AuditService(AuditRepository(db)),
+    )
+
+
+def get_audit_service(db: Session) -> AuditService:
+    return AuditService(AuditRepository(db))
 
 
 @router.get("/users", response_model=ApiResponse[list[AdminUserResponse]])
@@ -124,6 +138,37 @@ def update_admin_branding(
     return success_response(
         BrandingProfileResponse.model_validate(
             service.update_branding_profile(profile_id, payload, current_user)
+        )
+    )
+
+
+@router.get("/audit-logs", response_model=ApiResponse[list[AuditLogResponse]])
+def list_admin_audit_logs(
+    entity_type: str | None = None,
+    entity_id: UUID | None = None,
+    action: str | None = None,
+    project_id: UUID | None = None,
+    scenario_id: UUID | None = None,
+    user_id: UUID | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[list[AuditLogResponse]]:
+    service = get_audit_service(db)
+    return success_response(
+        service.list_audit_logs(
+            current_user,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            action=action,
+            project_id=project_id,
+            scenario_id=scenario_id,
+            user_id=user_id,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit,
         )
     )
 

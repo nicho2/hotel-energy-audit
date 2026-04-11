@@ -13,8 +13,9 @@ from app.schemas.solutions import (
 class SolutionCatalogService:
     ADMIN_ROLES = {"org_admin"}
 
-    def __init__(self, repository: SolutionCatalogRepository):
+    def __init__(self, repository: SolutionCatalogRepository, audit_service=None):
         self.repository = repository
+        self.audit_service = audit_service
 
     def list_catalogs(self, current_user) -> list[SolutionCatalogResponse]:
         return [
@@ -82,7 +83,14 @@ class SolutionCatalogService:
             )
         data = payload.model_dump()
         solution = self.repository.create_solution(**data)
-        return self._to_solution_response(solution)
+        response = self._to_solution_response(solution)
+        self._audit_solution(
+            action="solution_created",
+            solution_response=response,
+            current_user=current_user,
+            after_json=_solution_audit_payload(response),
+        )
+        return response
 
     def update_solution(
         self,
@@ -107,12 +115,30 @@ class SolutionCatalogService:
                 field="offer_reference",
                 details={"reason": "offer_reference is required for commercial offers"},
             )
-        return self._to_solution_response(self.repository.update_solution(solution, **updates))
+        before_response = self._to_solution_response(solution)
+        response = self._to_solution_response(self.repository.update_solution(solution, **updates))
+        self._audit_solution(
+            action="solution_updated",
+            solution_response=response,
+            current_user=current_user,
+            before_json=_solution_audit_payload(before_response),
+            after_json=_solution_audit_payload(response, changed_fields=sorted(updates)),
+        )
+        return response
 
     def deactivate_solution(self, solution_id: UUID, current_user) -> SolutionDefinitionResponse:
         self.ensure_admin(current_user)
         solution = self._get_solution_or_404(solution_id, current_user)
-        return self._to_solution_response(self.repository.update_solution(solution, is_active=False))
+        before_response = self._to_solution_response(solution)
+        response = self._to_solution_response(self.repository.update_solution(solution, is_active=False))
+        self._audit_solution(
+            action="solution_deactivated",
+            solution_response=response,
+            current_user=current_user,
+            before_json=_solution_audit_payload(before_response),
+            after_json=_solution_audit_payload(response, changed_fields=["is_active"]),
+        )
+        return response
 
     def ensure_admin(self, current_user) -> None:
         if current_user.role not in self.ADMIN_ROLES:
@@ -156,8 +182,51 @@ class SolutionCatalogService:
             updated_at=solution.updated_at,
         )
 
+    def _audit_solution(
+        self,
+        *,
+        action: str,
+        solution_response: SolutionDefinitionResponse,
+        current_user,
+        before_json: dict | None = None,
+        after_json: dict | None = None,
+    ) -> None:
+        if self.audit_service is not None:
+            self.audit_service.log(
+                entity_type="solution_definition",
+                entity_id=solution_response.id,
+                action=action,
+                current_user=current_user,
+                before_json=before_json,
+                after_json=after_json,
+            )
+
 
 def _matches_filter(value: str | None, applicable_values: list[str]) -> bool:
     if value is None:
         return True
     return not applicable_values or value in applicable_values
+
+
+def _solution_audit_payload(
+    item: SolutionDefinitionResponse,
+    *,
+    changed_fields: list[str] | None = None,
+) -> dict:
+    data = {
+        "id": item.id,
+        "catalog_id": item.catalog_id,
+        "code": item.code,
+        "name": item.name,
+        "family": item.family,
+        "scope": item.scope,
+        "country_code": item.country_code,
+        "organization_id": item.organization_id,
+        "priority": item.priority,
+        "is_commercial_offer": item.is_commercial_offer,
+        "offer_reference": item.offer_reference,
+        "is_active": item.is_active,
+    }
+    if changed_fields is not None:
+        data["changed_fields"] = changed_fields
+    return data
