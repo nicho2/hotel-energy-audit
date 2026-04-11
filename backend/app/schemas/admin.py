@@ -23,7 +23,7 @@ class AdminUserCreate(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     first_name: str | None = Field(default=None, max_length=100)
     last_name: str | None = Field(default=None, max_length=100)
-    role: str = Field(default="member", pattern="^(org_admin|member)$")
+    role: str = Field(default="org_member", pattern="^(org_admin|org_member|member)$")
     preferred_language: str = Field(default="fr", pattern="^(fr|en)$")
 
 

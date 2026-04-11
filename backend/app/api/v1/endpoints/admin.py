@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps.auth import get_current_user
+from app.api.deps.auth import require_org_admin
 from app.api.deps.db import get_db
 from app.db.models.user import User
 from app.repositories.audit_repository import AuditRepository
@@ -66,7 +66,7 @@ def get_audit_service(db: Session) -> AuditService:
 @router.get("/users", response_model=ApiResponse[list[AdminUserResponse]])
 def list_admin_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[AdminUserResponse]]:
     service = get_admin_service(db)
     data = [
@@ -80,7 +80,7 @@ def list_admin_users(
 def create_admin_user(
     payload: AdminUserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AdminUserResponse]:
     service = get_admin_service(db)
     return success_response(
@@ -92,7 +92,7 @@ def create_admin_user(
 def deactivate_admin_user(
     user_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AdminUserResponse]:
     service = get_admin_service(db)
     return success_response(
@@ -103,7 +103,7 @@ def deactivate_admin_user(
 @router.get("/branding", response_model=ApiResponse[list[BrandingProfileResponse]])
 def list_admin_branding(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[BrandingProfileResponse]]:
     service = get_admin_service(db)
     data = [
@@ -117,7 +117,7 @@ def list_admin_branding(
 def create_admin_branding(
     payload: AdminBrandingProfileCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[BrandingProfileResponse]:
     service = get_admin_service(db)
     return success_response(
@@ -132,7 +132,7 @@ def update_admin_branding(
     profile_id: UUID,
     payload: AdminBrandingProfileUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[BrandingProfileResponse]:
     service = get_admin_service(db)
     return success_response(
@@ -154,7 +154,7 @@ def list_admin_audit_logs(
     date_to: datetime | None = None,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[AuditLogResponse]]:
     service = get_audit_service(db)
     return success_response(
@@ -176,7 +176,7 @@ def list_admin_audit_logs(
 @router.get("/assumption-sets", response_model=ApiResponse[list[AssumptionSetResponse]])
 def list_admin_assumption_sets(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[AssumptionSetResponse]]:
     service = get_assumption_set_service(db)
     return success_response(service.list_assumption_sets(current_user))
@@ -189,7 +189,7 @@ def list_admin_assumption_sets(
 def get_admin_assumption_set(
     assumption_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.get_assumption_set(assumption_set_id, current_user))
@@ -203,7 +203,7 @@ def get_admin_assumption_set(
 def create_admin_assumption_set(
     payload: AssumptionSetCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.create_assumption_set(payload, current_user))
@@ -217,7 +217,7 @@ def update_admin_assumption_set(
     assumption_set_id: UUID,
     payload: AssumptionSetUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.update_assumption_set(assumption_set_id, payload, current_user))
@@ -232,7 +232,7 @@ def clone_admin_assumption_set(
     assumption_set_id: UUID,
     payload: AssumptionSetCloneRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.clone_assumption_set(assumption_set_id, payload, current_user))
@@ -245,7 +245,7 @@ def clone_admin_assumption_set(
 def activate_admin_assumption_set(
     assumption_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.activate_assumption_set(assumption_set_id, current_user))
@@ -258,7 +258,7 @@ def activate_admin_assumption_set(
 def deactivate_admin_assumption_set(
     assumption_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.deactivate_assumption_set(assumption_set_id, current_user))
@@ -267,7 +267,7 @@ def deactivate_admin_assumption_set(
 @router.get("/solution-catalogs", response_model=ApiResponse[list[SolutionCatalogResponse]])
 def list_admin_solution_catalogs(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[SolutionCatalogResponse]]:
     service = get_solution_catalog_service(db)
     service.ensure_admin(current_user)
@@ -283,7 +283,7 @@ def list_admin_solutions(
     scope: str | None = None,
     include_inactive: bool = True,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[list[SolutionDefinitionResponse]]:
     service = get_solution_catalog_service(db)
     service.ensure_admin(current_user)
@@ -304,7 +304,7 @@ def list_admin_solutions(
 def create_admin_solution(
     payload: SolutionDefinitionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[SolutionDefinitionResponse]:
     service = get_solution_catalog_service(db)
     return success_response(service.create_solution(payload, current_user))
@@ -315,7 +315,7 @@ def update_admin_solution(
     solution_id: UUID,
     payload: SolutionDefinitionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[SolutionDefinitionResponse]:
     service = get_solution_catalog_service(db)
     return success_response(service.update_solution(solution_id, payload, current_user))
@@ -325,7 +325,7 @@ def update_admin_solution(
 def deactivate_admin_solution(
     solution_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_org_admin),
 ) -> ApiResponse[SolutionDefinitionResponse]:
     service = get_solution_catalog_service(db)
     return success_response(service.deactivate_solution(solution_id, current_user))

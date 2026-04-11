@@ -408,8 +408,11 @@ def get_report_storage_dir() -> Path:
 
 def _resolve_report_file_path(storage_path: str) -> Path:
     storage_root = get_report_storage_dir()
-    file_path = (storage_root / Path(storage_path)).resolve()
-    if storage_root not in file_path.parents:
+    relative_path = Path(storage_path)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise NotFoundError("Generated report file not found")
+    file_path = (storage_root / relative_path).resolve()
+    if storage_root != file_path and storage_root not in file_path.parents:
         raise NotFoundError("Generated report file not found")
     return file_path
 

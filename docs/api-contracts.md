@@ -69,6 +69,20 @@ Generated report metadata now retains the optional `branding_profile_id` used du
 Detailed generation also supports `include_assumptions`, `include_regulatory_section`, and `include_annexes`.
 
 ## Main enums
+### auth token claims
+- `sub`
+- `organization_id`
+- `email`
+- `role`
+- `type`
+- `iat`
+- `exp`
+
+### user roles
+- `org_admin`
+- `org_member`
+- `member`
+
 ### branding profile fields
 - `id`
 - `organization_id`

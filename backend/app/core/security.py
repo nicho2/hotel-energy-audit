@@ -38,11 +38,14 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
 
 
 def create_access_token(subject: str, *, expires_delta: timedelta | None = None, **claims: Any) -> str:
+    issued_at = datetime.now(UTC)
     expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
     payload: dict[str, Any] = {
         "sub": subject,
+        "type": "access",
+        "iat": issued_at,
         "exp": expire,
         **claims,
     }

@@ -3,8 +3,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps.auth import get_current_user
+from app.api.deps.auth import get_current_user, require_project_access
 from app.api.deps.db import get_db
+from app.db.models.project import Project
 from app.db.models.user import User
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.branding_repository import BrandingRepository
@@ -50,6 +51,7 @@ def create_project(
 @router.get("/{project_id}", response_model=ApiResponse[ProjectResponse])
 def get_project(
     project_id: UUID,
+    _project_access: Project = Depends(require_project_access),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ApiResponse[ProjectResponse]:
@@ -62,6 +64,7 @@ def get_project(
 def update_project(
     project_id: UUID,
     payload: ProjectUpdate,
+    _project_access: Project = Depends(require_project_access),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ApiResponse[ProjectResponse]:

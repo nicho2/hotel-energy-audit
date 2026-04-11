@@ -12,7 +12,13 @@ class AuthService:
 
     def authenticate(self, email: str, password: str) -> User:
         user = self.user_repository.get_by_email(email)
-        if user is None or not verify_password(password, user.password_hash):
+        if user is None:
+            raise UnauthorizedError("Invalid email or password")
+        try:
+            password_ok = verify_password(password, user.password_hash)
+        except (UnauthorizedError, ValueError):
+            password_ok = False
+        if not password_ok:
             raise UnauthorizedError("Invalid email or password")
         if not user.is_active:
             raise UnauthorizedError("User account is inactive")
