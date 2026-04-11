@@ -24,6 +24,8 @@ def _login(client: TestClient) -> tuple[str, dict]:
 
 def test_create_project_returns_created_project_for_current_organization(client: TestClient) -> None:
     token, user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
 
     response = client.post(
         "/api/v1/projects",
@@ -33,6 +35,8 @@ def test_create_project_returns_created_project_for_current_organization(client:
             "client_name": "Groupe Lumiere",
             "reference_code": "HL-001",
             "description": "Projet pilote",
+            "country_profile_id": str(country_profile_id),
+            "climate_zone_id": str(climate_zone_id),
             "building_type": "hotel",
             "project_goal": "reduce_energy",
         },
@@ -46,10 +50,52 @@ def test_create_project_returns_created_project_for_current_organization(client:
     assert body["data"]["created_by_user_id"] == user["id"]
     assert body["data"]["wizard_step"] == 1
     assert body["data"]["status"] == "draft"
+    assert body["data"]["country_profile_id"] == str(country_profile_id)
+    assert body["data"]["climate_zone_id"] == str(climate_zone_id)
+
+
+def test_project_country_and_climate_fields_roundtrip_create_get_list(client: TestClient) -> None:
+    token, _user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
+
+    create_response = client.post(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Roundtrip Project",
+            "building_type": "hotel",
+            "project_goal": "reduce_energy",
+            "country_profile_id": str(country_profile_id),
+            "climate_zone_id": str(climate_zone_id),
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+
+    get_response = client.get(
+        f"/api/v1/projects/{created['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert get_response.status_code == 200
+    fetched = get_response.json()["data"]
+    assert fetched["country_profile_id"] == str(country_profile_id)
+    assert fetched["climate_zone_id"] == str(climate_zone_id)
+
+    list_response = client.get(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert list_response.status_code == 200
+    projects_by_id = {project["id"]: project for project in list_response.json()["data"]}
+    assert projects_by_id[created["id"]]["country_profile_id"] == str(country_profile_id)
+    assert projects_by_id[created["id"]]["climate_zone_id"] == str(climate_zone_id)
 
 
 def test_list_projects_only_returns_projects_for_current_organization(client: TestClient) -> None:
     token, user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
 
     with SessionLocal() as db:
         current_user = db.scalar(select(User).where(User.id == user["id"]))
@@ -83,6 +129,8 @@ def test_list_projects_only_returns_projects_for_current_organization(client: Te
                     organization_id=current_user.organization_id,
                     created_by_user_id=current_user.id,
                     name="Visible Project",
+                    country_profile_id=country_profile_id,
+                    climate_zone_id=climate_zone_id,
                     building_type="hotel",
                     project_goal="baseline",
                 ),
@@ -104,19 +152,26 @@ def test_list_projects_only_returns_projects_for_current_organization(client: Te
 
     assert response.status_code == 200
     body = response.json()
-    project_names = {project["name"] for project in body["data"]}
+    projects_by_name = {project["name"]: project for project in body["data"]}
+    project_names = set(projects_by_name)
     assert "Visible Project" in project_names
     assert "Hidden Project" not in project_names
+    assert projects_by_name["Visible Project"]["country_profile_id"] == str(country_profile_id)
+    assert projects_by_name["Visible Project"]["climate_zone_id"] == str(climate_zone_id)
 
 
 def test_get_project_returns_only_project_from_current_organization(client: TestClient) -> None:
     token, user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
 
     with SessionLocal() as db:
         project = Project(
             organization_id=user["organization_id"],
             created_by_user_id=user["id"],
             name="Project Detail",
+            country_profile_id=country_profile_id,
+            climate_zone_id=climate_zone_id,
             building_type="hotel",
             project_goal="compare_scenarios",
         )
@@ -134,6 +189,8 @@ def test_get_project_returns_only_project_from_current_organization(client: Test
     body = response.json()
     assert body["data"]["id"] == project_id
     assert body["data"]["name"] == "Project Detail"
+    assert body["data"]["country_profile_id"] == str(country_profile_id)
+    assert body["data"]["climate_zone_id"] == str(climate_zone_id)
 
 
 def test_patch_project_updates_partial_fields(client: TestClient) -> None:
