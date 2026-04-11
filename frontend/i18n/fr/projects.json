@@ -38,6 +38,7 @@
   "projects.header.openCompare": "Ouvrir le comparateur",
   "projects.header.viewReports": "Voir les rapports",
   "projects.header.viewHistory": "Voir l'historique",
+  "projects.header.viewAssumptions": "Voir les hypotheses",
   "projects.overview.energy": "Energie",
   "projects.overview.energyHelper": "KPI placeholder en attente du moteur de calcul.",
   "projects.overview.co2Helper": "Sera remplace par le resultat du scenario de reference.",

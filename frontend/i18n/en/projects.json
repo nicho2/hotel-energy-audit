@@ -38,6 +38,7 @@
   "projects.header.openCompare": "Open comparison",
   "projects.header.viewReports": "View reports",
   "projects.header.viewHistory": "View history",
+  "projects.header.viewAssumptions": "View assumptions",
   "projects.overview.energy": "Energy",
   "projects.overview.energyHelper": "KPI placeholder while the calculation engine is pending.",
   "projects.overview.co2Helper": "Will be replaced by the reference scenario result.",

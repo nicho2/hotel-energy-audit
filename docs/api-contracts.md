@@ -27,6 +27,7 @@
 - `/api/v1/auth`
 - `/api/v1/branding`
 - `/api/v1/projects`
+- `/api/v1/projects/{id}/assumptions`
 - `/api/v1/projects/{id}/history`
 - `/api/v1/projects/{id}/wizard`
 - `/api/v1/projects/{id}/building`
@@ -73,6 +74,22 @@ Generated report metadata now retains the optional `branding_profile_id` used du
 - scenario_created
 - scenario_updated
 - report_generated
+
+### project assumptions fields
+- `project_id`
+- `calculation_run_id`
+- `scenario_name`
+- `engine_version`
+- `generated_at`
+- `warnings`
+- `sections[].key`
+- `sections[].title`
+- `sections[].items[].key`
+- `sections[].items[].label`
+- `sections[].items[].value`
+- `sections[].items[].source`
+- `sections[].items[].note`
+- `sections[].items[].warning`
 
 ### building_type
 - hotel

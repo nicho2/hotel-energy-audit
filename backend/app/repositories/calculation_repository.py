@@ -84,6 +84,19 @@ class CalculationRepository:
         )
         return self.db.scalars(statement).first()
 
+    def get_latest_by_project(self, project_id: UUID) -> CalculationRun | None:
+        statement = (
+            select(CalculationRun)
+            .where(CalculationRun.project_id == project_id)
+            .options(
+                joinedload(CalculationRun.result_summary),
+                joinedload(CalculationRun.economic_result),
+                joinedload(CalculationRun.scenario),
+            )
+            .order_by(CalculationRun.created_at.desc())
+        )
+        return self.db.scalars(statement).first()
+
     def get_by_id(self, calculation_run_id: UUID) -> CalculationRun | None:
         statement = (
             select(CalculationRun)
