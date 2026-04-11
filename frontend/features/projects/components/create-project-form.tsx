@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ApiError } from "@/lib/api-client/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BrandingSelect } from "@/features/branding/components/branding-select";
+import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
 import { useCreateProject } from "../hooks/use-create-project";
 import { buildingTypeOptions, projectSchema, type ProjectFormValues } from "../schemas/project-schema";
 import type { ProjectCreatePayload } from "@/types/project";
@@ -25,17 +27,21 @@ function toCreatePayload(values: ProjectFormValues): ProjectCreatePayload {
     climate_zone_id: toNullableValue(values.climate_zone_id),
     building_type: values.building_type,
     project_goal: toNullableValue(values.project_goal),
+    branding_profile_id: toNullableValue(values.branding_profile_id),
   };
 }
 
 export function CreateProjectForm() {
   const router = useRouter();
   const createProject = useCreateProject();
+  const brandingProfiles = useBrandingProfiles();
   const { t } = useI18n();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -46,6 +52,7 @@ export function CreateProjectForm() {
       climate_zone_id: "",
       building_type: "hotel",
       project_goal: "",
+      branding_profile_id: "",
     },
   });
 
@@ -116,6 +123,21 @@ export function CreateProjectForm() {
           <label htmlFor="project_goal" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.projectGoal")}</label>
           <Input id="project_goal" placeholder={t("projects.form.projectGoalPlaceholder")} {...register("project_goal")} />
           {errors.project_goal ? <p style={{ margin: 0, color: "#b91c1c", fontSize: 12 }}>{errors.project_goal.message}</p> : null}
+        </div>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <label htmlFor="branding_profile_id" style={{ fontSize: 14, fontWeight: 600 }}>{t("branding.selectLabel")}</label>
+          <BrandingSelect
+            id="branding_profile_id"
+            value={watch("branding_profile_id")}
+            profiles={brandingProfiles.data?.data ?? []}
+            disabled={brandingProfiles.isLoading}
+            onChange={(brandingProfileId) => setValue("branding_profile_id", brandingProfileId, { shouldValidate: true })}
+          />
+          <p style={{ margin: 0, color: "#627084", fontSize: 12 }}>
+            {(brandingProfiles.data?.data ?? []).length > 0 ? t("branding.projectBranding") : t("branding.noProfiles")}
+          </p>
+          {errors.branding_profile_id ? <p style={{ margin: 0, color: "#b91c1c", fontSize: 12 }}>{errors.branding_profile_id.message}</p> : null}
         </div>
       </div>
 

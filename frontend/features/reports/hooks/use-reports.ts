@@ -6,6 +6,8 @@ import { listScenarios } from "@/features/scenarios/api/list-scenarios";
 import { generateExecutiveReport } from "../api/generate-executive-report";
 import { getLatestResult } from "../api/get-latest-result";
 import { listProjectReports } from "../api/list-project-reports";
+import { updateProject } from "@/features/projects/api/update-project";
+import type { ProjectUpdatePayload } from "@/types/project";
 
 export function useReports(projectId: string, selectedScenarioId: string | null) {
   const queryClient = useQueryClient();
@@ -39,11 +41,20 @@ export function useReports(projectId: string, selectedScenarioId: string | null)
     },
   });
 
+  const updateProjectBranding = useMutation({
+    mutationFn: (payload: ProjectUpdatePayload) => updateProject(projectId, payload, token),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+
   return {
     scenarios,
     reports,
     latestResult,
     generateReport,
+    updateProjectBranding,
     token,
   };
 }

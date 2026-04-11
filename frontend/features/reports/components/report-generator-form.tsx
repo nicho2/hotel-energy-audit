@@ -4,8 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { ProjectResponse } from "@/types/project";
+import type { BrandingProfile } from "@/types/branding";
 import type { CalculationResultLatestResponse } from "@/types/reports";
 import type { ScenarioResponse } from "@/types/scenarios";
+import { BrandMark } from "@/features/branding/components/brand-mark";
+import { BrandingSelect } from "@/features/branding/components/branding-select";
+import { getDefaultBrandingProfile } from "@/features/branding/utils/branding";
 import {
   reportGeneratorSchema,
   type ReportGeneratorFormValues,
@@ -23,6 +27,8 @@ const inputStyle = {
 
 type ReportGeneratorFormProps = {
   project: ProjectResponse | null;
+  brandingProfiles: BrandingProfile[];
+  isLoadingBranding: boolean;
   scenarios: ScenarioResponse[];
   selectedScenarioId: string | null;
   latestResult: CalculationResultLatestResponse | null;
@@ -34,6 +40,8 @@ type ReportGeneratorFormProps = {
 
 export function ReportGeneratorForm({
   project,
+  brandingProfiles,
+  isLoadingBranding,
   scenarios,
   selectedScenarioId,
   latestResult,
@@ -48,6 +56,7 @@ export function ReportGeneratorForm({
     defaultValues: {
       scenario_id: selectedScenarioId ?? "",
       report_type: "executive",
+      branding_profile_id: project?.branding_profile_id ?? "",
     },
   });
 
@@ -55,7 +64,15 @@ export function ReportGeneratorForm({
     form.setValue("scenario_id", selectedScenarioId ?? "");
   }, [form, selectedScenarioId]);
 
+  useEffect(() => {
+    form.setValue("branding_profile_id", project?.branding_profile_id ?? "");
+  }, [form, project?.branding_profile_id]);
+
   const handleSubmit = form.handleSubmit(onSubmit);
+  const selectedBrandingProfileId = form.watch("branding_profile_id");
+  const selectedBranding =
+    brandingProfiles.find((profile) => profile.id === selectedBrandingProfileId) ??
+    (selectedBrandingProfileId ? null : getDefaultBrandingProfile(brandingProfiles));
 
   return (
     <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
@@ -98,7 +115,7 @@ export function ReportGeneratorForm({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
             <div style={{ fontSize: 12, color: "#627084", textTransform: "uppercase" }}>{t("reports.branding")}</div>
-            <div style={{ fontWeight: 700 }}>{project?.branding_profile_id ? t("reports.projectProfile") : t("reports.fallbackBranding")}</div>
+            <div style={{ fontWeight: 700 }}>{selectedBranding ? selectedBranding.company_name : t("reports.fallbackBranding")}</div>
             <div style={{ fontSize: 13, color: "#627084" }}>{t("reports.brandingHelp")}</div>
           </div>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, display: "grid", gap: 4 }}>
@@ -116,6 +133,21 @@ export function ReportGeneratorForm({
             </div>
           </div>
         </div>
+
+        <label style={{ display: "grid", gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{t("branding.reportBranding")}</span>
+          <BrandingSelect
+            id="report_branding_profile_id"
+            value={selectedBrandingProfileId}
+            profiles={brandingProfiles}
+            disabled={isLoadingBranding || isGenerating}
+            onChange={(brandingProfileId) => form.setValue("branding_profile_id", brandingProfileId, { shouldValidate: true })}
+          />
+          <span style={{ color: "#627084", fontSize: 13 }}>
+            {brandingProfiles.length > 0 ? t("branding.usedForReport") : t("branding.noProfiles")}
+          </span>
+          {selectedBranding ? <BrandMark profile={selectedBranding} size="sm" /> : null}
+        </label>
 
         {latestResult ? (
           <div style={{ border: "1px solid #dbeafe", background: "#eff6ff", borderRadius: 12, padding: 14, display: "grid", gap: 6 }}>

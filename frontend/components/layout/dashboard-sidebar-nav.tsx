@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { env } from "@/lib/config/env";
+import { BrandMark } from "@/features/branding/components/brand-mark";
+import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
+import { getDefaultBrandingProfile } from "@/features/branding/utils/branding";
 import { useI18n } from "@/providers/i18n-provider";
 
 const navItems = [
@@ -16,6 +19,8 @@ const navItems = [
 export function DashboardSidebarNav() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const brandingProfiles = useBrandingProfiles();
+  const activeBranding = getDefaultBrandingProfile(brandingProfiles.data?.data ?? []);
 
   return (
     <nav style={{ padding: 16, display: "grid", gap: 24 }}>
@@ -31,7 +36,11 @@ export function DashboardSidebarNav() {
         >
           MVP
         </div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#142033" }}>{env.appName}</div>
+        {activeBranding ? (
+          <BrandMark profile={activeBranding} />
+        ) : (
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#142033" }}>{env.appName}</div>
+        )}
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>

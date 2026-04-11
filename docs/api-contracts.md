@@ -25,6 +25,7 @@
 
 ## Main endpoint groups
 - `/api/v1/auth`
+- `/api/v1/branding`
 - `/api/v1/projects`
 - `/api/v1/projects/{id}/wizard`
 - `/api/v1/projects/{id}/building`
@@ -47,6 +48,18 @@
 Generated report metadata now retains the optional `branding_profile_id` used during rendering.
 
 ## Main enums
+### branding profile fields
+- `id`
+- `organization_id`
+- `name`
+- `company_name`
+- `accent_color`
+- `logo_text`
+- `contact_email`
+- `cover_tagline`
+- `footer_note`
+- `is_default`
+
 ### building_type
 - hotel
 - aparthotel

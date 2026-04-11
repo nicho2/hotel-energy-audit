@@ -9,6 +9,7 @@ import { ReportGeneratorForm } from "./report-generator-form";
 import { ReportHistoryTable } from "./report-history-table";
 import { useReports } from "../hooks/use-reports";
 import type { ReportGeneratorFormValues } from "../schemas/report-generator-schema";
+import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
 import { useI18n } from "@/providers/i18n-provider";
 
 export function ReportsPage({ projectId }: { projectId: string }) {
@@ -19,6 +20,7 @@ export function ReportsPage({ projectId }: { projectId: string }) {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
   const reports = useReports(projectId, selectedScenarioId);
+  const brandingProfiles = useBrandingProfiles();
 
   const scenarioList = reports.scenarios.data?.data ?? [];
   const reportHistory = reports.reports.data?.data ?? [];
@@ -42,6 +44,11 @@ export function ReportsPage({ projectId }: { projectId: string }) {
 
     setSubmitError(null);
     try {
+      const selectedBrandingProfileId = _values.branding_profile_id || null;
+      const currentBrandingProfileId = project.data?.data.branding_profile_id ?? null;
+      if (selectedBrandingProfileId !== currentBrandingProfileId) {
+        await reports.updateProjectBranding.mutateAsync({ branding_profile_id: selectedBrandingProfileId });
+      }
       await reports.generateReport.mutateAsync(latestResult.calculation_run_id);
     } catch (error) {
       setSubmitError(error instanceof ApiError ? error.message : t("reports.generateError"));
@@ -95,11 +102,13 @@ export function ReportsPage({ projectId }: { projectId: string }) {
       ) : (
         <ReportGeneratorForm
           project={project.data?.data ?? null}
+          brandingProfiles={brandingProfiles.data?.data ?? []}
+          isLoadingBranding={brandingProfiles.isLoading}
           scenarios={scenarioList}
           selectedScenarioId={selectedScenarioId}
           latestResult={latestResult}
           isLoadingLatestResult={reports.latestResult.isLoading}
-          isGenerating={reports.generateReport.isPending}
+          isGenerating={reports.generateReport.isPending || reports.updateProjectBranding.isPending}
           onScenarioChange={setSelectedScenarioId}
           onSubmit={handleGenerate}
         />

@@ -32,5 +32,17 @@
   "common.actions": "Actions",
   "common.type": "Type",
   "common.created": "Created",
-  "common.size": "Size"
+  "common.size": "Size",
+  "branding.label": "Branding",
+  "branding.loading": "Loading branding...",
+  "branding.fallback": "Default application branding",
+  "branding.noneConfigured": "No branding configured",
+  "branding.defaultOption": "Default branding",
+  "branding.defaultBadge": "default",
+  "branding.noContact": "No contact provided",
+  "branding.selectLabel": "Branding",
+  "branding.projectBranding": "Project branding",
+  "branding.reportBranding": "Report branding",
+  "branding.usedForReport": "This branding will be assigned to the project before the report is generated.",
+  "branding.noProfiles": "No branding profile is configured for this organization."
 }

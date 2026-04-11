@@ -16,6 +16,11 @@ export type ProjectCreatePayload = {
   climate_zone_id: string | null;
   building_type: BuildingType;
   project_goal: string | null;
+  branding_profile_id: string | null;
+};
+
+export type ProjectUpdatePayload = {
+  branding_profile_id?: string | null;
 };
 
 export type ProjectResponse = {

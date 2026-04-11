@@ -17,6 +17,14 @@ class BrandingRepository:
         )
         return self.db.scalar(statement)
 
+    def list_for_organization(self, organization_id: UUID) -> list[BrandingProfile]:
+        statement = (
+            select(BrandingProfile)
+            .where(BrandingProfile.organization_id == organization_id)
+            .order_by(BrandingProfile.is_default.desc(), BrandingProfile.created_at.desc())
+        )
+        return list(self.db.scalars(statement).all())
+
     def get_default_for_organization(self, organization_id: UUID) -> BrandingProfile | None:
         statement = (
             select(BrandingProfile)

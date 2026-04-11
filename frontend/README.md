@@ -26,3 +26,7 @@ Copier `.env.example` en `.env.local` puis ajuster l'URL du backend si besoin.
 ## Internationalisation
 
 Le provider `I18nProvider` charge les dictionnaires FR/EN, initialise la langue depuis la preference navigateur ou `NEXT_PUBLIC_DEFAULT_LANGUAGE`, puis persiste le choix localement. Les libelles d'interface doivent passer par `useI18n().t("domain.key")`; en developpement, une cle manquante s'affiche sous la forme `[[domain.key]]`.
+
+## Branding
+
+Les profils de branding sont recuperes via `/api/v1/branding`. Le shell affiche le profil par defaut de l'organisation quand il existe, les projets peuvent porter un `branding_profile_id`, et le formulaire de generation de rapport permet de choisir le branding a appliquer avant la generation PDF.

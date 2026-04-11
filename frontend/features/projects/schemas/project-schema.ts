@@ -16,6 +16,7 @@ export const projectSchema = z.object({
   climate_zone_id: uuidField,
   building_type: z.enum(["hotel", "aparthotel", "residence", "other_accommodation"]),
   project_goal: z.string().trim().max(100, "Le besoin doit rester concis.").optional().or(z.literal("")),
+  branding_profile_id: uuidField,
 });
 
 export type ProjectFormValues = z.infer<typeof projectSchema>;

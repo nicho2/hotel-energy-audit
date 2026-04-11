@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { ProjectResponse } from "@/types/project";
+import { BrandingSummary } from "@/features/branding/components/branding-summary";
+import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
+import { getDefaultBrandingProfile } from "@/features/branding/utils/branding";
 import { useI18n } from "@/providers/i18n-provider";
 
 const quickLinks = [
@@ -15,6 +18,11 @@ type ProjectHeaderProps = {
 
 export function ProjectHeader({ project }: ProjectHeaderProps) {
   const { t } = useI18n();
+  const brandingProfiles = useBrandingProfiles();
+  const profiles = brandingProfiles.data?.data ?? [];
+  const projectBranding =
+    profiles.find((profile) => profile.id === project.branding_profile_id) ??
+    (project.branding_profile_id ? null : getDefaultBrandingProfile(profiles));
 
   return (
     <div
@@ -73,6 +81,8 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
           </Link>
         ))}
       </div>
+
+      <BrandingSummary profile={projectBranding} isLoading={brandingProfiles.isLoading} />
     </div>
   );
 }

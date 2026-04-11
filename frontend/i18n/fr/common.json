@@ -32,5 +32,17 @@
   "common.actions": "Actions",
   "common.type": "Type",
   "common.created": "Cree le",
-  "common.size": "Taille"
+  "common.size": "Taille",
+  "branding.label": "Branding",
+  "branding.loading": "Chargement du branding...",
+  "branding.fallback": "Branding par defaut de l'application",
+  "branding.noneConfigured": "Aucun branding configure",
+  "branding.defaultOption": "Branding par defaut",
+  "branding.defaultBadge": "defaut",
+  "branding.noContact": "Aucun contact renseigne",
+  "branding.selectLabel": "Branding",
+  "branding.projectBranding": "Branding projet",
+  "branding.reportBranding": "Branding du rapport",
+  "branding.usedForReport": "Ce branding sera associe au projet avant la generation du rapport.",
+  "branding.noProfiles": "Aucun profil de branding n'est configure pour cette organisation."
 }
