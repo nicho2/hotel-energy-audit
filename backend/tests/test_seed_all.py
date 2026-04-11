@@ -47,6 +47,15 @@ def test_seed_demo_showcase_creates_three_ready_projects() -> None:
 
         assert len(projects) == 3
         assert {project.reference_code for project in projects} == set(DEMO_PROJECT_REFERENCE_CODES)
+        assert {project.building_type for project in projects} == {"hotel", "residence"}
+        assert {
+            project.reference_code: project.name
+            for project in projects
+        } == {
+            "DEMO-HOTEL-001": "Hotel Lumiere Paris",
+            "DEMO-HOTEL-SW-001": "Hotel Belvedere Sud-Ouest",
+            "DEMO-RESIDENCE-001": "Residence Azur Seaside",
+        }
         for project in projects:
             assert project.status == "ready"
             assert project.wizard_step == 10

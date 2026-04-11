@@ -38,7 +38,7 @@ This repository provides:
 cd backend
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e ".[dev]"
 alembic upgrade head
 python scripts/seed_all.py
 uvicorn app.main:app --reload
@@ -50,6 +50,34 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Demo / Recette MVP+
+
+The backend includes a demo seed pack for MVP+ validation:
+
+- `DEMO-HOTEL-001` — standard urban hotel
+- `DEMO-HOTEL-SW-001` — south/west exposed hotel
+- `DEMO-RESIDENCE-001` — accommodation residence with spa/pool
+
+Demo credentials after `python scripts/seed_all.py`:
+
+- admin: `demo@hotel-energy-audit.example.com` / `admin1234`
+- sales user: `sales@hotel-energy-audit.example.com` / `sales1234`
+- partner admin: `partner@hotel-energy-audit.example.com` / `partner1234`
+
+Useful backend validation commands:
+
+```bash
+cd backend
+python -m ruff check app tests scripts
+python -m pytest tests/test_recette_smoke_api.py tests/test_seed_all.py
+python -m pytest
+```
+
+The full recipe pack is documented in:
+
+- `docs/recette-mvp-plus.md`
+- `docs/smoke-test-checklist.md`
 
 ## Intended use with Codex
 
