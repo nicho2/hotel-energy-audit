@@ -1,8 +1,6 @@
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select
-
 from app.db.models.branding_profile import BrandingProfile
 from app.db.models.organization import Organization
 from app.db.session import SessionLocal
