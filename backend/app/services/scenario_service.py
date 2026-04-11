@@ -1,60 +1,8 @@
-from dataclasses import dataclass
-
 from app.core.exceptions import NotFoundError, ValidationError
 from app.repositories.scenario_repository import ScenarioRepository
 from app.repositories.scenario_solution_repository import ScenarioSolutionRepository
+from app.services.solution_catalog_service import SolutionCatalogService
 from app.services.project_service import ProjectService
-
-
-@dataclass(frozen=True)
-class SolutionCatalogItem:
-    code: str
-    name: str
-    description: str
-    solution_family: str
-    target_scopes: list[str]
-    default_quantity: float | None = None
-    default_unit: str | None = None
-
-
-SOLUTION_CATALOG: tuple[SolutionCatalogItem, ...] = (
-    SolutionCatalogItem(
-        code="ROOM_AUTOMATION_BASIC",
-        name="Room automation basic",
-        description="Basic occupancy and setback logic for guest rooms.",
-        solution_family="bacs",
-        target_scopes=["zone"],
-        default_quantity=1,
-        default_unit="zone",
-    ),
-    SolutionCatalogItem(
-        code="LED_RETROFIT_COMMON",
-        name="LED retrofit common areas",
-        description="LED retrofit package for circulation and common areas.",
-        solution_family="lighting",
-        target_scopes=["zone", "project"],
-        default_quantity=1,
-        default_unit="zone",
-    ),
-    SolutionCatalogItem(
-        code="BOILER_REPLACEMENT_CONDENSING",
-        name="Condensing boiler replacement",
-        description="Replace existing heating production with a condensing boiler solution.",
-        solution_family="hvac",
-        target_scopes=["system"],
-        default_quantity=1,
-        default_unit="system",
-    ),
-    SolutionCatalogItem(
-        code="HEAT_PUMP_HYBRID",
-        name="Hybrid heat pump",
-        description="Hybrid heat pump package for existing accommodation buildings.",
-        solution_family="hvac",
-        target_scopes=["system", "project"],
-        default_quantity=1,
-        default_unit="system",
-    ),
-)
 
 
 class ScenarioService:
@@ -63,10 +11,12 @@ class ScenarioService:
         scenario_repository: ScenarioRepository,
         scenario_solution_repository: ScenarioSolutionRepository,
         project_service: ProjectService,
+        solution_catalog_service: SolutionCatalogService,
     ):
         self.scenario_repository = scenario_repository
         self.scenario_solution_repository = scenario_solution_repository
         self.project_service = project_service
+        self.solution_catalog_service = solution_catalog_service
 
     def list_scenarios(self, project_id, current_user):
         project = self.project_service.get_project(project_id, current_user)
@@ -133,8 +83,26 @@ class ScenarioService:
 
         return duplicated
 
-    def list_catalog(self):
-        return list(SOLUTION_CATALOG)
+    def list_catalog(
+        self,
+        current_user,
+        *,
+        country: str | None = None,
+        family: str | None = None,
+        building_type: str | None = None,
+        zone_type: str | None = None,
+        scope: str | None = None,
+        include_inactive: bool = False,
+    ):
+        return self.solution_catalog_service.list_solutions(
+            current_user,
+            country=country,
+            family=family,
+            building_type=building_type,
+            zone_type=zone_type,
+            scope=scope,
+            include_inactive=include_inactive,
+        )
 
     def list_assignments(self, project_id, scenario_id, current_user):
         scenario = self._get_project_scenario(project_id, scenario_id, current_user)
@@ -142,7 +110,7 @@ class ScenarioService:
 
     def create_assignment(self, project_id, scenario_id, payload, current_user):
         scenario = self._get_project_scenario(project_id, scenario_id, current_user)
-        self._validate_solution_code(payload.solution_code)
+        self._validate_solution_code(payload.solution_code, current_user)
         data = payload.model_dump()
         self._validate_target_scope(data)
         return self.scenario_solution_repository.create(scenario_id=scenario.id, **data)
@@ -201,9 +169,8 @@ class ScenarioService:
                 details={"reason": "target_system_id is required when target_scope is system"},
             )
 
-    @staticmethod
-    def _validate_solution_code(solution_code: str) -> None:
-        if not any(item.code == solution_code for item in SOLUTION_CATALOG):
+    def _validate_solution_code(self, solution_code: str, current_user) -> None:
+        if self.solution_catalog_service.get_solution_by_code(solution_code, current_user) is None:
             raise ValidationError(
                 "Validation failed",
                 field="solution_code",

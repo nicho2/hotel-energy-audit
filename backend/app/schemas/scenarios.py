@@ -45,13 +45,29 @@ class ScenarioResponse(BaseModel):
 
 
 class SolutionCatalogItemResponse(BaseModel):
+    id: UUID
+    catalog_id: UUID
     code: str
     name: str
     description: str
     solution_family: str
+    family: str
     target_scopes: list[TargetScope]
+    applicable_countries: list[str]
+    applicable_building_types: list[str]
+    applicable_zone_types: list[str]
+    bacs_impact_json: dict
+    lifetime_years: int | None = None
     default_quantity: float | None = None
     default_unit: str | None = None
+    default_unit_cost: float | None = None
+    default_capex: float | None = None
+    priority: int
+    scope: str
+    country_code: str | None = None
+    is_commercial_offer: bool
+    offer_reference: str | None = None
+    is_active: bool
 
 
 class ScenarioSolutionAssignmentCreate(BaseModel):

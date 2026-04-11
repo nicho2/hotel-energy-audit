@@ -34,6 +34,10 @@
 - `/api/v1/admin/assumption-sets/{id}/deactivate`
 - `/api/v1/admin/branding`
 - `/api/v1/admin/branding/{id}`
+- `/api/v1/admin/solution-catalogs`
+- `/api/v1/admin/solutions`
+- `/api/v1/admin/solutions/{id}`
+- `/api/v1/admin/solutions/{id}/deactivate`
 - `/api/v1/branding`
 - `/api/v1/projects`
 - `/api/v1/projects/{id}/assumptions`
@@ -43,6 +47,7 @@
 - `/api/v1/projects/{id}/zones`
 - `/api/v1/projects/{id}/systems`
 - `/api/v1/projects/{id}/bacs`
+- `/api/v1/projects/solutions/catalog`
 - `/api/v1/projects/{id}/scenarios`
 - `/api/v1/projects/{id}/scenarios/compare`
 - `/api/v1/projects/{id}/scenarios/{scenarioId}/calculate`
@@ -131,6 +136,49 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 - platform_default
 - country_default
 - organization_override
+
+### solution catalog fields
+- `id`
+- `organization_id`
+- `name`
+- `version`
+- `scope`
+- `country_code`
+- `is_active`
+- `created_at`
+- `updated_at`
+
+### solution definition fields
+- `id`
+- `catalog_id`
+- `catalog_name`
+- `catalog_version`
+- `scope`
+- `country_code`
+- `organization_id`
+- `code`
+- `name`
+- `description`
+- `family`
+- `target_scopes`
+- `applicable_countries`
+- `applicable_building_types`
+- `applicable_zone_types`
+- `bacs_impact_json`
+- `lifetime_years`
+- `default_quantity`
+- `default_unit`
+- `default_unit_cost`
+- `default_capex`
+- `priority`
+- `is_commercial_offer`
+- `offer_reference`
+- `is_active`
+
+### solution_catalog_scope
+- global
+- country_specific
+- organization_specific
 
 ### building_type
 - hotel

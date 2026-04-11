@@ -14,6 +14,8 @@ from app.db.models.result_by_use import ResultByUse
 from app.db.models.result_by_zone import ResultByZone
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
+from app.db.models.solution_catalog import SolutionCatalog
+from app.db.models.solution_definition import SolutionDefinition
 from app.db.models.technical_system import TechnicalSystem
 from app.db.models.user import User
 
@@ -34,6 +36,8 @@ __all__ = [
     "ResultByZone",
     "ResultSummary",
     "Scenario",
+    "SolutionCatalog",
+    "SolutionDefinition",
     "TechnicalSystem",
     "User",
 ]

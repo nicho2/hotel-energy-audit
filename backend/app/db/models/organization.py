@@ -35,3 +35,7 @@ class Organization(Base):
         back_populates="organization",
         cascade="all, delete-orphan",
     )
+    solution_catalogs: Mapped[list["SolutionCatalog"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )

@@ -16,6 +16,8 @@ from app.db.models import (  # noqa: F401
     ResultByZone,
     ResultSummary,
     Scenario,
+    SolutionCatalog,
+    SolutionDefinition,
     TechnicalSystem,
     User,
 )
@@ -35,6 +37,8 @@ def test_base_metadata_registers_core_tables() -> None:
         "branding_profiles",
         "calculation_assumption_sets",
         "scenarios",
+        "solution_catalogs",
+        "solution_definitions",
         "calculation_runs",
         "result_summaries",
         "economic_results",

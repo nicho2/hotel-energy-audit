@@ -8,6 +8,7 @@ from app.api.deps.db import get_db
 from app.db.models.user import User
 from app.repositories.assumption_set_repository import AssumptionSetRepository
 from app.repositories.branding_repository import BrandingRepository
+from app.repositories.solution_catalog_repository import SolutionCatalogRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.admin import (
     AdminBrandingProfileCreate,
@@ -23,8 +24,15 @@ from app.schemas.assumption_sets import (
 )
 from app.schemas.branding import BrandingProfileResponse
 from app.schemas.common import ApiResponse, success_response
+from app.schemas.solutions import (
+    SolutionCatalogResponse,
+    SolutionDefinitionCreate,
+    SolutionDefinitionResponse,
+    SolutionDefinitionUpdate,
+)
 from app.services.assumption_set_service import AssumptionSetService
 from app.services.admin_service import AdminService
+from app.services.solution_catalog_service import SolutionCatalogService
 
 router = APIRouter()
 
@@ -35,6 +43,10 @@ def get_admin_service(db: Session) -> AdminService:
 
 def get_assumption_set_service(db: Session) -> AssumptionSetService:
     return AssumptionSetService(AssumptionSetRepository(db))
+
+
+def get_solution_catalog_service(db: Session) -> SolutionCatalogService:
+    return SolutionCatalogService(SolutionCatalogRepository(db))
 
 
 @router.get("/users", response_model=ApiResponse[list[AdminUserResponse]])
@@ -205,3 +217,70 @@ def deactivate_admin_assumption_set(
 ) -> ApiResponse[AssumptionSetResponse]:
     service = get_assumption_set_service(db)
     return success_response(service.deactivate_assumption_set(assumption_set_id, current_user))
+
+
+@router.get("/solution-catalogs", response_model=ApiResponse[list[SolutionCatalogResponse]])
+def list_admin_solution_catalogs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[list[SolutionCatalogResponse]]:
+    service = get_solution_catalog_service(db)
+    service.ensure_admin(current_user)
+    return success_response(service.list_catalogs(current_user))
+
+
+@router.get("/solutions", response_model=ApiResponse[list[SolutionDefinitionResponse]])
+def list_admin_solutions(
+    country: str | None = None,
+    family: str | None = None,
+    building_type: str | None = None,
+    zone_type: str | None = None,
+    scope: str | None = None,
+    include_inactive: bool = True,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[list[SolutionDefinitionResponse]]:
+    service = get_solution_catalog_service(db)
+    service.ensure_admin(current_user)
+    return success_response(
+        service.list_solutions(
+            current_user,
+            country=country,
+            family=family,
+            building_type=building_type,
+            zone_type=zone_type,
+            scope=scope,
+            include_inactive=include_inactive,
+        )
+    )
+
+
+@router.post("/solutions", response_model=ApiResponse[SolutionDefinitionResponse], status_code=201)
+def create_admin_solution(
+    payload: SolutionDefinitionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[SolutionDefinitionResponse]:
+    service = get_solution_catalog_service(db)
+    return success_response(service.create_solution(payload, current_user))
+
+
+@router.patch("/solutions/{solution_id}", response_model=ApiResponse[SolutionDefinitionResponse])
+def update_admin_solution(
+    solution_id: UUID,
+    payload: SolutionDefinitionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[SolutionDefinitionResponse]:
+    service = get_solution_catalog_service(db)
+    return success_response(service.update_solution(solution_id, payload, current_user))
+
+
+@router.post("/solutions/{solution_id}/deactivate", response_model=ApiResponse[SolutionDefinitionResponse])
+def deactivate_admin_solution(
+    solution_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApiResponse[SolutionDefinitionResponse]:
+    service = get_solution_catalog_service(db)
+    return success_response(service.deactivate_solution(solution_id, current_user))

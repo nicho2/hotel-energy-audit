@@ -15,6 +15,8 @@ from app.db.models.result_by_use import ResultByUse
 from app.db.models.result_by_zone import ResultByZone
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
+from app.db.models.solution_catalog import SolutionCatalog
+from app.db.models.solution_definition import SolutionDefinition
 from app.db.models.technical_system import TechnicalSystem
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -46,12 +48,161 @@ BACS_FUNCTION_DEFINITIONS_V1 = [
     {"code": "lighting.occupancy_control", "domain": "lighting", "name": "Occupancy-based lighting control", "description": "Lighting in relevant spaces reacts to presence detection or room status.", "weight": 10.0, "order_index": 2},
 ]
 
+SOLUTION_CATALOG_SEEDS = [
+    {
+        "catalog": {
+            "name": "Global solution catalog",
+            "version": "global-1.0.0",
+            "scope": "global",
+            "country_code": None,
+        },
+        "solutions": [
+            {
+                "code": "ROOM_AUTOMATION_BASIC",
+                "name": "Room automation basic",
+                "description": "Basic occupancy and setback logic for guest rooms.",
+                "family": "bacs",
+                "target_scopes": ["zone"],
+                "applicable_countries": [],
+                "applicable_building_types": ["hotel", "aparthotel", "residence"],
+                "applicable_zone_types": ["guest_rooms"],
+                "bacs_impact_json": {"domains": ["heating", "cooling"], "target_class_gain": 1},
+                "lifetime_years": 10,
+                "default_quantity": 1,
+                "default_unit": "zone",
+                "default_unit_cost": 1800,
+                "default_capex": 1800,
+                "priority": 10,
+                "is_commercial_offer": False,
+                "offer_reference": None,
+            },
+            {
+                "code": "LED_RETROFIT_COMMON",
+                "name": "LED retrofit common areas",
+                "description": "LED retrofit package for circulation and common areas.",
+                "family": "lighting",
+                "target_scopes": ["zone", "project"],
+                "applicable_countries": [],
+                "applicable_building_types": ["hotel", "aparthotel", "residence"],
+                "applicable_zone_types": ["circulation", "lobby", "restaurant", "meeting"],
+                "bacs_impact_json": {"domains": ["lighting"], "target_class_gain": 0},
+                "lifetime_years": 12,
+                "default_quantity": 1,
+                "default_unit": "zone",
+                "default_unit_cost": 35,
+                "default_capex": 12000,
+                "priority": 20,
+                "is_commercial_offer": False,
+                "offer_reference": None,
+            },
+            {
+                "code": "BOILER_REPLACEMENT_CONDENSING",
+                "name": "Condensing boiler replacement",
+                "description": "Replace existing heating production with a condensing boiler solution.",
+                "family": "hvac",
+                "target_scopes": ["system"],
+                "applicable_countries": [],
+                "applicable_building_types": ["hotel", "aparthotel", "residence"],
+                "applicable_zone_types": [],
+                "bacs_impact_json": {"domains": ["heating"], "target_class_gain": 0},
+                "lifetime_years": 18,
+                "default_quantity": 1,
+                "default_unit": "system",
+                "default_unit_cost": 45000,
+                "default_capex": 45000,
+                "priority": 30,
+                "is_commercial_offer": False,
+                "offer_reference": None,
+            },
+            {
+                "code": "HEAT_PUMP_HYBRID",
+                "name": "Hybrid heat pump",
+                "description": "Hybrid heat pump package for existing accommodation buildings.",
+                "family": "hvac",
+                "target_scopes": ["system", "project"],
+                "applicable_countries": [],
+                "applicable_building_types": ["hotel", "aparthotel", "residence"],
+                "applicable_zone_types": [],
+                "bacs_impact_json": {"domains": ["heating", "cooling"], "target_class_gain": 0},
+                "lifetime_years": 16,
+                "default_quantity": 1,
+                "default_unit": "system",
+                "default_unit_cost": 72000,
+                "default_capex": 72000,
+                "priority": 40,
+                "is_commercial_offer": False,
+                "offer_reference": None,
+            },
+        ],
+    },
+    {
+        "catalog": {
+            "name": "France solution catalog",
+            "version": "fr-1.0.0",
+            "scope": "country_specific",
+            "country_code": "FR",
+        },
+        "solutions": [
+            {
+                "code": "FR_BACS_SUPERVISION_PLUS",
+                "name": "BACS supervision plus",
+                "description": "France-oriented supervision and alarm reporting package.",
+                "family": "bacs",
+                "target_scopes": ["project"],
+                "applicable_countries": ["FR"],
+                "applicable_building_types": ["hotel", "aparthotel"],
+                "applicable_zone_types": [],
+                "bacs_impact_json": {"domains": ["monitoring"], "target_class_gain": 1},
+                "lifetime_years": 12,
+                "default_quantity": 1,
+                "default_unit": "project",
+                "default_unit_cost": 28000,
+                "default_capex": 28000,
+                "priority": 15,
+                "is_commercial_offer": False,
+                "offer_reference": None,
+            }
+        ],
+    },
+]
+
+ORG_SPECIFIC_SOLUTION_SEED = {
+    "catalog": {
+        "name": "Demo organization offers",
+        "version": "org-demo-1.0.0",
+        "scope": "organization_specific",
+        "country_code": None,
+    },
+    "solutions": [
+        {
+            "code": "DEMO_ROOM_AUTOMATION_OFFER",
+            "name": "Demo room automation offer",
+            "description": "Organization-specific commercial package for room automation.",
+            "family": "bacs",
+            "target_scopes": ["zone", "project"],
+            "applicable_countries": ["FR"],
+            "applicable_building_types": ["hotel"],
+            "applicable_zone_types": ["guest_rooms"],
+            "bacs_impact_json": {"domains": ["heating", "cooling", "monitoring"], "target_class_gain": 1},
+            "lifetime_years": 10,
+            "default_quantity": 1,
+            "default_unit": "project",
+            "default_unit_cost": 24000,
+            "default_capex": 24000,
+            "priority": 5,
+            "is_commercial_offer": True,
+            "offer_reference": "DEMO-OFFER-ROOM-AUTO",
+        }
+    ],
+}
+
 
 def seed_dev_auth_data() -> None:
     with SessionLocal() as db:
         demo_org = _ensure_organization(db, slug=DEV_ORGANIZATION_SLUG, name=DEV_ORGANIZATION_NAME, default_language="fr")
         _ensure_user(db, organization=demo_org, email=DEV_USER_EMAIL, password=DEV_USER_PASSWORD, first_name="Demo", last_name="Admin", role="org_admin", preferred_language="fr")
         _ensure_bacs_function_definitions(db)
+        _ensure_solution_catalogs(db, demo_org)
         db.commit()
 
 
@@ -121,7 +272,6 @@ def _build_results_by_use(calculation_run_id, seed: ScenarioSeed) -> list[Result
 
 def _build_results_by_zone(calculation_run_id, zones: list[BuildingZone], seed: ScenarioSeed) -> list[ResultByZone]:
     total_area = sum(zone.area_m2 for zone in zones) or float(len(zones) or 1)
-    reduction_ratio = _compute_reduction_ratio(seed.baseline_energy_kwh_year, seed.scenario_energy_kwh_year)
     return [ResultByZone(calculation_run_id=calculation_run_id, zone_id=zone.id, zone_name=zone.name, zone_type=zone.zone_type, orientation=zone.orientation, baseline_energy_kwh_year=round(seed.baseline_energy_kwh_year * (zone.area_m2 / total_area), 2), scenario_energy_kwh_year=round((seed.baseline_energy_kwh_year if seed.scenario_energy_kwh_year == seed.baseline_energy_kwh_year else seed.scenario_energy_kwh_year) * (zone.area_m2 / total_area), 2), energy_savings_percent=_compute_savings_percent(round(seed.baseline_energy_kwh_year * (zone.area_m2 / total_area), 2), round((seed.baseline_energy_kwh_year if seed.scenario_energy_kwh_year == seed.baseline_energy_kwh_year else seed.scenario_energy_kwh_year) * (zone.area_m2 / total_area), 2))) for zone in zones]
 
 
@@ -203,6 +353,72 @@ def _ensure_bacs_function_definitions(db) -> None:
             definition.order_index = definition_data["order_index"]
             definition.version = "v1"
             definition.is_active = True
+
+
+def _ensure_solution_catalogs(db, demo_org: Organization) -> None:
+    for seed in SOLUTION_CATALOG_SEEDS:
+        catalog = _ensure_solution_catalog(db, organization=None, **seed["catalog"])
+        for solution_data in seed["solutions"]:
+            _ensure_solution_definition(db, catalog, solution_data)
+
+    org_catalog = _ensure_solution_catalog(
+        db,
+        organization=demo_org,
+        **ORG_SPECIFIC_SOLUTION_SEED["catalog"],
+    )
+    for solution_data in ORG_SPECIFIC_SOLUTION_SEED["solutions"]:
+        _ensure_solution_definition(db, org_catalog, solution_data)
+
+
+def _ensure_solution_catalog(
+    db,
+    *,
+    organization: Organization | None,
+    name: str,
+    version: str,
+    scope: str,
+    country_code: str | None,
+) -> SolutionCatalog:
+    organization_id = organization.id if organization is not None else None
+    catalog = db.scalar(
+        select(SolutionCatalog).where(
+            SolutionCatalog.version == version,
+            SolutionCatalog.scope == scope,
+            SolutionCatalog.organization_id.is_(organization_id)
+            if organization_id is None
+            else SolutionCatalog.organization_id == organization_id,
+        )
+    )
+    if catalog is None:
+        catalog = SolutionCatalog(
+            organization_id=organization_id,
+            name=name,
+            version=version,
+            scope=scope,
+            country_code=country_code,
+            is_active=True,
+        )
+        db.add(catalog)
+        db.flush()
+    else:
+        catalog.name = name
+        catalog.country_code = country_code
+        catalog.is_active = True
+    return catalog
+
+
+def _ensure_solution_definition(db, catalog: SolutionCatalog, data: dict) -> SolutionDefinition:
+    solution = db.scalar(select(SolutionDefinition).where(SolutionDefinition.code == data["code"]))
+    if solution is None:
+        solution = SolutionDefinition(catalog_id=catalog.id, is_active=True, **data)
+        db.add(solution)
+        db.flush()
+    else:
+        solution.catalog_id = catalog.id
+        for field, value in data.items():
+            setattr(solution, field, value)
+        solution.is_active = True
+    return solution
 
 
 def _remove_existing_demo_projects(db, organization_id) -> None:
