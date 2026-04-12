@@ -1,6 +1,9 @@
 from fastapi.testclient import TestClient
+from uuid import UUID, uuid4
 
 from app.db.models.project import Project
+from app.db.models.scenario import Scenario
+from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
 
@@ -23,6 +26,8 @@ def _create_project(client: TestClient, name: str) -> tuple[str, str]:
             organization_id=user["organization_id"],
             created_by_user_id=user["id"],
             name=name,
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
             building_type="hotel",
             project_goal="baseline",
         )
@@ -46,14 +51,16 @@ def test_calculation_readiness_blocks_when_building_and_zones_are_missing(client
     body = response.json()["data"]
     assert body["is_ready"] is False
     assert body["confidence_level"] == "low"
-    assert [issue["code"] for issue in body["blocking_issues"]] == [
+    assert {issue["code"] for issue in body["blocking_issues"]} == {
         "building_missing",
         "zones_missing",
-    ]
+        "usage_occupancy_missing",
+        "usage_dhw_intensity_missing",
+        "scenario_missing",
+    }
     assert [warning["code"] for warning in body["warnings"]] == [
-        "heating_system_missing",
-        "dhw_system_missing",
-        "reference_scenario_implicit",
+        "systems_missing",
+        "bacs_assessment_missing",
     ]
 
 
@@ -87,6 +94,26 @@ def test_calculation_readiness_is_ready_with_warnings_when_systems_are_missing(c
     )
     assert zone_response.status_code == 200
 
+    with SessionLocal() as db:
+        project = db.get(Project, UUID(project_id))
+        assert project is not None
+        db.add(
+            WizardStepPayload(
+                project_id=project.id,
+                step_code="usage",
+                payload_json={"average_occupancy_rate": 0.7, "ecs_intensity_level": "medium"},
+            )
+        )
+        db.add(
+            Scenario(
+                project_id=project.id,
+                name="Baseline",
+                scenario_type="reference",
+                is_reference=True,
+            )
+        )
+        db.commit()
+
     response = client.get(
         f"/api/v1/projects/{project_id}/calculation-readiness",
         headers={"Authorization": f"Bearer {token}"},
@@ -98,9 +125,8 @@ def test_calculation_readiness_is_ready_with_warnings_when_systems_are_missing(c
     assert body["blocking_issues"] == []
     assert body["confidence_level"] == "low"
     assert [warning["code"] for warning in body["warnings"]] == [
-        "heating_system_missing",
-        "dhw_system_missing",
-        "reference_scenario_implicit",
+        "systems_missing",
+        "bacs_assessment_missing",
     ]
 
 
@@ -131,6 +157,26 @@ def test_calculation_readiness_confidence_increases_with_major_systems(client: T
             "order_index": 1,
         },
     ).status_code == 200
+
+    with SessionLocal() as db:
+        project = db.get(Project, UUID(project_id))
+        assert project is not None
+        db.add(
+            WizardStepPayload(
+                project_id=project.id,
+                step_code="usage",
+                payload_json={"average_occupancy_rate": 0.82, "ecs_intensity_level": "medium"},
+            )
+        )
+        db.add(
+            Scenario(
+                project_id=project.id,
+                name="Improvement",
+                scenario_type="custom",
+                is_reference=False,
+            )
+        )
+        db.commit()
 
     assert client.post(
         f"/api/v1/projects/{project_id}/systems",
@@ -163,5 +209,5 @@ def test_calculation_readiness_confidence_increases_with_major_systems(client: T
     body = response.json()["data"]
     assert body["is_ready"] is True
     assert body["blocking_issues"] == []
-    assert body["confidence_level"] == "high"
-    assert [warning["code"] for warning in body["warnings"]] == ["reference_scenario_implicit"]
+    assert body["confidence_level"] == "medium"
+    assert [warning["code"] for warning in body["warnings"]] == ["bacs_assessment_missing"]

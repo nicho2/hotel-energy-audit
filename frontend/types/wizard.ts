@@ -19,6 +19,8 @@ export type WizardReadiness = {
   can_calculate: boolean;
   blocking_steps: number[];
   pending_validations: string[];
+  blocking_reasons: WizardValidation[];
+  warnings: WizardValidation[];
 };
 
 export type WizardState = {

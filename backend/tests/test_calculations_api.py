@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from app.db.models.calculation_run import CalculationRun
@@ -5,6 +7,7 @@ from app.db.models.economic_result import EconomicResult
 from app.db.models.project import Project
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
+from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
 
@@ -27,6 +30,8 @@ def _create_ready_project_with_scenario(client: TestClient) -> tuple[str, str, s
             organization_id=user["organization_id"],
             created_by_user_id=user["id"],
             name="Calculation Project",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
             building_type="hotel",
             project_goal="baseline",
         )
@@ -40,6 +45,13 @@ def _create_ready_project_with_scenario(client: TestClient) -> tuple[str, str, s
             is_reference=True,
         )
         db.add(scenario)
+        db.add(
+            WizardStepPayload(
+                project_id=project.id,
+                step_code="usage",
+                payload_json={"average_occupancy_rate": 0.72, "ecs_intensity_level": "medium"},
+            )
+        )
         db.commit()
         db.refresh(project)
         db.refresh(scenario)

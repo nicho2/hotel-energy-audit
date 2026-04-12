@@ -9,6 +9,9 @@ ConfidenceLevel = Literal["low", "medium", "high"]
 class ReadinessIssue(BaseModel):
     code: str
     message: str
+    severity: Literal["error", "warning"]
+    step_code: str | None = None
+    step: int | None = None
 
 
 class CalculationReadinessResponse(BaseModel):

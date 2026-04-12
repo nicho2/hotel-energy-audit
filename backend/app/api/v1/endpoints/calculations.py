@@ -16,6 +16,7 @@ from app.repositories.project_repository import ProjectRepository
 from app.repositories.results_repository import ResultsRepository
 from app.repositories.scenario_repository import ScenarioRepository
 from app.repositories.technical_system_repository import TechnicalSystemRepository
+from app.repositories.wizard_step_payload_repository import WizardStepPayloadRepository
 from app.repositories.zone_repository import ZoneRepository
 from app.schemas.calculations import CalculationResultLatestResponse
 from app.schemas.common import ApiResponse, success_response
@@ -36,6 +37,9 @@ def get_readiness_service(db: Session) -> ReadinessService:
         building_repository=BuildingRepository(db),
         zone_repository=ZoneRepository(db),
         technical_system_repository=TechnicalSystemRepository(db),
+        wizard_step_payload_repository=WizardStepPayloadRepository(db),
+        bacs_repository=BacsRepository(db),
+        scenario_repository=ScenarioRepository(db),
     )
 
 
@@ -46,6 +50,9 @@ def get_calculation_service(db: Session) -> CalculationService:
         building_repository=BuildingRepository(db),
         zone_repository=ZoneRepository(db),
         technical_system_repository=TechnicalSystemRepository(db),
+        wizard_step_payload_repository=WizardStepPayloadRepository(db),
+        bacs_repository=BacsRepository(db),
+        scenario_repository=ScenarioRepository(db),
     )
     return CalculationService(
         project_service=project_service,

@@ -26,6 +26,8 @@ class WizardReadinessResponse(BaseModel):
     can_calculate: bool
     blocking_steps: list[int]
     pending_validations: list[str]
+    blocking_reasons: list[WizardStepValidationResponse] = Field(default_factory=list)
+    warnings: list[WizardStepValidationResponse] = Field(default_factory=list)
 
 
 class WizardStateResponse(BaseModel):

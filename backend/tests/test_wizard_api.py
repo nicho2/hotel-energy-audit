@@ -2,9 +2,12 @@ from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
+from app.db.models.building import Building
+from app.db.models.building_zone import BuildingZone
 from app.core.security import get_password_hash
 from app.db.models.organization import Organization
 from app.db.models.project import Project
+from app.db.models.scenario import Scenario
 from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -55,7 +58,90 @@ def test_get_wizard_state_returns_full_stepper_for_project(client: TestClient) -
     assert body["data"]["step_payloads"]["project"]["name"] == "Wizard Project"
     assert body["data"]["readiness"]["can_calculate"] is False
     assert body["data"]["readiness"]["status"] == "not_ready"
-    assert 4 in body["data"]["readiness"]["blocking_steps"]
+    assert body["data"]["readiness"]["blocking_steps"] == [2, 3, 4, 5, 9]
+    assert {reason["code"] for reason in body["data"]["readiness"]["blocking_reasons"]} == {
+        "country_profile_missing",
+        "climate_zone_missing",
+        "building_missing",
+        "zones_missing",
+        "usage_occupancy_missing",
+        "usage_dhw_intensity_missing",
+        "scenario_missing",
+    }
+    assert {warning["code"] for warning in body["data"]["readiness"]["warnings"]} == {
+        "systems_missing",
+        "bacs_assessment_missing",
+    }
+
+
+def test_get_wizard_state_can_calculate_when_real_prerequisites_are_met(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Ready Wizard Project",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
+            building_type="hotel",
+            project_goal="baseline",
+            wizard_step=10,
+        )
+        db.add(project)
+        db.flush()
+        db.add(
+            Building(
+                project_id=project.id,
+                name="Ready hotel",
+                gross_floor_area_m2=4200,
+                heated_area_m2=3900,
+                number_of_rooms=90,
+            )
+        )
+        db.add(
+            BuildingZone(
+                project_id=project.id,
+                name="Rooms",
+                zone_type="guest_rooms",
+                orientation="mixed",
+                area_m2=2200,
+                room_count=70,
+            )
+        )
+        db.add(
+            WizardStepPayload(
+                project_id=project.id,
+                step_code="usage",
+                payload_json={"average_occupancy_rate": 0.68, "ecs_intensity_level": "medium"},
+            )
+        )
+        db.add(
+            Scenario(
+                project_id=project.id,
+                name="Reference",
+                scenario_type="reference",
+                is_reference=True,
+            )
+        )
+        db.commit()
+        project_id = str(project.id)
+
+    response = client.get(
+        f"/api/v1/projects/{project_id}/wizard",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    readiness = response.json()["data"]["readiness"]
+    assert readiness["status"] == "ready"
+    assert readiness["can_calculate"] is True
+    assert readiness["blocking_steps"] == []
+    assert readiness["blocking_reasons"] == []
+    assert {warning["code"] for warning in readiness["warnings"]} == {
+        "systems_missing",
+        "bacs_assessment_missing",
+    }
 
 
 def test_get_wizard_state_is_scoped_to_current_organization(client: TestClient) -> None:

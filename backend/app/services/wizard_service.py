@@ -20,6 +20,7 @@ from app.schemas.wizard import (
     WizardStepValidationResult,
 )
 from app.services.project_service import ProjectService
+from app.services.readiness_service import build_readiness_issues
 
 
 @dataclass(frozen=True)
@@ -71,8 +72,10 @@ class WizardService:
         project = self.project_service.get_project(project_id, current_user)
         current_step = min(max(project.wizard_step, 1), len(WIZARD_STEP_DEFINITIONS))
         payloads = self._build_step_payloads(project)
+        readiness_issues = self._build_readiness_issues(project, payloads)
+        error_steps = {issue.step for issue in readiness_issues if issue.severity == "error"}
         validations_by_step = {
-            definition.step: self._validate_definition(project, definition, payloads).valid
+            definition.step: definition.step not in error_steps
             for definition in WIZARD_STEP_DEFINITIONS
         }
         steps = [
@@ -89,7 +92,7 @@ class WizardService:
             project_id=project.id,
             current_step=current_step,
             steps=steps,
-            readiness=self._build_readiness(validations_by_step),
+            readiness=self._build_readiness(readiness_issues),
             step_payloads=payloads,
         )
 
@@ -240,21 +243,40 @@ class WizardService:
     ) -> list[WizardStepValidationResponse]:
         return self._validate_definition(project, definition, payloads).validations
 
-    def _build_readiness(self, validations_by_step: dict[int, bool]) -> WizardReadinessResponse:
+    def _build_readiness(self, readiness_issues: list) -> WizardReadinessResponse:
+        blocking_issues = [issue for issue in readiness_issues if issue.severity == "error"]
+        warning_issues = [issue for issue in readiness_issues if issue.severity == "warning"]
         blocking_steps = [
-            definition.step
-            for definition in WIZARD_STEP_DEFINITIONS
-            if not validations_by_step[definition.step]
+            issue.step
+            for issue in blocking_issues
+            if issue.step is not None
         ]
         return WizardReadinessResponse(
             status="ready" if not blocking_steps else "not_ready",
             can_calculate=not blocking_steps,
-            blocking_steps=blocking_steps,
-            pending_validations=[
-                definition.code
-                for definition in WIZARD_STEP_DEFINITIONS
-                if not validations_by_step[definition.step]
-            ],
+            blocking_steps=sorted(set(blocking_steps)),
+            pending_validations=sorted({issue.step_code for issue in blocking_issues if issue.step_code}),
+            blocking_reasons=[self._readiness_issue_to_validation(issue) for issue in blocking_issues],
+            warnings=[self._readiness_issue_to_validation(issue) for issue in warning_issues],
+        )
+
+    def _build_readiness_issues(self, project: Project, payloads: dict[str, dict[str, Any]]) -> list:
+        return build_readiness_issues(
+            project=project,
+            building=self.building_repository.get_by_project_id(project.id),
+            zones=self.zone_repository.list_by_project_id(project.id),
+            systems=self.technical_system_repository.list_by_project_id(project.id),
+            usage_payload=payloads.get("usage", {}),
+            assessment=self.bacs_repository.get_assessment_by_project_id(project.id),
+            scenarios=self.scenario_repository.list_by_project_id(project.id),
+        )
+
+    @staticmethod
+    def _readiness_issue_to_validation(issue) -> WizardStepValidationResponse:
+        return WizardStepValidationResponse(
+            code=issue.code,
+            status=issue.severity,
+            message=issue.message,
         )
 
     def _validate_definition(
