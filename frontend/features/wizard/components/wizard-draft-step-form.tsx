@@ -5,7 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ApiError } from "@/lib/api-client/errors";
 import { useAuthContext } from "@/providers/auth-provider";
+import { useI18n } from "@/providers/i18n-provider";
 import { FeedbackBlock, FieldError } from "@/components/ui/feedback";
+import { useClimateZones } from "@/features/reference-data/hooks/use-climate-zones";
+import { useCountryProfiles } from "@/features/reference-data/hooks/use-country-profiles";
 import { saveStep } from "../api/save-step";
 import { wizardDraftStepSchema, type WizardDraftStepValues } from "../schemas/wizard-draft-step-schema";
 
@@ -44,8 +47,8 @@ const stepFields: Record<string, FieldDefinition[]> = {
     { name: "description", label: "Description", kind: "textarea" },
   ],
   context: [
-    { name: "country_profile_id", label: "Profil pays", kind: "text", required: true, helper: "UUID du referentiel pays." },
-    { name: "climate_zone_id", label: "Zone climatique", kind: "text", required: true, helper: "UUID du referentiel climat." },
+    { name: "country_profile_id", label: "Pays", kind: "select", required: true },
+    { name: "climate_zone_id", label: "Zone climatique", kind: "select", required: true },
     { name: "regulatory_frame", label: "Cadre de reference", kind: "text" },
     { name: "energy_price_electricity_eur_kwh", label: "Prix electricite EUR/kWh", kind: "number" },
     { name: "energy_price_gas_eur_kwh", label: "Prix gaz EUR/kWh", kind: "number" },
@@ -138,18 +141,36 @@ type WizardDraftStepFormProps = {
 
 export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: WizardDraftStepFormProps) {
   const { token } = useAuthContext();
+  const { language } = useI18n();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const fields = useMemo(() => stepFields[stepCode] ?? [], [stepCode]);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<WizardDraftStepValues>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<WizardDraftStepValues>({
     resolver: zodResolver(wizardDraftStepSchema),
     defaultValues: toFormDefaults(fields, payload),
   });
+  const selectedCountryProfileId = String(watch("country_profile_id") ?? "");
+  const selectedClimateZoneId = String(watch("climate_zone_id") ?? "");
+  const countryProfiles = useCountryProfiles(stepCode === "context");
+  const climateZones = useClimateZones(stepCode === "context" ? selectedCountryProfileId : null);
+  const countries = countryProfiles.data?.data ?? [];
+  const zones = climateZones.data?.data ?? [];
 
   useEffect(() => {
     reset(toFormDefaults(fields, payload));
   }, [fields, payload, reset]);
+
+  useEffect(() => {
+    if (stepCode !== "context" || !selectedClimateZoneId || climateZones.isLoading) {
+      return;
+    }
+
+    const climateZoneStillAvailable = zones.some((zone) => zone.id === selectedClimateZoneId);
+    if (!climateZoneStillAvailable) {
+      setValue("climate_zone_id", "", { shouldValidate: true });
+    }
+  }, [climateZones.isLoading, selectedClimateZoneId, setValue, stepCode, zones]);
 
   const onSubmit = async (values: WizardDraftStepValues) => {
     setSubmitError(null);
@@ -176,7 +197,46 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
             <label htmlFor={`${stepCode}_${field.name}`} style={{ fontSize: 14, fontWeight: 600 }}>
               {field.label}{field.required ? " *" : ""}
             </label>
-            {field.kind === "textarea" ? (
+            {stepCode === "context" && field.name === "country_profile_id" ? (
+              <select
+                id={`${stepCode}_${field.name}`}
+                value={selectedCountryProfileId}
+                disabled={countryProfiles.isLoading}
+                onChange={(event) => {
+                  setValue("country_profile_id", event.target.value, { shouldValidate: true });
+                  setValue("climate_zone_id", "", { shouldValidate: true });
+                }}
+                style={inputStyle}
+              >
+                <option value="">{countryProfiles.isLoading ? "Chargement..." : "Selectionner un pays"}</option>
+                {countries.map((country) => (
+                  <option key={country.id} value={country.id}>
+                    {(language === "fr" ? country.name_fr : country.name_en) || country.name_fr} ({country.country_code})
+                  </option>
+                ))}
+              </select>
+            ) : stepCode === "context" && field.name === "climate_zone_id" ? (
+              <select
+                id={`${stepCode}_${field.name}`}
+                value={selectedClimateZoneId}
+                disabled={!selectedCountryProfileId || climateZones.isLoading}
+                onChange={(event) => setValue("climate_zone_id", event.target.value, { shouldValidate: true })}
+                style={inputStyle}
+              >
+                <option value="">
+                  {!selectedCountryProfileId
+                    ? "Selectionner d'abord un pays"
+                    : climateZones.isLoading
+                      ? "Chargement..."
+                      : "Selectionner une zone climatique"}
+                </option>
+                {zones.map((zone) => (
+                  <option key={zone.id} value={zone.id}>
+                    {(language === "fr" ? zone.name_fr : zone.name_en) || zone.name_fr} ({zone.code})
+                  </option>
+                ))}
+              </select>
+            ) : field.kind === "textarea" ? (
               <textarea id={`${stepCode}_${field.name}`} rows={4} {...register(field.name)} style={{ ...inputStyle, resize: "vertical" }} />
             ) : field.kind === "select" ? (
               <select id={`${stepCode}_${field.name}`} {...register(field.name)} style={inputStyle}>

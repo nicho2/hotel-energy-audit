@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BrandingSelect } from "@/features/branding/components/branding-select";
 import { useBrandingProfiles } from "@/features/branding/hooks/use-branding-profiles";
+import { useClimateZones } from "@/features/reference-data/hooks/use-climate-zones";
+import { useCountryProfiles } from "@/features/reference-data/hooks/use-country-profiles";
 import { useCreateProject } from "../hooks/use-create-project";
 import { buildingTypeOptions, projectSchema, type ProjectFormValues } from "../schemas/project-schema";
 import type { ProjectCreatePayload } from "@/types/project";
@@ -23,8 +25,8 @@ function toCreatePayload(values: ProjectFormValues): ProjectCreatePayload {
   return {
     name: values.name.trim(),
     client_name: toNullableValue(values.client_name),
-    country_profile_id: toNullableValue(values.country_profile_id),
-    climate_zone_id: toNullableValue(values.climate_zone_id),
+    country_profile_id: values.country_profile_id,
+    climate_zone_id: values.climate_zone_id,
     building_type: values.building_type,
     project_goal: toNullableValue(values.project_goal),
     branding_profile_id: toNullableValue(values.branding_profile_id),
@@ -35,7 +37,7 @@ export function CreateProjectForm() {
   const router = useRouter();
   const createProject = useCreateProject();
   const brandingProfiles = useBrandingProfiles();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
@@ -55,6 +57,23 @@ export function CreateProjectForm() {
       branding_profile_id: "",
     },
   });
+  const selectedCountryProfileId = watch("country_profile_id");
+  const selectedClimateZoneId = watch("climate_zone_id");
+  const countryProfiles = useCountryProfiles();
+  const climateZones = useClimateZones(selectedCountryProfileId);
+  const countries = countryProfiles.data?.data ?? [];
+  const zones = climateZones.data?.data ?? [];
+
+  useEffect(() => {
+    if (!selectedClimateZoneId || climateZones.isLoading) {
+      return;
+    }
+
+    const climateZoneStillAvailable = zones.some((zone) => zone.id === selectedClimateZoneId);
+    if (!climateZoneStillAvailable) {
+      setValue("climate_zone_id", "", { shouldValidate: true });
+    }
+  }, [climateZones.isLoading, selectedClimateZoneId, setValue, zones]);
 
   const onSubmit = async (values: ProjectFormValues) => {
     setSubmitError(null);
@@ -84,17 +103,72 @@ export function CreateProjectForm() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <label htmlFor="country_profile_id" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.countryProfileId")}</label>
-            <Input id="country_profile_id" placeholder={t("projects.form.optionalUuid")} {...register("country_profile_id")} />
+            <label htmlFor="country_profile_id" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.countryProfile")}</label>
+            <select
+              id="country_profile_id"
+              value={selectedCountryProfileId}
+              disabled={countryProfiles.isLoading}
+              onChange={(event) => {
+                setValue("country_profile_id", event.target.value, { shouldValidate: true });
+                setValue("climate_zone_id", "", { shouldValidate: true });
+              }}
+              style={{
+                width: "100%",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                padding: "10px 12px",
+                fontSize: 14,
+                background: "#fff",
+              }}
+            >
+              <option value="">{countryProfiles.isLoading ? t("projects.form.referenceDataLoading") : t("projects.form.countryPlaceholder")}</option>
+              {countries.map((country) => (
+                <option key={country.id} value={country.id}>
+                  {(language === "fr" ? country.name_fr : country.name_en) || country.name_fr} ({country.country_code})
+                </option>
+              ))}
+            </select>
             {errors.country_profile_id ? <p style={{ margin: 0, color: "#b91c1c", fontSize: 12 }}>{errors.country_profile_id.message}</p> : null}
           </div>
 
           <div style={{ display: "grid", gap: 6 }}>
-            <label htmlFor="climate_zone_id" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.climateZoneId")}</label>
-            <Input id="climate_zone_id" placeholder={t("projects.form.optionalUuid")} {...register("climate_zone_id")} />
+            <label htmlFor="climate_zone_id" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.climateZone")}</label>
+            <select
+              id="climate_zone_id"
+              value={selectedClimateZoneId}
+              disabled={!selectedCountryProfileId || climateZones.isLoading}
+              onChange={(event) => setValue("climate_zone_id", event.target.value, { shouldValidate: true })}
+              style={{
+                width: "100%",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                padding: "10px 12px",
+                fontSize: 14,
+                background: "#fff",
+              }}
+            >
+              <option value="">
+                {!selectedCountryProfileId
+                  ? t("projects.form.countryFirst")
+                  : climateZones.isLoading
+                    ? t("projects.form.referenceDataLoading")
+                    : t("projects.form.climatePlaceholder")}
+              </option>
+              {zones.map((zone) => (
+                <option key={zone.id} value={zone.id}>
+                  {(language === "fr" ? zone.name_fr : zone.name_en) || zone.name_fr} ({zone.code}){zone.is_default ? ` - ${t("projects.form.defaultClimate")}` : ""}
+                </option>
+              ))}
+            </select>
             {errors.climate_zone_id ? <p style={{ margin: 0, color: "#b91c1c", fontSize: 12 }}>{errors.climate_zone_id.message}</p> : null}
           </div>
         </div>
+
+        {countryProfiles.error || climateZones.error ? (
+          <div style={{ border: "1px solid #fecaca", borderRadius: 8, background: "#fff", padding: 12, color: "#b91c1c", fontSize: 13 }}>
+            {t("projects.form.referenceDataError")}
+          </div>
+        ) : null}
 
         <div style={{ display: "grid", gap: 6 }}>
           <label htmlFor="building_type" style={{ fontSize: 14, fontWeight: 600 }}>{t("projects.form.buildingType")}</label>
