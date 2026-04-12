@@ -69,6 +69,18 @@ The same filter set is available for admin users through:
 
 Admin listing defaults to `include_inactive=true` so back-office screens can show retired offers.
 
+## Calculation Impact Rules
+
+Scenario calculations load selected assignments from the scenario before invoking the calculation engine. The engine applies impacts in assignment order, using residual multiplication and per-usage caps from the active assumption set. This keeps cumulative gains plausible: two 20% actions on the same usage produce a 36% reduction before caps, not a flat 40% subtraction.
+
+Supported scopes are intentionally MVP-sized:
+
+- `project`: gains apply to every zone for the listed usages.
+- `zone`: gains apply only to the targeted zone.
+- `system`: gains apply only to usages supported by the targeted technical system type, for example lighting systems affect lighting only.
+
+The calculation snapshot stores the effective `selected_solutions` plus `assumptions.applied_impacts`. Each applied impact contains the solution code, scope, target ids, target system type when available, effective gains, and application order. User-facing calculation messages also summarize the applied impact order for auditability.
+
 ## Admin Workflow
 
 1. List catalogs to find the target catalog.

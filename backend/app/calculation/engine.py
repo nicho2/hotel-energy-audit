@@ -71,7 +71,9 @@ class CalculationEngine:
         baseline_by_zone = _freeze_zone_baselines(baseline_by_zone)
 
         baseline_totals = _sum_by_usage_from_key(baseline_by_zone, "baseline_uses")
-        scenario_by_zone = _apply_solution_impacts(baseline_by_zone, _solution_impacts(input_data.selected_solutions), assumptions)
+        solution_impacts = _solution_impacts(input_data.selected_solutions)
+        input_data.assumptions["applied_impacts"] = _impact_trace(solution_impacts)
+        scenario_by_zone = _apply_solution_impacts(baseline_by_zone, solution_impacts, assumptions)
         scenario_totals = _sum_by_usage_from_key(scenario_by_zone, "uses")
 
         baseline_total = sum(baseline_totals.values())
@@ -103,7 +105,7 @@ class CalculationEngine:
             by_zone=[_zone_output(row) for row in scenario_by_zone],
             economic=economic,
             bacs={"estimated_bacs_class": baseline_bacs_class, "scenario_bacs_class": scenario_bacs_class, "current_score": round(current_bacs_score, 1), "scenario_score": round(scenario_bacs_score, 1)},
-            messages=_messages(baseline_totals, baseline_total, _percent_savings(baseline_total, scenario_total), economic["simple_payback_years"], baseline_bacs_class, scenario_bacs_class, zones, input_data.selected_solutions),
+            messages=_messages(baseline_totals, baseline_total, _percent_savings(baseline_total, scenario_total), economic["simple_payback_years"], baseline_bacs_class, scenario_bacs_class, zones, input_data.selected_solutions, solution_impacts),
             warnings=warnings,
         )
 
@@ -339,13 +341,45 @@ def _solution_impacts(selected_solutions: list[dict[str, Any]]) -> list[dict[str
         if solution.get("gain_override_percent") is not None:
             override = _bounded(_num(solution.get("gain_override_percent")), 0.0, 0.9)
             gains = {usage: override for usage in _default_solution_uses(code, family)}
+        if solution.get("target_scope") == "system" and solution.get("target_system_type"):
+            allowed_uses = _uses_for_system_type(str(solution["target_system_type"]))
+            gains = {usage: value for usage, value in gains.items() if usage in allowed_uses}
         impacts.append({
             "code": code,
             "target_scope": solution.get("target_scope", "project"),
             "target_zone_id": solution.get("target_zone_id"),
+            "target_system_id": solution.get("target_system_id"),
+            "target_system_type": solution.get("target_system_type"),
             "gains": {usage: _bounded(_num(value), 0.0, 0.9) for usage, value in gains.items() if usage in USAGES},
         })
     return impacts
+
+
+def _impact_trace(impacts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "solution_code": impact["code"],
+            "target_scope": impact["target_scope"],
+            "target_zone_id": impact.get("target_zone_id"),
+            "target_system_id": impact.get("target_system_id"),
+            "target_system_type": impact.get("target_system_type"),
+            "gains": {usage: round(gain, 4) for usage, gain in impact["gains"].items()},
+            "application_order": index + 1,
+        }
+        for index, impact in enumerate(impacts)
+    ]
+
+
+def _uses_for_system_type(system_type: str) -> set[str]:
+    system_type = system_type.lower()
+    mapping = {
+        "heating": {"heating"},
+        "cooling": {"cooling"},
+        "ventilation": {"ventilation", "auxiliaries"},
+        "dhw": {"dhw"},
+        "lighting": {"lighting"},
+    }
+    return mapping.get(system_type, set(USAGES))
 
 
 def _apply_solution_impacts(zone_rows: list[dict[str, Any]], impacts: list[dict[str, Any]], assumptions: dict[str, Any]) -> list[dict[str, Any]]:
@@ -527,6 +561,7 @@ def _messages(
     scenario_bacs_class: str,
     zones: list[dict[str, Any]],
     selected_solutions: list[dict[str, Any]],
+    solution_impacts: list[dict[str, Any]],
 ) -> list[str]:
     messages = []
     if baseline_total > 0:
@@ -541,6 +576,14 @@ def _messages(
         messages.append("Les chambres sud/ouest concentrent un potentiel eleve d'optimisation estivale.")
     if selected_solutions:
         messages.append(f"Le bouquet selectionne genere un gain energetique estime de {energy_savings_percent:.1f} %.")
+    if solution_impacts:
+        applied = ", ".join(
+            f"{impact['code']} ({'/'.join(sorted(impact['gains']))})"
+            for impact in solution_impacts
+            if impact["gains"]
+        )
+        if applied:
+            messages.append(f"Impacts appliques dans l'ordre: {applied}.")
     if baseline_bacs_class != scenario_bacs_class:
         messages.append(f"Le scenario ameliore la classe BACS estimee de {baseline_bacs_class} vers {scenario_bacs_class}.")
     if payback:

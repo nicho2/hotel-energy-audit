@@ -105,3 +105,33 @@ def test_run_varies_significantly_by_climate_and_system_performance() -> None:
     mild_heating = next(item for item in mild_efficient.by_use if item["usage_type"] == "heating")
     cold_heating = next(item for item in cold_poor.by_use if item["usage_type"] == "heating")
     assert cold_heating["baseline_energy_kwh_year"] > mild_heating["baseline_energy_kwh_year"] * 2
+
+
+def test_run_combines_solution_impacts_sequentially_and_traces_order() -> None:
+    output = CalculationEngine().run(
+        _build_input(
+            zones=[{"id": "zone-1", "name": "Lobby", "zone_type": "lobby", "orientation": "mixed", "area_m2": 1000}],
+            selected_solutions=[
+                {
+                    "solution_code": "LED_RETROFIT_COMMON",
+                    "family": "lighting",
+                    "target_scope": "project",
+                    "gain_override_percent": 0.20,
+                    "is_selected": True,
+                },
+                {
+                    "solution_code": "LIGHTING_PRESENCE_CONTROL",
+                    "family": "lighting",
+                    "target_scope": "project",
+                    "gain_override_percent": 0.20,
+                    "is_selected": True,
+                },
+            ],
+        )
+    )
+
+    lighting = next(item for item in output.by_use if item["usage_type"] == "lighting")
+    assert lighting["energy_savings_percent"] == 36.0
+    assert "Impacts appliques dans l'ordre" in output.messages[-1] or any(
+        "Impacts appliques dans l'ordre" in message for message in output.messages
+    )

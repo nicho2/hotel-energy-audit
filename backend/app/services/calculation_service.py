@@ -162,7 +162,7 @@ class CalculationService:
             zones=[self._serialize_model(zone) for zone in zones],
             systems=[self._serialize_model(system) for system in systems],
             bacs_functions=bacs_functions,
-            selected_solutions=self._selected_solutions(scenario_id, project.organization_id),
+            selected_solutions=self._selected_solutions(scenario_id, project.id, project.organization_id),
             assumptions=self._build_assumptions(
                 assumption_set=assumption_set,
                 country_profile=country_profile,
@@ -171,10 +171,14 @@ class CalculationService:
             ),
         )
 
-    def _selected_solutions(self, scenario_id, organization_id) -> list[dict]:
+    def _selected_solutions(self, scenario_id, project_id, organization_id) -> list[dict]:
         selected = []
         for assignment in self.scenario_solution_repository.list_by_scenario_id(scenario_id):
             data = self._serialize_model(assignment)
+            if assignment.target_system_id is not None:
+                system = self.technical_system_repository.get_by_id(assignment.target_system_id, project_id)
+                if system is not None:
+                    data["target_system_type"] = system.system_type
             solution = self.solution_catalog_repository.get_solution_by_code(
                 assignment.solution_code,
                 organization_id,

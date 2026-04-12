@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
@@ -8,6 +8,7 @@ from app.db.models.project import Project
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
 from app.db.models.scenario_solution_assignment import ScenarioSolutionAssignment
+from app.db.models.technical_system import TechnicalSystem
 from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
@@ -142,6 +143,9 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
     assert body["input_snapshot"]["assumptions"]["engine_version"] == "simplified-annual-v1"
     assert body["input_snapshot"]["assumptions"]["usage_payload"]["average_occupancy_rate"] == 0.72
     assert body["input_snapshot"]["selected_solutions"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
+    assert body["input_snapshot"]["assumptions"]["applied_impacts"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
+    assert "heating" in body["input_snapshot"]["assumptions"]["applied_impacts"][0]["gains"]
+    assert any("Impacts appliques dans l'ordre" in message for message in body["messages"])
 
     with SessionLocal() as db:
         runs = db.query(CalculationRun).filter(CalculationRun.scenario_id == scenario_id).all()
@@ -178,6 +182,90 @@ def test_get_latest_result_returns_404_when_no_run_exists(client: TestClient) ->
     )
 
     assert response.status_code == 404
+
+
+def test_calculate_compares_baseline_and_solution_scenarios(client: TestClient) -> None:
+    token, project_id, baseline_scenario_id = _create_ready_project_with_scenario(client)
+
+    with SessionLocal() as db:
+        solution_scenario = Scenario(
+            project_id=UUID(project_id),
+            name="Room automation bouquet",
+            description="Scenario with selected room automation solution",
+        )
+        db.add(solution_scenario)
+        db.flush()
+        db.add(
+            ScenarioSolutionAssignment(
+                scenario_id=solution_scenario.id,
+                solution_code="ROOM_AUTOMATION_BASIC",
+                target_scope="project",
+                quantity=1,
+                capex_override=18000,
+                is_selected=True,
+            )
+        )
+        db.commit()
+        db.refresh(solution_scenario)
+        solution_scenario_id = str(solution_scenario.id)
+
+    baseline_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{baseline_scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    solution_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{solution_scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert baseline_response.status_code == 200
+    assert solution_response.status_code == 200
+    baseline = baseline_response.json()["data"]
+    solution = solution_response.json()["data"]
+    assert baseline["summary"]["scenario_energy_kwh_year"] == baseline["summary"]["baseline_energy_kwh_year"]
+    assert solution["summary"]["scenario_energy_kwh_year"] < baseline["summary"]["scenario_energy_kwh_year"]
+    bacs_rank = {"D": 0, "C": 1, "B": 2, "A": 3}
+    assert bacs_rank[solution["summary"]["scenario_bacs_class"]] > bacs_rank[baseline["summary"]["scenario_bacs_class"]]
+    assert solution["input_snapshot"]["selected_solutions"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
+
+
+def test_calculate_system_scoped_solution_limits_impacts_to_target_system_use(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+
+    with SessionLocal() as db:
+        lighting_system = TechnicalSystem(
+            project_id=UUID(project_id),
+            name="Lighting network",
+            system_type="lighting",
+            energy_source="electricity",
+            technology_type="fluorescent",
+        )
+        db.add(lighting_system)
+        db.flush()
+        db.add(
+            ScenarioSolutionAssignment(
+                scenario_id=scenario_id,
+                solution_code="LED_RETROFIT_COMMON",
+                target_scope="system",
+                target_system_id=lighting_system.id,
+                gain_override_percent=0.30,
+                capex_override=12000,
+                is_selected=True,
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    applied = body["input_snapshot"]["assumptions"]["applied_impacts"][0]
+    assert applied["target_scope"] == "system"
+    assert applied["target_system_type"] == "lighting"
+    assert set(applied["gains"]) == {"lighting"}
 
 
 def test_get_latest_result_selects_most_recent_run(client: TestClient) -> None:
