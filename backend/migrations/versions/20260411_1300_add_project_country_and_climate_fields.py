@@ -32,11 +32,19 @@ def _foreign_key_exists(table_name: str, fk_name: str) -> bool:
     return any(fk.get("name") == fk_name for fk in inspector.get_foreign_keys(table_name))
 
 
-def upgrade() -> None:
-    op.add_column("projects", sa.Column("country_profile_id", postgresql.UUID(as_uuid=True), nullable=True))
-    op.add_column("projects", sa.Column("climate_zone_id", postgresql.UUID(as_uuid=True), nullable=True))
+def _column_exists(table_name: str, column_name: str) -> bool:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    return any(column.get("name") == column_name for column in inspector.get_columns(table_name))
 
-    if _table_exists("country_profiles"):
+
+def upgrade() -> None:
+    if not _column_exists("projects", "country_profile_id"):
+        op.add_column("projects", sa.Column("country_profile_id", postgresql.UUID(as_uuid=True), nullable=True))
+    if not _column_exists("projects", "climate_zone_id"):
+        op.add_column("projects", sa.Column("climate_zone_id", postgresql.UUID(as_uuid=True), nullable=True))
+
+    if _table_exists("country_profiles") and not _foreign_key_exists("projects", COUNTRY_FK_NAME):
         op.create_foreign_key(
             COUNTRY_FK_NAME,
             "projects",
@@ -46,7 +54,7 @@ def upgrade() -> None:
             ondelete="SET NULL",
         )
 
-    if _table_exists("climate_zones"):
+    if _table_exists("climate_zones") and not _foreign_key_exists("projects", CLIMATE_FK_NAME):
         op.create_foreign_key(
             CLIMATE_FK_NAME,
             "projects",
@@ -63,5 +71,7 @@ def downgrade() -> None:
     if _foreign_key_exists("projects", COUNTRY_FK_NAME):
         op.drop_constraint(COUNTRY_FK_NAME, "projects", type_="foreignkey")
 
-    op.drop_column("projects", "climate_zone_id")
-    op.drop_column("projects", "country_profile_id")
+    if _column_exists("projects", "climate_zone_id"):
+        op.drop_column("projects", "climate_zone_id")
+    if _column_exists("projects", "country_profile_id"):
+        op.drop_column("projects", "country_profile_id")

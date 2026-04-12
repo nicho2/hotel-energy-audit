@@ -92,10 +92,31 @@ def test_project_country_and_climate_fields_roundtrip_create_get_list(client: Te
     assert projects_by_id[created["id"]]["climate_zone_id"] == str(climate_zone_id)
 
 
+def test_create_project_requires_country_and_climate_context(client: TestClient) -> None:
+    token, _user = _login(client)
+
+    response = client.post(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Missing Context Project",
+            "building_type": "hotel",
+            "project_goal": "reduce_energy",
+        },
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    fields = {error["field"] for error in body["errors"]}
+    assert fields == {"country_profile_id", "climate_zone_id"}
+
+
 def test_list_projects_only_returns_projects_for_current_organization(client: TestClient) -> None:
     token, user = _login(client)
     country_profile_id = uuid4()
     climate_zone_id = uuid4()
+    visible_project_name = f"Visible Project {uuid4().hex[:8]}"
+    hidden_project_name = f"Hidden Project {uuid4().hex[:8]}"
 
     with SessionLocal() as db:
         current_user = db.scalar(select(User).where(User.id == user["id"]))
@@ -128,7 +149,7 @@ def test_list_projects_only_returns_projects_for_current_organization(client: Te
                 Project(
                     organization_id=current_user.organization_id,
                     created_by_user_id=current_user.id,
-                    name="Visible Project",
+                    name=visible_project_name,
                     country_profile_id=country_profile_id,
                     climate_zone_id=climate_zone_id,
                     building_type="hotel",
@@ -137,7 +158,7 @@ def test_list_projects_only_returns_projects_for_current_organization(client: Te
                 Project(
                     organization_id=other_organization.id,
                     created_by_user_id=other_user.id,
-                    name="Hidden Project",
+                    name=hidden_project_name,
                     building_type="hotel",
                     project_goal="baseline",
                 ),
@@ -154,10 +175,10 @@ def test_list_projects_only_returns_projects_for_current_organization(client: Te
     body = response.json()
     projects_by_name = {project["name"]: project for project in body["data"]}
     project_names = set(projects_by_name)
-    assert "Visible Project" in project_names
-    assert "Hidden Project" not in project_names
-    assert projects_by_name["Visible Project"]["country_profile_id"] == str(country_profile_id)
-    assert projects_by_name["Visible Project"]["climate_zone_id"] == str(climate_zone_id)
+    assert visible_project_name in project_names
+    assert hidden_project_name not in project_names
+    assert projects_by_name[visible_project_name]["country_profile_id"] == str(country_profile_id)
+    assert projects_by_name[visible_project_name]["climate_zone_id"] == str(climate_zone_id)
 
 
 def test_get_project_returns_only_project_from_current_organization(client: TestClient) -> None:
@@ -195,6 +216,8 @@ def test_get_project_returns_only_project_from_current_organization(client: Test
 
 def test_patch_project_updates_partial_fields(client: TestClient) -> None:
     token, user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
 
     with SessionLocal() as db:
         project = Project(
@@ -202,6 +225,8 @@ def test_patch_project_updates_partial_fields(client: TestClient) -> None:
             created_by_user_id=user["id"],
             name="Original Name",
             client_name="Client A",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
             building_type="hotel",
             project_goal="baseline",
         )
@@ -217,6 +242,8 @@ def test_patch_project_updates_partial_fields(client: TestClient) -> None:
             "name": "Updated Name",
             "wizard_step": 3,
             "description": "Updated description",
+            "country_profile_id": str(country_profile_id),
+            "climate_zone_id": str(climate_zone_id),
         },
     )
 
@@ -226,10 +253,14 @@ def test_patch_project_updates_partial_fields(client: TestClient) -> None:
     assert body["data"]["wizard_step"] == 3
     assert body["data"]["description"] == "Updated description"
     assert body["data"]["client_name"] == "Client A"
+    assert body["data"]["country_profile_id"] == str(country_profile_id)
+    assert body["data"]["climate_zone_id"] == str(climate_zone_id)
 
 
 def test_create_project_persists_branding_profile_id(client: TestClient) -> None:
     token, user = _login(client)
+    country_profile_id = uuid4()
+    climate_zone_id = uuid4()
 
     with SessionLocal() as db:
         branding_profile = BrandingProfile(
@@ -252,6 +283,8 @@ def test_create_project_persists_branding_profile_id(client: TestClient) -> None
             "name": "Branded Project",
             "building_type": "hotel",
             "project_goal": "reduce_energy",
+            "country_profile_id": str(country_profile_id),
+            "climate_zone_id": str(climate_zone_id),
             "branding_profile_id": str(branding_profile.id),
         },
     )

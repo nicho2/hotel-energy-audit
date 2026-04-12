@@ -12,8 +12,8 @@ class ProjectCreate(BaseModel):
     client_name: str | None = None
     reference_code: str | None = Field(default=None, max_length=100)
     description: str | None = None
-    country_profile_id: UUID | None = None
-    climate_zone_id: UUID | None = None
+    country_profile_id: UUID
+    climate_zone_id: UUID
     building_type: BuildingType
     project_goal: str | None = None
     branding_profile_id: UUID | None = None

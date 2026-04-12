@@ -23,6 +23,8 @@ def test_project_and_scenario_history_use_audit_logs(client: TestClient) -> None
             "name": "Audited Project",
             "building_type": "hotel",
             "project_goal": "traceability",
+            "country_profile_id": str(uuid4()),
+            "climate_zone_id": str(uuid4()),
         },
     )
     assert project_response.status_code == 200

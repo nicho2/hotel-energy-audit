@@ -48,6 +48,8 @@ def test_create_project_rejects_unknown_branding_profile() -> None:
         name="Demo Project",
         building_type="hotel",
         project_goal="reduce_energy",
+        country_profile_id=uuid4(),
+        climate_zone_id=uuid4(),
         branding_profile_id=uuid4(),
     )
 

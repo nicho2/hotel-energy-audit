@@ -50,3 +50,10 @@ def test_base_metadata_registers_core_tables() -> None:
         "result_by_use",
         "result_by_zone",
     }
+
+
+def test_project_metadata_exposes_country_and_climate_columns() -> None:
+    project_columns = Base.metadata.tables["projects"].columns
+
+    assert "country_profile_id" in project_columns
+    assert "climate_zone_id" in project_columns
