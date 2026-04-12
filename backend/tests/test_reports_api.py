@@ -174,7 +174,7 @@ def test_get_executive_report_html_returns_rendered_document(client: TestClient)
     assert body["context"]["project"]["name"] == "Calculation Project"
     assert body["context"]["scenario"]["id"] == scenario_id
     assert body["context"]["branding"]["source"] == "fallback"
-    assert body["context"]["results"]["summary"]["scenario_energy_kwh_year"] == 980000
+    assert body["context"]["results"]["summary"]["scenario_energy_kwh_year"] == calculate_response.json()["data"]["summary"]["scenario_energy_kwh_year"]
 
 
 def test_get_detailed_report_html_returns_extended_sections(client: TestClient) -> None:

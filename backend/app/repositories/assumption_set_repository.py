@@ -127,6 +127,36 @@ class AssumptionSetRepository:
             )
         return list(self.db.scalars(statement).all())
 
+    def get_active_for_context(
+        self,
+        *,
+        organization_id: UUID,
+        country_profile_id: UUID | None,
+    ) -> CalculationAssumptionSet | None:
+        organization_override = self.list_active_for_scope(
+            scope="organization_override",
+            organization_id=organization_id,
+            country_profile_id=None,
+        )
+        if organization_override:
+            return organization_override[0]
+
+        if country_profile_id is not None:
+            country_default = self.list_active_for_scope(
+                scope="country_default",
+                organization_id=None,
+                country_profile_id=country_profile_id,
+            )
+            if country_default:
+                return country_default[0]
+
+        platform_default = self.list_active_for_scope(
+            scope="platform_default",
+            organization_id=None,
+            country_profile_id=None,
+        )
+        return platform_default[0] if platform_default else None
+
     def count_historical_uses(self, assumption_set: CalculationAssumptionSet) -> int:
         runs = self.db.scalars(select(CalculationRun)).all()
         return sum(

@@ -7,14 +7,18 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db
 from app.calculation.engine import CalculationEngine
 from app.db.models.user import User
+from app.repositories.assumption_set_repository import AssumptionSetRepository
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.bacs_repository import BacsRepository
 from app.repositories.building_repository import BuildingRepository
 from app.repositories.calculation_repository import CalculationRepository
 from app.repositories.project_repository import ProjectRepository
+from app.repositories.reference_data_repository import ReferenceDataRepository
 from app.repositories.results_repository import ResultsRepository
 from app.repositories.scenario_repository import ScenarioRepository
+from app.repositories.scenario_solution_repository import ScenarioSolutionRepository
+from app.repositories.solution_catalog_repository import SolutionCatalogRepository
 from app.repositories.technical_system_repository import TechnicalSystemRepository
 from app.repositories.wizard_step_payload_repository import WizardStepPayloadRepository
 from app.repositories.zone_repository import ZoneRepository
@@ -62,6 +66,11 @@ def get_calculation_service(db: Session) -> CalculationService:
         zone_repository=ZoneRepository(db),
         technical_system_repository=TechnicalSystemRepository(db),
         bacs_repository=BacsRepository(db),
+        wizard_step_payload_repository=WizardStepPayloadRepository(db),
+        scenario_solution_repository=ScenarioSolutionRepository(db),
+        solution_catalog_repository=SolutionCatalogRepository(db),
+        assumption_set_repository=AssumptionSetRepository(db),
+        reference_data_repository=ReferenceDataRepository(db),
         readiness_service=readiness_service,
         engine=CalculationEngine(),
         audit_service=AuditService(AuditRepository(db)),

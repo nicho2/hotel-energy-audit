@@ -7,6 +7,7 @@ from app.db.models.economic_result import EconomicResult
 from app.db.models.project import Project
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
+from app.db.models.scenario_solution_assignment import ScenarioSolutionAssignment
 from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
@@ -22,7 +23,7 @@ def _login(client: TestClient) -> tuple[str, dict]:
     return body["data"]["access_token"], body["data"]["user"]
 
 
-def _create_ready_project_with_scenario(client: TestClient) -> tuple[str, str, str]:
+def _create_ready_project_with_scenario(client: TestClient, *, with_solution: bool = False) -> tuple[str, str, str]:
     token, user = _login(client)
 
     with SessionLocal() as db:
@@ -45,6 +46,18 @@ def _create_ready_project_with_scenario(client: TestClient) -> tuple[str, str, s
             is_reference=True,
         )
         db.add(scenario)
+        db.flush()
+        if with_solution:
+            db.add(
+                ScenarioSolutionAssignment(
+                    scenario_id=scenario.id,
+                    solution_code="ROOM_AUTOMATION_BASIC",
+                    target_scope="project",
+                    quantity=1,
+                    capex_override=18000,
+                    is_selected=True,
+                )
+            )
         db.add(
             WizardStepPayload(
                 project_id=project.id,
@@ -109,7 +122,7 @@ def _create_ready_project_with_scenario(client: TestClient) -> tuple[str, str, s
 
 
 def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
-    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client, with_solution=True)
 
     response = client.post(
         f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
@@ -120,11 +133,15 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
     body = response.json()["data"]
     assert body["project_id"] == project_id
     assert body["scenario_id"] == scenario_id
-    assert body["engine_version"] == "placeholder-v1"
-    assert body["summary"]["baseline_energy_kwh_year"] == 1200000
-    assert body["economic"]["total_capex"] == 92000
-    assert body["messages"] == ["Starter output from placeholder engine."]
+    assert body["engine_version"] == "simplified-annual-v1"
+    assert body["summary"]["baseline_energy_kwh_year"] > body["summary"]["scenario_energy_kwh_year"]
+    assert body["summary"]["energy_savings_percent"] > 0
+    assert body["economic"]["total_capex"] == 18000
+    assert body["messages"]
     assert body["input_snapshot"]["project_id"] == project_id
+    assert body["input_snapshot"]["assumptions"]["engine_version"] == "simplified-annual-v1"
+    assert body["input_snapshot"]["assumptions"]["usage_payload"]["average_occupancy_rate"] == 0.72
+    assert body["input_snapshot"]["selected_solutions"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
 
     with SessionLocal() as db:
         runs = db.query(CalculationRun).filter(CalculationRun.scenario_id == scenario_id).all()
@@ -132,7 +149,7 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
 
 
 def test_get_latest_result_returns_latest_persisted_payload(client: TestClient) -> None:
-    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client, with_solution=True)
 
     calculate_response = client.post(
         f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
@@ -147,9 +164,9 @@ def test_get_latest_result_returns_latest_persisted_payload(client: TestClient) 
 
     assert latest_response.status_code == 200
     body = latest_response.json()["data"]
-    assert body["summary"]["scenario_energy_kwh_year"] == 980000
-    assert body["economic"]["annual_cost_savings"] == 28000
-    assert body["messages"] == ["Starter output from placeholder engine."]
+    assert body["summary"]["scenario_energy_kwh_year"] < body["summary"]["baseline_energy_kwh_year"]
+    assert body["economic"]["annual_cost_savings"] > 0
+    assert body["messages"]
 
 
 def test_get_latest_result_returns_404_when_no_run_exists(client: TestClient) -> None:

@@ -195,6 +195,15 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 - `created_at`
 - `updated_at`
 
+### calculation engine V1 snapshot
+- `engine_version`: `simplified-annual-v1`
+- `input_snapshot.assumptions.assumption_set_id` when an active versioned assumption set is found
+- `input_snapshot.assumptions.usage_payload` for wizard usage inputs used by the run
+- `input_snapshot.assumptions.climate_zone` for heating, cooling, and solar severity indexes
+- `input_snapshot.selected_solutions[]` for scenario solution assignments and their resolved catalog assumptions when available
+
+The V1 engine is annual and simplified. Results vary by building surface, construction period, compactness, climate indexes, zones, orientation, occupancy, systems, BACS functions, and selected scenario solutions. It keeps the persisted summary/by-use/by-zone/economic contracts unchanged.
+
 ### solution definition fields
 - `id`
 - `catalog_id`

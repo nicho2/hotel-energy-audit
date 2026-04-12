@@ -23,10 +23,10 @@ def test_get_results_by_use_returns_latest_result_details(client: TestClient) ->
     assert body["data"]["result_set"]["project_id"] == project_id
     assert body["data"]["result_set"]["scenario_id"] == scenario_id
     usage_types = [item["usage_type"] for item in body["data"]["items"]]
-    assert usage_types == ["cooling", "dhw", "heating", "lighting", "ventilation"]
+    assert usage_types == ["auxiliaries", "cooling", "dhw", "heating", "lighting", "ventilation"]
     heating = next(item for item in body["data"]["items"] if item["usage_type"] == "heating")
-    assert heating["baseline_energy_kwh_year"] == 420000
-    assert heating["scenario_energy_kwh_year"] == 344000
+    assert heating["baseline_energy_kwh_year"] > 0
+    assert heating["scenario_energy_kwh_year"] == heating["baseline_energy_kwh_year"]
 
 
 def test_get_results_by_zone_returns_latest_zone_breakdown(client: TestClient) -> None:
@@ -44,14 +44,14 @@ def test_get_results_by_zone_returns_latest_zone_breakdown(client: TestClient) -
 
     assert response.status_code == 200
     body = response.json()["data"]
-    assert body["result_set"]["engine_version"] == "placeholder-v1"
+    assert body["result_set"]["engine_version"] == "simplified-annual-v1"
     assert len(body["items"]) == 1
     zone = body["items"][0]
     assert zone["zone_name"] == "Guest rooms east"
     assert zone["zone_type"] == "guest_rooms"
     assert zone["orientation"] == "east"
-    assert zone["baseline_energy_kwh_year"] == 1200000.0
-    assert zone["scenario_energy_kwh_year"] == 980000.0
+    assert zone["baseline_energy_kwh_year"] > 0
+    assert zone["scenario_energy_kwh_year"] == zone["baseline_energy_kwh_year"]
 
 
 def test_get_results_by_use_returns_404_when_no_run_exists(client: TestClient) -> None:
