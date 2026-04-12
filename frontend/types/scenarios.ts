@@ -36,13 +36,29 @@ export type ScenarioDuplicatePayload = {
 };
 
 export type SolutionCatalogItem = {
+  id: string;
+  catalog_id: string;
   code: string;
   name: string;
   description: string;
   solution_family: string;
+  family: string;
   target_scopes: TargetScope[];
+  applicable_countries: string[];
+  applicable_building_types: string[];
+  applicable_zone_types: string[];
+  bacs_impact_json: Record<string, unknown>;
+  lifetime_years: number | null;
   default_quantity: number | null;
   default_unit: string | null;
+  default_unit_cost: number | null;
+  default_capex: number | null;
+  priority: number;
+  scope: string;
+  country_code: string | null;
+  is_commercial_offer: boolean;
+  offer_reference: string | null;
+  is_active: boolean;
 };
 
 export type ScenarioSolutionAssignment = {

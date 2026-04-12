@@ -23,6 +23,15 @@ def _first_country_profile_id(client: TestClient, token: str) -> str:
     return response.json()["data"][0]["id"]
 
 
+def _first_climate_zone_id(client: TestClient, token: str, country_profile_id: str) -> str:
+    response = client.get(
+        f"/api/v1/climate-zones?country_profile_id={country_profile_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    return response.json()["data"][0]["id"]
+
+
 def test_project_template_crud_roundtrip(client: TestClient) -> None:
     token = _login(client)
     country_profile_id = _first_country_profile_id(client, token)
@@ -112,3 +121,45 @@ def test_project_template_rejects_duplicate_name_in_organization(client: TestCli
     assert second_response.status_code == 422
     body = second_response.json()
     assert body["errors"][0]["field"] == "name"
+
+
+def test_project_can_be_created_from_project_template(client: TestClient) -> None:
+    token = _login(client)
+    country_profile_id = _first_country_profile_id(client, token)
+    climate_zone_id = _first_climate_zone_id(client, token, country_profile_id)
+
+    template_response = client.post(
+        "/api/v1/project-templates",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": f"Apply Template {uuid4().hex[:8]}",
+            "building_type": "hotel",
+            "country_profile_id": country_profile_id,
+            "default_payload_json": {
+                "mode": "express",
+                "zoning_standard": "hotel_standard",
+                "usage_standard": "standard",
+                "favorite_solution_codes": ["ROOM_AUTOMATION_BASIC"],
+            },
+        },
+    )
+    assert template_response.status_code == 201
+    template_id = template_response.json()["data"]["id"]
+
+    project_response = client.post(
+        "/api/v1/projects",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": f"Project from template {uuid4().hex[:8]}",
+            "country_profile_id": country_profile_id,
+            "climate_zone_id": climate_zone_id,
+            "building_type": "hotel",
+            "project_goal": "pre_audit",
+            "template_id": template_id,
+        },
+    )
+
+    assert project_response.status_code == 200
+    body = project_response.json()["data"]
+    assert body["template_id"] == template_id
+    assert body["wizard_step"] == 1

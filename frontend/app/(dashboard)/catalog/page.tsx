@@ -1,3 +1,5 @@
+import { CatalogPage } from "@/features/scenarios/components/catalog-page";
+
 export default function Page() {
-  return <div>catalog page placeholder.</div>;
+  return <CatalogPage />;
 }

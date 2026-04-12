@@ -17,6 +17,7 @@ export type ProjectCreatePayload = {
   building_type: BuildingType;
   project_goal: string | null;
   branding_profile_id: string | null;
+  template_id?: string | null;
 };
 
 export type ProjectUpdatePayload = {
