@@ -16,11 +16,12 @@ type FieldKind = "text" | "textarea" | "number" | "select" | "checkbox" | "csv";
 
 type FieldDefinition = {
   name: string;
-  label: string;
+  labelKey: string;
   kind: FieldKind;
   required?: boolean;
-  helper?: string;
-  options?: Array<{ value: string; label: string }>;
+  helperKey?: string;
+  tooltipKey: string;
+  options?: Array<{ value: string; labelKey: string }>;
 };
 
 const inputStyle = {
@@ -34,72 +35,72 @@ const inputStyle = {
 
 const stepFields: Record<string, FieldDefinition[]> = {
   project: [
-    { name: "name", label: "Nom du projet", kind: "text", required: true },
-    { name: "client_name", label: "Client", kind: "text" },
-    { name: "reference_code", label: "Reference", kind: "text" },
-    { name: "building_type", label: "Type de batiment", kind: "select", required: true, options: [
-      { value: "hotel", label: "Hotel" },
-      { value: "aparthotel", label: "Aparthotel" },
-      { value: "residence", label: "Residence" },
-      { value: "other_accommodation", label: "Autre hebergement" },
+    { name: "name", labelKey: "wizard.fields.project.name.label", tooltipKey: "wizard.fields.project.name.tooltip", kind: "text", required: true },
+    { name: "client_name", labelKey: "wizard.fields.project.client_name.label", tooltipKey: "wizard.fields.project.client_name.tooltip", kind: "text" },
+    { name: "reference_code", labelKey: "wizard.fields.project.reference_code.label", tooltipKey: "wizard.fields.project.reference_code.tooltip", kind: "text" },
+    { name: "building_type", labelKey: "wizard.fields.project.building_type.label", tooltipKey: "wizard.fields.project.building_type.tooltip", kind: "select", required: true, options: [
+      { value: "hotel", labelKey: "projects.buildingTypes.hotel" },
+      { value: "aparthotel", labelKey: "projects.buildingTypes.aparthotel" },
+      { value: "residence", labelKey: "projects.buildingTypes.residence" },
+      { value: "other_accommodation", labelKey: "projects.buildingTypes.other_accommodation" },
     ] },
-    { name: "project_goal", label: "Objectif", kind: "text" },
-    { name: "description", label: "Description", kind: "textarea" },
+    { name: "project_goal", labelKey: "wizard.fields.project.project_goal.label", tooltipKey: "wizard.fields.project.project_goal.tooltip", kind: "text" },
+    { name: "description", labelKey: "wizard.fields.project.description.label", tooltipKey: "wizard.fields.project.description.tooltip", kind: "textarea" },
   ],
   context: [
-    { name: "country_profile_id", label: "Pays", kind: "select", required: true },
-    { name: "climate_zone_id", label: "Zone climatique", kind: "select", required: true },
-    { name: "regulatory_frame", label: "Cadre de reference", kind: "text" },
-    { name: "energy_price_electricity_eur_kwh", label: "Prix electricite EUR/kWh", kind: "number" },
-    { name: "energy_price_gas_eur_kwh", label: "Prix gaz EUR/kWh", kind: "number" },
+    { name: "country_profile_id", labelKey: "wizard.fields.context.country_profile_id.label", tooltipKey: "wizard.fields.context.country_profile_id.tooltip", kind: "select", required: true },
+    { name: "climate_zone_id", labelKey: "wizard.fields.context.climate_zone_id.label", tooltipKey: "wizard.fields.context.climate_zone_id.tooltip", kind: "select", required: true },
+    { name: "regulatory_frame", labelKey: "wizard.fields.context.regulatory_frame.label", tooltipKey: "wizard.fields.context.regulatory_frame.tooltip", kind: "text" },
+    { name: "energy_price_electricity_eur_kwh", labelKey: "wizard.fields.context.energy_price_electricity_eur_kwh.label", tooltipKey: "wizard.fields.context.energy_price_electricity_eur_kwh.tooltip", kind: "number" },
+    { name: "energy_price_gas_eur_kwh", labelKey: "wizard.fields.context.energy_price_gas_eur_kwh.label", tooltipKey: "wizard.fields.context.energy_price_gas_eur_kwh.tooltip", kind: "number" },
   ],
   usage: [
-    { name: "average_occupancy_rate", label: "Taux d'occupation moyen", kind: "number", required: true, helper: "Valeur entre 0 et 1." },
-    { name: "seasonality_profile", label: "Saisonnalite", kind: "select", options: [
-      { value: "stable", label: "Stable" },
-      { value: "seasonal", label: "Saisonnier" },
-      { value: "highly_seasonal", label: "Tres saisonnier" },
+    { name: "average_occupancy_rate", labelKey: "wizard.fields.usage.average_occupancy_rate.label", tooltipKey: "wizard.fields.usage.average_occupancy_rate.tooltip", kind: "number", required: true, helperKey: "wizard.fields.usage.average_occupancy_rate.helper" },
+    { name: "seasonality_profile", labelKey: "wizard.fields.usage.seasonality_profile.label", tooltipKey: "wizard.fields.usage.seasonality_profile.tooltip", kind: "select", options: [
+      { value: "stable", labelKey: "wizard.options.seasonality.stable" },
+      { value: "seasonal", labelKey: "wizard.options.seasonality.seasonal" },
+      { value: "highly_seasonal", labelKey: "wizard.options.seasonality.highly_seasonal" },
     ] },
-    { name: "room_usage_intensity", label: "Intensite chambres", kind: "select", options: [
-      { value: "low", label: "Faible" },
-      { value: "standard", label: "Standard" },
-      { value: "high", label: "Forte" },
+    { name: "room_usage_intensity", labelKey: "wizard.fields.usage.room_usage_intensity.label", tooltipKey: "wizard.fields.usage.room_usage_intensity.tooltip", kind: "select", options: [
+      { value: "low", labelKey: "wizard.options.intensity.low" },
+      { value: "standard", labelKey: "wizard.options.intensity.standard" },
+      { value: "high", labelKey: "wizard.options.intensity.high" },
     ] },
-    { name: "ecs_intensity_level", label: "Intensite ECS", kind: "select", required: true, options: [
-      { value: "low", label: "Faible" },
-      { value: "medium", label: "Moyenne" },
-      { value: "high", label: "Forte" },
+    { name: "ecs_intensity_level", labelKey: "wizard.fields.usage.ecs_intensity_level.label", tooltipKey: "wizard.fields.usage.ecs_intensity_level.tooltip", kind: "select", required: true, options: [
+      { value: "low", labelKey: "wizard.options.intensity.low" },
+      { value: "medium", labelKey: "wizard.options.intensity.medium" },
+      { value: "high", labelKey: "wizard.options.intensity.high" },
     ] },
-    { name: "restaurant_active", label: "Restaurant actif", kind: "checkbox" },
-    { name: "seminar_activity", label: "Seminaires / reunions", kind: "checkbox" },
+    { name: "restaurant_active", labelKey: "wizard.fields.usage.restaurant_active.label", tooltipKey: "wizard.fields.usage.restaurant_active.tooltip", kind: "checkbox" },
+    { name: "seminar_activity", labelKey: "wizard.fields.usage.seminar_activity.label", tooltipKey: "wizard.fields.usage.seminar_activity.tooltip", kind: "checkbox" },
   ],
   solutions: [
-    { name: "selected_solution_codes", label: "Solutions retenues", kind: "csv", required: true, helper: "Codes separes par des virgules." },
-    { name: "target_bacs_class", label: "Classe BACS cible", kind: "select", options: [
-      { value: "A", label: "A" },
-      { value: "B", label: "B" },
-      { value: "C", label: "C" },
-      { value: "D", label: "D" },
+    { name: "selected_solution_codes", labelKey: "wizard.fields.solutions.selected_solution_codes.label", tooltipKey: "wizard.fields.solutions.selected_solution_codes.tooltip", kind: "csv", required: true, helperKey: "wizard.fields.solutions.selected_solution_codes.helper" },
+    { name: "target_bacs_class", labelKey: "wizard.fields.solutions.target_bacs_class.label", tooltipKey: "wizard.fields.solutions.target_bacs_class.tooltip", kind: "select", options: [
+      { value: "A", labelKey: "wizard.options.bacs.A" },
+      { value: "B", labelKey: "wizard.options.bacs.B" },
+      { value: "C", labelKey: "wizard.options.bacs.C" },
+      { value: "D", labelKey: "wizard.options.bacs.D" },
     ] },
-    { name: "automation_package", label: "Bouquet automation", kind: "select", options: [
-      { value: "standard", label: "Standard" },
-      { value: "advanced", label: "Avance" },
-      { value: "custom", label: "Personnalise" },
+    { name: "automation_package", labelKey: "wizard.fields.solutions.automation_package.label", tooltipKey: "wizard.fields.solutions.automation_package.tooltip", kind: "select", options: [
+      { value: "standard", labelKey: "wizard.options.package.standard" },
+      { value: "advanced", labelKey: "wizard.options.package.advanced" },
+      { value: "custom", labelKey: "wizard.options.package.custom" },
     ] },
   ],
   scenarios: [
-    { name: "reference_scenario_name", label: "Scenario de reference", kind: "text", required: true },
-    { name: "improvement_scenario_name", label: "Scenario d'amelioration", kind: "text", required: true },
-    { name: "comparison_horizon_years", label: "Horizon de comparaison", kind: "number" },
+    { name: "reference_scenario_name", labelKey: "wizard.fields.scenarios.reference_scenario_name.label", tooltipKey: "wizard.fields.scenarios.reference_scenario_name.tooltip", kind: "text", required: true },
+    { name: "improvement_scenario_name", labelKey: "wizard.fields.scenarios.improvement_scenario_name.label", tooltipKey: "wizard.fields.scenarios.improvement_scenario_name.tooltip", kind: "text", required: true },
+    { name: "comparison_horizon_years", labelKey: "wizard.fields.scenarios.comparison_horizon_years.label", tooltipKey: "wizard.fields.scenarios.comparison_horizon_years.tooltip", kind: "number" },
   ],
   review: [
-    { name: "report_language", label: "Langue du rapport", kind: "select", options: [
-      { value: "fr", label: "Francais" },
-      { value: "en", label: "Anglais" },
+    { name: "report_language", labelKey: "wizard.fields.review.report_language.label", tooltipKey: "wizard.fields.review.report_language.tooltip", kind: "select", options: [
+      { value: "fr", labelKey: "wizard.options.language.fr" },
+      { value: "en", labelKey: "wizard.options.language.en" },
     ] },
-    { name: "include_executive_summary", label: "Inclure la synthese executive", kind: "checkbox" },
-    { name: "include_assumptions_appendix", label: "Inclure l'annexe hypotheses", kind: "checkbox" },
-    { name: "ready_for_report", label: "Revue confirmee", kind: "checkbox", required: true },
+    { name: "include_executive_summary", labelKey: "wizard.fields.review.include_executive_summary.label", tooltipKey: "wizard.fields.review.include_executive_summary.tooltip", kind: "checkbox" },
+    { name: "include_assumptions_appendix", labelKey: "wizard.fields.review.include_assumptions_appendix.label", tooltipKey: "wizard.fields.review.include_assumptions_appendix.tooltip", kind: "checkbox" },
+    { name: "ready_for_report", labelKey: "wizard.fields.review.ready_for_report.label", tooltipKey: "wizard.fields.review.ready_for_report.tooltip", kind: "checkbox", required: true },
   ],
 };
 
@@ -109,6 +110,9 @@ function toFormDefaults(fields: FieldDefinition[], payload: Record<string, unkno
       const value = payload[field.name];
       if (field.kind === "checkbox") return [field.name, Boolean(value)];
       if (field.kind === "csv") return [field.name, Array.isArray(value) ? value.join(", ") : ""];
+      if (field.name === "average_occupancy_rate" && typeof value === "number" && value <= 1) {
+        return [field.name, Math.round(value * 100).toString()];
+      }
       return [field.name, value == null ? "" : value];
     }),
   ) as WizardDraftStepValues;
@@ -118,7 +122,14 @@ function normalizePayload(fields: FieldDefinition[], values: WizardDraftStepValu
   return Object.fromEntries(
     fields.map((field) => {
       const value = values[field.name];
-      if (field.kind === "number") return [field.name, value === "" || value == null ? null : Number(value)];
+      if (field.kind === "number") {
+        if (value === "" || value == null) return [field.name, null];
+        const numericValue = Number(value);
+        if (field.name === "average_occupancy_rate") {
+          return [field.name, numericValue > 1 ? numericValue / 100 : numericValue];
+        }
+        return [field.name, numericValue];
+      }
       if (field.kind === "checkbox") return [field.name, Boolean(value)];
       if (field.kind === "csv") {
         const items = String(value ?? "")
@@ -141,7 +152,7 @@ type WizardDraftStepFormProps = {
 
 export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: WizardDraftStepFormProps) {
   const { token } = useAuthContext();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const fields = useMemo(() => stepFields[stepCode] ?? [], [stepCode]);
@@ -178,15 +189,15 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
 
     try {
       await saveStep(projectId, stepCode, normalizePayload(fields, values), token);
-      setSavedMessage("Etape enregistree.");
+      setSavedMessage(t("wizard.stepSaved"));
       await onSaved?.();
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Enregistrement de l'etape impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("wizard.stepSaveError"));
     }
   };
 
   if (fields.length === 0) {
-    return <FeedbackBlock tone="warning">Aucun formulaire n'est defini pour cette etape.</FeedbackBlock>;
+    return <FeedbackBlock tone="warning">{t("wizard.noStepForm")}</FeedbackBlock>;
   }
 
   return (
@@ -194,8 +205,18 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
         {fields.map((field) => (
           <div key={field.name} style={{ display: "grid", gap: 6, gridColumn: field.kind === "textarea" ? "1 / -1" : undefined }}>
-            <label htmlFor={`${stepCode}_${field.name}`} style={{ fontSize: 14, fontWeight: 600 }}>
-              {field.label}{field.required ? " *" : ""}
+            <label
+              htmlFor={`${stepCode}_${field.name}`}
+              title={t(field.tooltipKey)}
+              style={{ fontSize: 14, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              {t(field.labelKey)}{field.required ? " *" : ""}
+              <span
+                aria-label={t(field.tooltipKey)}
+                style={{ border: "1px solid #cbd5e1", borderRadius: 8, color: "#627084", fontSize: 11, fontWeight: 700, lineHeight: "16px", textAlign: "center", width: 16, height: 16 }}
+              >
+                ?
+              </span>
             </label>
             {stepCode === "context" && field.name === "country_profile_id" ? (
               <select
@@ -208,7 +229,7 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
                 }}
                 style={inputStyle}
               >
-                <option value="">{countryProfiles.isLoading ? "Chargement..." : "Selectionner un pays"}</option>
+                <option value="">{countryProfiles.isLoading ? t("wizard.loadingShort") : t("wizard.countryPlaceholder")}</option>
                 {countries.map((country) => (
                   <option key={country.id} value={country.id}>
                     {(language === "fr" ? country.name_fr : country.name_en) || country.name_fr} ({country.country_code})
@@ -225,10 +246,10 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
               >
                 <option value="">
                   {!selectedCountryProfileId
-                    ? "Selectionner d'abord un pays"
+                    ? t("wizard.countryFirst")
                     : climateZones.isLoading
-                      ? "Chargement..."
-                      : "Selectionner une zone climatique"}
+                      ? t("wizard.loadingShort")
+                      : t("wizard.climatePlaceholder")}
                 </option>
                 {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
@@ -240,15 +261,15 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
               <textarea id={`${stepCode}_${field.name}`} rows={4} {...register(field.name)} style={{ ...inputStyle, resize: "vertical" }} />
             ) : field.kind === "select" ? (
               <select id={`${stepCode}_${field.name}`} {...register(field.name)} style={inputStyle}>
-                <option value="">Selectionner</option>
+                <option value="">{t("wizard.selectPlaceholder")}</option>
                 {(field.options ?? []).map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
                 ))}
               </select>
             ) : field.kind === "checkbox" ? (
               <label style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 40 }}>
                 <input id={`${stepCode}_${field.name}`} type="checkbox" {...register(field.name)} />
-                <span>Oui</span>
+                <span>{t("wizard.yes")}</span>
               </label>
             ) : (
               <input
@@ -259,7 +280,7 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
                 style={inputStyle}
               />
             )}
-            {field.helper ? <div style={{ color: "#627084", fontSize: 13 }}>{field.helper}</div> : null}
+            {field.helperKey ? <div style={{ color: "#627084", fontSize: 13 }}>{t(field.helperKey)}</div> : null}
             <FieldError>{String(errors[field.name]?.message ?? "")}</FieldError>
           </div>
         ))}
@@ -282,7 +303,7 @@ export function WizardDraftStepForm({ projectId, stepCode, payload, onSaved }: W
             cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
         >
-          {isSubmitting ? "Enregistrement..." : "Enregistrer l'etape"}
+          {isSubmitting ? t("wizard.saving") : t("wizard.saveStep")}
         </button>
       </div>
     </form>

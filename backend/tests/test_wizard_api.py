@@ -221,3 +221,36 @@ def test_validate_wizard_usage_step_advances_resume_step_when_valid(client: Test
         refreshed = db.get(Project, UUID(project_id))
         assert refreshed is not None
         assert refreshed.wizard_step == 6
+
+
+def test_save_wizard_usage_step_accepts_user_facing_percent(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Percent Usage Wizard Project",
+            building_type="hotel",
+            project_goal="baseline",
+            wizard_step=5,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    response = client.put(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage",
+        json={"payload": {"average_occupancy_rate": 56, "ecs_intensity_level": "medium"}},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["payload"]["average_occupancy_rate"] == 0.56
+
+    validate_response = client.post(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage/validate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert validate_response.status_code == 200

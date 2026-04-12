@@ -36,6 +36,7 @@ export function WizardShell({ projectId }: { projectId: string }) {
   const canGoPrevious = currentIndex > 0;
   const canGoNext = currentIndex < wizard.steps.length - 1;
   const stepTitle = `${activeStep.step}. ${activeStep.name}`;
+  const stepDescription = t(`wizard.stepDescription.${activeStep.code}`);
 
   const goPrevious = () => {
     if (!canGoPrevious) return;
@@ -52,7 +53,7 @@ export function WizardShell({ projectId }: { projectId: string }) {
       await validateStep(projectId, activeStep.code, token);
       setActiveStepCode(wizard.steps[currentIndex + 1]?.code ?? activeStep.code);
     } catch (error) {
-      setNavigationError(error instanceof ApiError ? error.message : t("wizard.validationError"));
+      setNavigationError(error instanceof ApiError ? formatWizardValidationError(error, t) : t("wizard.validationError"));
     } finally {
       setIsMovingNext(false);
     }
@@ -75,6 +76,9 @@ export function WizardShell({ projectId }: { projectId: string }) {
             <div style={{ fontSize: 13, color: "#627084", textTransform: "uppercase", letterSpacing: 0 }}>
               Wizard
             </div>
+            <p style={{ margin: 0, color: "#475569", lineHeight: 1.5 }}>
+              {stepDescription}
+            </p>
             <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{stepTitle}</h2>
           </div>
 
@@ -102,4 +106,27 @@ export function WizardShell({ projectId }: { projectId: string }) {
       </div>
     </div>
   );
+}
+
+function formatWizardValidationError(error: ApiError, t: (key: string) => string) {
+  const validations = error.errors.flatMap((item) => {
+    const value = item.details?.validations;
+    return Array.isArray(value) ? value : [];
+  });
+  const firstValidation = validations.find((item): item is { code: string; status: string; message?: string } => {
+    if (!item || typeof item !== "object") return false;
+    const candidate = item as { code?: unknown; status?: unknown };
+    return typeof candidate.code === "string" && candidate.status === "error";
+  });
+
+  if (!firstValidation) {
+    return error.message || t("wizard.validationError");
+  }
+
+  const translated = t(`wizard.validation.${firstValidation.code}`);
+  if (!translated.startsWith("[[")) {
+    return translated;
+  }
+
+  return firstValidation.message ?? error.message ?? t("wizard.validationError");
 }

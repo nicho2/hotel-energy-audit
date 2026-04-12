@@ -110,6 +110,9 @@ class WizardService:
             normalized_payload = self._save_project_payload(project, normalized_payload)
         elif definition.code == "context":
             normalized_payload = self._save_context_payload(project, normalized_payload)
+        elif definition.code == "usage":
+            normalized_payload = self._normalize_usage_payload(normalized_payload)
+            self.payload_repository.upsert(project.id, definition.code, normalized_payload)
         else:
             self.payload_repository.upsert(project.id, definition.code, normalized_payload)
 
@@ -170,6 +173,12 @@ class WizardService:
         if draft_payload:
             self.payload_repository.upsert(project.id, "context", draft_payload)
         return self._context_payload(project) | draft_payload
+
+    def _normalize_usage_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        occupancy_value = self._to_float(payload.get("average_occupancy_rate"))
+        if occupancy_value is not None and occupancy_value > 1:
+            payload["average_occupancy_rate"] = round(occupancy_value / 100, 4)
+        return payload
 
     def _advance_to(self, project: Project, step_number: int) -> None:
         next_step = min(max(step_number, 1), len(WIZARD_STEP_DEFINITIONS))
