@@ -8,17 +8,20 @@ from app.db.models.branding_profile import BrandingProfile
 from app.db.models.building import Building
 from app.db.models.building_zone import BuildingZone
 from app.db.models.calculation_run import CalculationRun
+from app.db.models.climate_zone import ClimateZone
+from app.db.models.country_profile import CountryProfile
 from app.db.models.economic_result import EconomicResult
 from app.db.models.organization import Organization
 from app.db.models.project import Project
+from app.db.models.project_template import ProjectTemplate
 from app.db.models.result_by_use import ResultByUse
 from app.db.models.result_by_zone import ResultByZone
 from app.db.models.result_summary import ResultSummary
 from app.db.models.scenario import Scenario
-from app.db.models.scenario_solution_assignment import ScenarioSolutionAssignment
 from app.db.models.solution_catalog import SolutionCatalog
 from app.db.models.solution_definition import SolutionDefinition
 from app.db.models.technical_system import TechnicalSystem
+from app.db.models.usage_profile import UsageProfile
 from app.db.models.user import User
 from app.db.session import SessionLocal
 try:
@@ -35,6 +38,97 @@ DEMO_SALES_PASSWORD = "sales1234"
 PARTNER_ORGANIZATION_SLUG = "partner-demo-org"
 PARTNER_USER_EMAIL = "partner@hotel-energy-audit.example.com"
 PARTNER_USER_PASSWORD = "partner1234"
+
+COUNTRY_PROFILE_SEEDS = [
+    {
+        "country_code": "FR",
+        "name_fr": "France",
+        "name_en": "France",
+        "regulatory_scope": "france_specific",
+        "currency_code": "EUR",
+        "default_language": "fr",
+        "default_discount_rate": 0.06,
+        "default_energy_inflation_rate": 0.03,
+        "default_analysis_period_years": 15,
+    }
+]
+
+CLIMATE_ZONE_SEEDS = [
+    {
+        "country_code": "FR",
+        "code": "FR-TEMP",
+        "name_fr": "France tempérée",
+        "name_en": "Temperate France",
+        "heating_severity_index": 1.0,
+        "cooling_severity_index": 0.75,
+        "solar_exposure_index": 0.85,
+        "default_weather_profile_json": {"hdd_base_18": 2200, "cdd_base_26": 120},
+        "is_default": True,
+    },
+    {
+        "country_code": "FR",
+        "code": "FR-MED",
+        "name_fr": "France méditerranéenne",
+        "name_en": "Mediterranean France",
+        "heating_severity_index": 0.65,
+        "cooling_severity_index": 1.25,
+        "solar_exposure_index": 1.2,
+        "default_weather_profile_json": {"hdd_base_18": 1400, "cdd_base_26": 360},
+        "is_default": False,
+    },
+]
+
+USAGE_PROFILE_SEEDS = [
+    {
+        "country_code": "FR",
+        "code": "FR_HOTEL_GUEST_ROOMS_STANDARD",
+        "name_fr": "Chambres hôtel standard",
+        "name_en": "Standard hotel guest rooms",
+        "building_type": "hotel",
+        "zone_type": "guest_rooms",
+        "default_occupancy_rate": 0.68,
+        "seasonality_profile_json": {
+            "jan": 0.55,
+            "feb": 0.58,
+            "mar": 0.64,
+            "apr": 0.70,
+            "may": 0.74,
+            "jun": 0.78,
+            "jul": 0.86,
+            "aug": 0.88,
+            "sep": 0.76,
+            "oct": 0.70,
+            "nov": 0.60,
+            "dec": 0.57,
+        },
+        "daily_schedule_json": {"occupied_hours": ["18:00-10:00"], "housekeeping_hours": ["10:00-15:00"]},
+        "ecs_intensity_level": "medium",
+    },
+    {
+        "country_code": "FR",
+        "code": "FR_HOTEL_LOBBY_STANDARD",
+        "name_fr": "Lobby hôtel standard",
+        "name_en": "Standard hotel lobby",
+        "building_type": "hotel",
+        "zone_type": "lobby",
+        "default_occupancy_rate": 0.45,
+        "seasonality_profile_json": {"annual": 1.0},
+        "daily_schedule_json": {"open_hours": ["00:00-24:00"], "peak_hours": ["07:00-10:00", "17:00-21:00"]},
+        "ecs_intensity_level": "low",
+    },
+    {
+        "country_code": "FR",
+        "code": "FR_HOTEL_RESTAURANT_STANDARD",
+        "name_fr": "Restaurant hôtel standard",
+        "name_en": "Standard hotel restaurant",
+        "building_type": "hotel",
+        "zone_type": "restaurant",
+        "default_occupancy_rate": 0.50,
+        "seasonality_profile_json": {"annual": 1.0},
+        "daily_schedule_json": {"service_hours": ["06:00-10:00", "12:00-14:30", "19:00-22:30"]},
+        "ecs_intensity_level": "high",
+    },
+]
 
 BACS_FUNCTION_DEFINITIONS_V1 = [
     {"code": "monitoring.central_supervision", "domain": "monitoring", "name": "Central supervision platform", "description": "A central platform supervises major technical equipment and provides a consolidated view.", "weight": 12.0, "order_index": 1},
@@ -201,7 +295,9 @@ ORG_SPECIFIC_SOLUTION_SEED = {
 def seed_dev_auth_data() -> None:
     with SessionLocal() as db:
         demo_org = _ensure_organization(db, slug=DEV_ORGANIZATION_SLUG, name=DEV_ORGANIZATION_NAME, default_language="fr")
-        _ensure_user(db, organization=demo_org, email=DEV_USER_EMAIL, password=DEV_USER_PASSWORD, first_name="Demo", last_name="Admin", role="org_admin", preferred_language="fr")
+        admin_user = _ensure_user(db, organization=demo_org, email=DEV_USER_EMAIL, password=DEV_USER_PASSWORD, first_name="Demo", last_name="Admin", role="org_admin", preferred_language="fr")
+        country_profiles = _ensure_reference_data(db)
+        _ensure_project_templates(db, demo_org, admin_user, country_profiles)
         _ensure_bacs_function_definitions(db)
         _ensure_solution_catalogs(db, demo_org)
         db.commit()
@@ -213,6 +309,13 @@ def seed_demo_showcase_data() -> None:
         admin_user = db.scalar(select(User).where(User.email == DEV_USER_EMAIL))
         if demo_org is None or admin_user is None:
             raise RuntimeError("Run seed_dev_auth_data() before seeding showcase data.")
+        default_country = _ensure_reference_data(db)["FR"]
+        default_climate = db.scalar(
+            select(ClimateZone).where(
+                ClimateZone.country_profile_id == default_country.id,
+                ClimateZone.is_default.is_(True),
+            )
+        )
         _ensure_user(db, organization=demo_org, email=DEMO_SALES_EMAIL, password=DEMO_SALES_PASSWORD, first_name="Commercial", last_name="Demo", role="org_member", preferred_language="fr")
         partner_org = _ensure_organization(db, slug=PARTNER_ORGANIZATION_SLUG, name="Partner Demo Organization", default_language="en")
         _ensure_user(db, organization=partner_org, email=PARTNER_USER_EMAIL, password=PARTNER_USER_PASSWORD, first_name="Partner", last_name="Viewer", role="org_admin", preferred_language="en")
@@ -220,12 +323,20 @@ def seed_demo_showcase_data() -> None:
         _remove_existing_demo_projects(db, demo_org.id)
         definitions_by_code = {definition.code: definition for definition in db.scalars(select(BacsFunctionDefinition)).all()}
         for project_seed in DEMO_PROJECTS:
-            _create_demo_project(db, demo_org, admin_user, definitions_by_code, project_seed)
+            _create_demo_project(
+                db,
+                demo_org,
+                admin_user,
+                definitions_by_code,
+                project_seed,
+                country_profile=default_country,
+                climate_zone=default_climate,
+            )
         db.commit()
 
 
-def _create_demo_project(db, organization: Organization, admin_user: User, definitions_by_code: dict[str, BacsFunctionDefinition], project_seed) -> None:
-    project = Project(organization_id=organization.id, created_by_user_id=admin_user.id, name=project_seed.name, client_name=project_seed.client_name, reference_code=project_seed.reference_code, description=project_seed.description, status="ready", wizard_step=10, building_type=project_seed.building_type, project_goal=project_seed.project_goal)
+def _create_demo_project(db, organization: Organization, admin_user: User, definitions_by_code: dict[str, BacsFunctionDefinition], project_seed, *, country_profile: CountryProfile, climate_zone: ClimateZone | None) -> None:
+    project = Project(organization_id=organization.id, created_by_user_id=admin_user.id, name=project_seed.name, client_name=project_seed.client_name, reference_code=project_seed.reference_code, description=project_seed.description, status="ready", wizard_step=10, building_type=project_seed.building_type, project_goal=project_seed.project_goal, country_profile_id=country_profile.id, climate_zone_id=climate_zone.id if climate_zone is not None else None)
     db.add(project)
     db.flush()
     building = Building(project_id=project.id, **project_seed.building)
@@ -339,6 +450,97 @@ def _ensure_branding_profile(db, *, organization: Organization, name: str, compa
         for other in db.scalars(select(BrandingProfile).where(BrandingProfile.organization_id == organization.id, BrandingProfile.id != branding.id)).all():
             other.is_default = False
     return branding
+
+
+def _ensure_reference_data(db) -> dict[str, CountryProfile]:
+    countries: dict[str, CountryProfile] = {}
+    for data in COUNTRY_PROFILE_SEEDS:
+        country = db.scalar(select(CountryProfile).where(CountryProfile.country_code == data["country_code"]))
+        if country is None:
+            country = CountryProfile(**data)
+            db.add(country)
+            db.flush()
+        else:
+            for field, value in data.items():
+                setattr(country, field, value)
+        countries[country.country_code] = country
+
+    for data in CLIMATE_ZONE_SEEDS:
+        country = countries[data["country_code"]]
+        climate_data = {key: value for key, value in data.items() if key != "country_code"}
+        climate = db.scalar(
+            select(ClimateZone).where(
+                ClimateZone.country_profile_id == country.id,
+                ClimateZone.code == climate_data["code"],
+            )
+        )
+        if climate is None:
+            climate = ClimateZone(country_profile_id=country.id, **climate_data)
+            db.add(climate)
+            db.flush()
+        else:
+            for field, value in climate_data.items():
+                setattr(climate, field, value)
+
+    for data in USAGE_PROFILE_SEEDS:
+        country = countries[data["country_code"]]
+        usage_data = {key: value for key, value in data.items() if key != "country_code"}
+        usage_profile = db.scalar(
+            select(UsageProfile).where(
+                UsageProfile.country_profile_id == country.id,
+                UsageProfile.code == usage_data["code"],
+            )
+        )
+        if usage_profile is None:
+            usage_profile = UsageProfile(country_profile_id=country.id, **usage_data)
+            db.add(usage_profile)
+            db.flush()
+        else:
+            for field, value in usage_data.items():
+                setattr(usage_profile, field, value)
+    return countries
+
+
+def _ensure_project_templates(
+    db,
+    organization: Organization,
+    admin_user: User,
+    countries: dict[str, CountryProfile],
+) -> ProjectTemplate:
+    template = db.scalar(
+        select(ProjectTemplate).where(
+            ProjectTemplate.organization_id == organization.id,
+            ProjectTemplate.name == "Hôtel urbain standard",
+        )
+    )
+    payload = {
+        "description": "Template MVP pour hôtel urbain avec zones chambres, lobby et restauration.",
+        "building_type": "hotel",
+        "country_profile_id": countries["FR"].id,
+        "default_payload_json": {
+            "wizard_mode": "express",
+            "building": {"has_restaurant": True, "main_orientation": "south"},
+            "zones": [
+                {"zone_type": "guest_rooms", "orientation": "south"},
+                {"zone_type": "lobby", "orientation": "north"},
+                {"zone_type": "restaurant", "orientation": "east"},
+            ],
+        },
+        "is_active": True,
+        "created_by_user_id": admin_user.id,
+    }
+    if template is None:
+        template = ProjectTemplate(
+            organization_id=organization.id,
+            name="Hôtel urbain standard",
+            **payload,
+        )
+        db.add(template)
+        db.flush()
+    else:
+        for field, value in payload.items():
+            setattr(template, field, value)
+    return template
 
 
 def _ensure_bacs_function_definitions(db) -> None:

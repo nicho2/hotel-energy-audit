@@ -9,7 +9,9 @@ from app.api.v1.endpoints import (
     buildings,
     calculations,
     history,
+    project_templates,
     projects,
+    reference_data,
     reports,
     results,
     scenario_management,
@@ -23,6 +25,8 @@ api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(branding.router, prefix="/branding", tags=["branding"])
+api_router.include_router(reference_data.router, tags=["reference-data"])
+api_router.include_router(project_templates.router, prefix="/project-templates", tags=["project-templates"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(assumptions.router, prefix="/projects", tags=["assumptions"])
 api_router.include_router(history.router, prefix="/projects", tags=["history"])

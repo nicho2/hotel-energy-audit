@@ -17,6 +17,7 @@ class ProjectService:
         project = self.repo.create(
             organization_id=current_user.organization_id,
             created_by_user_id=current_user.id,
+            template_id=payload.template_id,
             name=payload.name,
             client_name=payload.client_name,
             reference_code=payload.reference_code,
@@ -86,6 +87,7 @@ class ProjectService:
 def _project_audit_payload(project, *, changed_fields: list[str] | None = None) -> dict:
     data = {
         "id": project.id,
+        "template_id": getattr(project, "template_id", None),
         "name": project.name,
         "status": project.status,
         "building_type": project.building_type,

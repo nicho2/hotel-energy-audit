@@ -7,10 +7,13 @@ from app.db.models.calculation_assumption_set import CalculationAssumptionSet
 from app.db.models.calculation_run import CalculationRun
 from app.db.models.building import Building
 from app.db.models.building_zone import BuildingZone
+from app.db.models.climate_zone import ClimateZone
+from app.db.models.country_profile import CountryProfile
 from app.db.models.economic_result import EconomicResult
 from app.db.models.generated_report import GeneratedReport
 from app.db.models.organization import Organization
 from app.db.models.project import Project
+from app.db.models.project_template import ProjectTemplate
 from app.db.models.result_by_use import ResultByUse
 from app.db.models.result_by_zone import ResultByZone
 from app.db.models.result_summary import ResultSummary
@@ -19,6 +22,7 @@ from app.db.models.scenario_solution_assignment import ScenarioSolutionAssignmen
 from app.db.models.solution_catalog import SolutionCatalog
 from app.db.models.solution_definition import SolutionDefinition
 from app.db.models.technical_system import TechnicalSystem
+from app.db.models.usage_profile import UsageProfile
 from app.db.models.user import User
 
 __all__ = [
@@ -31,10 +35,13 @@ __all__ = [
     "CalculationRun",
     "Building",
     "BuildingZone",
+    "ClimateZone",
+    "CountryProfile",
     "EconomicResult",
     "GeneratedReport",
     "Organization",
     "Project",
+    "ProjectTemplate",
     "ResultByUse",
     "ResultByZone",
     "ResultSummary",
@@ -43,5 +50,6 @@ __all__ = [
     "SolutionCatalog",
     "SolutionDefinition",
     "TechnicalSystem",
+    "UsageProfile",
     "User",
 ]

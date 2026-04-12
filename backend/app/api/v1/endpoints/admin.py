@@ -10,6 +10,7 @@ from app.db.models.user import User
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.assumption_set_repository import AssumptionSetRepository
 from app.repositories.branding_repository import BrandingRepository
+from app.repositories.reference_data_repository import ReferenceDataRepository
 from app.repositories.solution_catalog_repository import SolutionCatalogRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.admin import (
@@ -27,6 +28,7 @@ from app.schemas.assumption_sets import (
 from app.schemas.audit import AuditLogResponse
 from app.schemas.branding import BrandingProfileResponse
 from app.schemas.common import ApiResponse, success_response
+from app.schemas.reference_data import ClimateZoneResponse, CountryProfileResponse
 from app.schemas.solutions import (
     SolutionCatalogResponse,
     SolutionDefinitionCreate,
@@ -36,6 +38,7 @@ from app.schemas.solutions import (
 from app.services.assumption_set_service import AssumptionSetService
 from app.services.admin_service import AdminService
 from app.services.audit_service import AuditService
+from app.services.reference_data_service import ReferenceDataService
 from app.services.solution_catalog_service import SolutionCatalogService
 
 router = APIRouter()
@@ -61,6 +64,10 @@ def get_solution_catalog_service(db: Session) -> SolutionCatalogService:
 
 def get_audit_service(db: Session) -> AuditService:
     return AuditService(AuditRepository(db))
+
+
+def get_reference_data_service(db: Session) -> ReferenceDataService:
+    return ReferenceDataService(ReferenceDataRepository(db))
 
 
 @router.get("/users", response_model=ApiResponse[list[AdminUserResponse]])
@@ -171,6 +178,25 @@ def list_admin_audit_logs(
             limit=limit,
         )
     )
+
+
+@router.get("/country-profiles", response_model=ApiResponse[list[CountryProfileResponse]])
+def list_admin_country_profiles(
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_org_admin),
+) -> ApiResponse[list[CountryProfileResponse]]:
+    service = get_reference_data_service(db)
+    return success_response(service.list_country_profiles())
+
+
+@router.get("/climate-zones", response_model=ApiResponse[list[ClimateZoneResponse]])
+def list_admin_climate_zones(
+    country_profile_id: UUID | None = None,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_org_admin),
+) -> ApiResponse[list[ClimateZoneResponse]]:
+    service = get_reference_data_service(db)
+    return success_response(service.list_climate_zones(country_profile_id))
 
 
 @router.get("/assumption-sets", response_model=ApiResponse[list[AssumptionSetResponse]])

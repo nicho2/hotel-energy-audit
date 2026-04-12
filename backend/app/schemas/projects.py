@@ -40,6 +40,7 @@ class ProjectResponse(BaseModel):
     id: UUID
     organization_id: UUID
     created_by_user_id: UUID
+    template_id: UUID | None
     name: str
     client_name: str | None
     reference_code: str | None

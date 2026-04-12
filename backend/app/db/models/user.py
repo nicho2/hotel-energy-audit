@@ -35,3 +35,6 @@ class User(Base):
 
     organization: Mapped["Organization"] = relationship(back_populates="users")
     projects_created: Mapped[list["Project"]] = relationship(back_populates="created_by_user")
+    project_templates_created: Mapped[list["ProjectTemplate"]] = relationship(
+        back_populates="created_by_user",
+    )

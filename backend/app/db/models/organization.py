@@ -39,3 +39,7 @@ class Organization(Base):
         back_populates="organization",
         cascade="all, delete-orphan",
     )
+    project_templates: Mapped[list["ProjectTemplate"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )

@@ -24,6 +24,11 @@ class Project(Base):
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    template_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("project_templates.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     client_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     reference_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
