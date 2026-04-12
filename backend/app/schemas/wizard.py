@@ -1,7 +1,7 @@
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 WizardStepStatus = Literal["completed", "current", "not_started"]
 ReadinessStatus = Literal["not_ready", "ready"]
@@ -9,7 +9,7 @@ ReadinessStatus = Literal["not_ready", "ready"]
 
 class WizardStepValidationResponse(BaseModel):
     code: str
-    status: Literal["pending"]
+    status: Literal["ok", "warning", "error", "pending"]
     message: str
 
 
@@ -33,3 +33,22 @@ class WizardStateResponse(BaseModel):
     current_step: int
     steps: list[WizardStepResponse]
     readiness: WizardReadinessResponse
+    step_payloads: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class WizardStepSaveRequest(BaseModel):
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class WizardStepSaveResponse(BaseModel):
+    project_id: UUID
+    step_code: str
+    saved: bool
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class WizardStepValidationResult(BaseModel):
+    step_code: str
+    valid: bool
+    message: str
+    validations: list[WizardStepValidationResponse] = Field(default_factory=list)

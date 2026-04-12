@@ -82,3 +82,7 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    wizard_step_payloads: Mapped[list["WizardStepPayload"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

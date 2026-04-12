@@ -1,17 +1,16 @@
-import type { BuildingPayload, BuildingResponse } from "@/types/building";
+import { apiClient } from "@/lib/api-client/client";
 import type { ApiEnvelope } from "@/types/api";
-import { upsertBuilding } from "@/features/building/api/upsert-building";
+import type { WizardStepSaveResponse } from "@/types/wizard";
 
 export async function saveStep(
   projectId: string,
   stepCode: string,
   payload: unknown,
   token?: string | null,
-): Promise<ApiEnvelope<BuildingResponse>> {
-  // MVP scope: only the building step is backed by a dedicated save endpoint today.
-  if (stepCode === "building") {
-    return upsertBuilding(projectId, payload as BuildingPayload, token);
-  }
-
-  throw new Error(`Step '${stepCode}' is not saveable yet.`);
+): Promise<ApiEnvelope<WizardStepSaveResponse>> {
+  return apiClient.put<WizardStepSaveResponse>(
+    `/api/v1/projects/${projectId}/wizard/steps/${stepCode}`,
+    { payload },
+    token,
+  );
 }

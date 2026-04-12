@@ -78,7 +78,12 @@ export function WizardShell({ projectId }: { projectId: string }) {
             <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{stepTitle}</h2>
           </div>
 
-          <WizardStepRenderer projectId={projectId} step={activeStep} onSaved={refetch} />
+          <WizardStepRenderer
+            projectId={projectId}
+            step={activeStep}
+            stepPayload={wizard.step_payloads[activeStep.code] ?? {}}
+            onSaved={refetch}
+          />
 
           {navigationError ? (
             <FeedbackBlock tone="error" compact>

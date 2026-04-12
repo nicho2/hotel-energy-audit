@@ -1,53 +1,30 @@
 import { apiClient, ApiError } from "@/lib/api-client/client";
 import type { ApiEnvelope } from "@/types/api";
-import type { ZoneValidationResponse } from "@/types/zones";
-
-export type StepValidationResult = {
-  step_code: string;
-  valid: boolean;
-  message: string;
-};
+import type { WizardStepValidationResult } from "@/types/wizard";
 
 export async function validateStep(
   projectId: string,
   stepCode: string,
   token?: string | null,
-): Promise<ApiEnvelope<StepValidationResult>> {
-  if (stepCode === "zones") {
-    const validation = await apiClient.get<ZoneValidationResponse>(`/api/v1/projects/${projectId}/zones/validation`, token);
+): Promise<ApiEnvelope<WizardStepValidationResult>> {
+  const validation = await apiClient.post<WizardStepValidationResult>(
+    `/api/v1/projects/${projectId}/wizard/steps/${stepCode}/validate`,
+    {},
+    token,
+  );
 
-    if (!validation.data.is_valid) {
-      const errorMessage =
-        validation.data.checks.find((item) => item.status === "error")?.message ??
-        "La validation des zones a echoue.";
+  if (!validation.data.valid) {
+    const errorMessage =
+      validation.data.validations.find((item) => item.status === "error")?.message ??
+      "La validation de l'etape a echoue.";
 
-      throw new ApiError(errorMessage, 422, [
-        {
-          code: "ZONE_VALIDATION_ERROR",
-          message: errorMessage,
-        },
-      ]);
-    }
-
-    return {
-      data: {
-        step_code: stepCode,
-        valid: true,
-        message: "Zones validation passed.",
+    throw new ApiError(errorMessage, 422, [
+      {
+        code: "WIZARD_STEP_VALIDATION_ERROR",
+        message: errorMessage,
       },
-      meta: {},
-      errors: [],
-    };
+    ]);
   }
 
-  // Placeholder facade: keeps a stable call site until backend step validation endpoints exist.
-  return Promise.resolve({
-    data: {
-      step_code: stepCode,
-      valid: true,
-      message: `Validation placeholder for ${projectId}/${stepCode}.`,
-    },
-    meta: {},
-    errors: [],
-  });
+  return validation;
 }

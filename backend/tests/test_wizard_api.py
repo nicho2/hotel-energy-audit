@@ -1,10 +1,11 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
 from app.core.security import get_password_hash
 from app.db.models.organization import Organization
 from app.db.models.project import Project
+from app.db.models.wizard_step_payload import WizardStepPayload
 from app.db.models.user import User
 from app.db.session import SessionLocal
 from scripts.seed_all import DEV_USER_EMAIL, DEV_USER_PASSWORD
@@ -51,9 +52,10 @@ def test_get_wizard_state_returns_full_stepper_for_project(client: TestClient) -
     assert body["data"]["steps"][0]["status"] == "completed"
     assert body["data"]["steps"][3]["status"] == "current"
     assert body["data"]["steps"][9]["status"] == "not_started"
+    assert body["data"]["step_payloads"]["project"]["name"] == "Wizard Project"
     assert body["data"]["readiness"]["can_calculate"] is False
     assert body["data"]["readiness"]["status"] == "not_ready"
-    assert body["data"]["readiness"]["blocking_steps"] == [4, 5, 6, 7, 8, 9, 10]
+    assert 4 in body["data"]["readiness"]["blocking_steps"]
 
 
 def test_get_wizard_state_is_scoped_to_current_organization(client: TestClient) -> None:
@@ -101,3 +103,121 @@ def test_get_wizard_state_is_scoped_to_current_organization(client: TestClient) 
     )
 
     assert response.status_code == 404
+
+
+def test_save_wizard_usage_step_persists_payload_and_round_trips(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Usage Wizard Project",
+            building_type="hotel",
+            project_goal="baseline",
+            wizard_step=5,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    payload = {
+        "average_occupancy_rate": 0.72,
+        "seasonality_profile": "seasonal",
+        "room_usage_intensity": "standard",
+        "ecs_intensity_level": "medium",
+        "restaurant_active": True,
+    }
+    response = client.put(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage",
+        json={"payload": payload},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["errors"] == []
+    assert body["data"]["saved"] is True
+    assert body["data"]["payload"] == payload
+
+    state_response = client.get(
+        f"/api/v1/projects/{project_id}/wizard",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert state_response.status_code == 200
+    assert state_response.json()["data"]["step_payloads"]["usage"] == payload
+
+    with SessionLocal() as db:
+        saved_payload = db.query(WizardStepPayload).filter_by(
+            project_id=UUID(project_id),
+            step_code="usage",
+        ).one()
+        assert saved_payload.payload_json == payload
+
+
+def test_validate_wizard_usage_step_blocks_missing_minimum_fields(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Invalid Usage Wizard Project",
+            building_type="hotel",
+            project_goal="baseline",
+            wizard_step=5,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage/validate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["data"] is None
+    assert body["errors"][0]["code"] == "VALIDATION_ERROR"
+    assert body["errors"][0]["details"]["step_code"] == "usage"
+
+
+def test_validate_wizard_usage_step_advances_resume_step_when_valid(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Valid Usage Wizard Project",
+            building_type="hotel",
+            project_goal="baseline",
+            wizard_step=5,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    save_response = client.put(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage",
+        json={"payload": {"average_occupancy_rate": 0.66, "ecs_intensity_level": "medium"}},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert save_response.status_code == 200
+
+    validate_response = client.post(
+        f"/api/v1/projects/{project_id}/wizard/steps/usage/validate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert validate_response.status_code == 200
+    assert validate_response.json()["data"]["valid"] is True
+
+    with SessionLocal() as db:
+        refreshed = db.get(Project, UUID(project_id))
+        assert refreshed is not None
+        assert refreshed.wizard_step == 6

@@ -1,6 +1,6 @@
 export type WizardValidation = {
   code: string;
-  status: "pending";
+  status: "ok" | "warning" | "error" | "pending";
   message: string;
 };
 
@@ -26,4 +26,19 @@ export type WizardState = {
   current_step: number;
   steps: WizardStep[];
   readiness: WizardReadiness;
+  step_payloads: Record<string, Record<string, unknown>>;
+};
+
+export type WizardStepSaveResponse = {
+  project_id: string;
+  step_code: string;
+  saved: boolean;
+  payload: Record<string, unknown>;
+};
+
+export type WizardStepValidationResult = {
+  step_code: string;
+  valid: boolean;
+  message: string;
+  validations: WizardValidation[];
 };

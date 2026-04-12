@@ -24,6 +24,7 @@ from app.db.models.solution_definition import SolutionDefinition
 from app.db.models.technical_system import TechnicalSystem
 from app.db.models.usage_profile import UsageProfile
 from app.db.models.user import User
+from app.db.models.wizard_step_payload import WizardStepPayload
 
 __all__ = [
     "BacsAssessment",
@@ -52,4 +53,5 @@ __all__ = [
     "TechnicalSystem",
     "UsageProfile",
     "User",
+    "WizardStepPayload",
 ]
