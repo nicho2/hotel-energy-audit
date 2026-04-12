@@ -71,6 +71,19 @@ class ProjectService:
         )
         return updated
 
+    def delete_project(self, project_id, current_user):
+        project = self.get_project(project_id, current_user)
+        before_json = _project_audit_payload(project)
+        self._audit(
+            action="project_deleted",
+            entity_id=project.id,
+            current_user=current_user,
+            before_json=before_json,
+            project_id=project.id,
+        )
+        self.repo.delete(project)
+        return project
+
     def _resolve_branding_profile_id(self, branding_profile_id, organization_id):
         if branding_profile_id is None:
             return None

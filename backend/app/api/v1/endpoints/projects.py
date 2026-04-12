@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps.auth import get_current_user, require_project_access
+from app.api.deps.auth import get_current_user, require_org_admin, require_project_access
 from app.api.deps.db import get_db
 from app.db.models.project import Project
 from app.db.models.user import User
@@ -70,4 +70,16 @@ def update_project(
 ) -> ApiResponse[ProjectResponse]:
     service = get_project_service(db)
     project = service.update_project(project_id, payload, current_user)
+    return success_response(ProjectResponse.model_validate(project))
+
+
+@router.delete("/{project_id}", response_model=ApiResponse[ProjectResponse])
+def delete_project(
+    project_id: UUID,
+    _project_access: Project = Depends(require_project_access),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_org_admin),
+) -> ApiResponse[ProjectResponse]:
+    service = get_project_service(db)
+    project = service.delete_project(project_id, current_user)
     return success_response(ProjectResponse.model_validate(project))

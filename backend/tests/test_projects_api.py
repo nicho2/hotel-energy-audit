@@ -1,10 +1,11 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.core.security import get_password_hash
 from app.db.models.branding_profile import BrandingProfile
+from app.db.models.building import Building
 from app.db.models.organization import Organization
 from app.db.models.project import Project
 from app.db.models.user import User
@@ -20,6 +21,15 @@ def _login(client: TestClient) -> tuple[str, dict]:
     assert response.status_code == 200
     body = response.json()
     return body["data"]["access_token"], body["data"]["user"]
+
+
+def _login_with_credentials(client: TestClient, email: str, password: str) -> str:
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert response.status_code == 200
+    return response.json()["data"]["access_token"]
 
 
 def test_create_project_returns_created_project_for_current_organization(client: TestClient) -> None:
@@ -292,3 +302,122 @@ def test_create_project_persists_branding_profile_id(client: TestClient) -> None
     assert response.status_code == 200
     body = response.json()["data"]
     assert body["branding_profile_id"] == str(branding_profile.id)
+
+
+def test_delete_project_is_available_to_org_admin(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Project To Delete",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
+            building_type="hotel",
+            project_goal="baseline",
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    response = client.delete(
+        f"/api/v1/projects/{project_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["id"] == project_id
+
+    get_response = client.get(
+        f"/api/v1/projects/{project_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert get_response.status_code == 404
+
+
+def test_delete_project_cascades_existing_project_children(client: TestClient) -> None:
+    token, user = _login(client)
+
+    with SessionLocal() as db:
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Project With Children To Delete",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
+            building_type="hotel",
+            project_goal="baseline",
+        )
+        db.add(project)
+        db.flush()
+        building = Building(
+            project_id=project.id,
+            name="Child Building",
+            gross_floor_area_m2=1200,
+            number_of_rooms=42,
+        )
+        db.add(building)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+        building_id = building.id
+
+    response = client.delete(
+        f"/api/v1/projects/{project_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    with SessionLocal() as db:
+        assert db.get(Project, UUID(project_id)) is None
+        assert db.get(Building, building_id) is None
+
+
+def test_delete_project_rejects_non_admin_user(client: TestClient) -> None:
+    admin_token, user = _login(client)
+    member_email = f"project-member-{uuid4().hex[:8]}@example.com"
+    member_password = "password123"
+
+    with SessionLocal() as db:
+        member = User(
+            organization_id=user["organization_id"],
+            email=member_email,
+            password_hash=get_password_hash(member_password),
+            first_name="Project",
+            last_name="Member",
+            role="org_member",
+            preferred_language="fr",
+            is_active=True,
+        )
+        db.add(member)
+        db.flush()
+        project = Project(
+            organization_id=user["organization_id"],
+            created_by_user_id=user["id"],
+            name="Protected Project",
+            country_profile_id=uuid4(),
+            climate_zone_id=uuid4(),
+            building_type="hotel",
+            project_goal="baseline",
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        project_id = str(project.id)
+
+    sales_token = _login_with_credentials(client, member_email, member_password)
+
+    response = client.delete(
+        f"/api/v1/projects/{project_id}",
+        headers={"Authorization": f"Bearer {sales_token}"},
+    )
+
+    assert response.status_code == 403
+
+    get_response = client.get(
+        f"/api/v1/projects/{project_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert get_response.status_code == 200

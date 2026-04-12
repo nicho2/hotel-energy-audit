@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.project import Project
@@ -44,3 +44,7 @@ class ProjectRepository:
         self.db.commit()
         self.db.refresh(project)
         return project
+
+    def delete(self, project: Project) -> None:
+        self.db.execute(delete(Project).where(Project.id == project.id))
+        self.db.commit()
