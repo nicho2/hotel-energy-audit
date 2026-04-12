@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ApiError } from "@/lib/api-client/errors";
 import { useAuthContext } from "@/providers/auth-provider";
+import { useI18n } from "@/providers/i18n-provider";
 import type { BacsClass } from "@/types/bacs";
 import { useBacs } from "../hooks/use-bacs";
 import { bacsStepSchema, type BacsStepFormValues } from "../schemas/bacs-schema";
@@ -38,6 +39,7 @@ type BacsStepFormProps = {
 
 export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
   const { user } = useAuthContext();
+  const { t } = useI18n();
   const bacs = useBacs(projectId);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -80,7 +82,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
       });
       await Promise.all([bacs.current.refetch(), bacs.summary.refetch(), onSaved?.()]);
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "Enregistrement BACS impossible.");
+      setSubmitError(error instanceof ApiError ? error.message : t("wizard.bacs.saveError"));
     }
   };
 
@@ -90,14 +92,14 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
   };
 
   if (bacs.current.isLoading || bacs.summary.isLoading) {
-    return <div>Chargement du questionnaire BACS...</div>;
+    return <div>{t("wizard.bacs.loading")}</div>;
   }
 
   if (bacs.current.error || bacs.summary.error) {
     return (
       <div style={{ display: "grid", gap: 12 }}>
         <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "#fff", padding: 16, color: "#b91c1c" }}>
-          Impossible de charger les donnees BACS du projet.
+          {t("wizard.bacs.loadError")}
         </div>
         <div>
           <button
@@ -105,7 +107,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
             onClick={handleRefresh}
             style={{ borderRadius: 10, border: "1px solid #14365d", background: "#fff", color: "#14365d", padding: "10px 14px", fontWeight: 600 }}
           >
-            Recharger
+            {t("wizard.bacs.reload")}
           </button>
         </div>
       </div>
@@ -120,7 +122,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
             BACS
           </div>
           <div style={{ fontSize: 16, color: "#334155" }}>
-            Renseignez les fonctions d&apos;automatisation presentes pour produire un score lisible par domaine.
+            {t("wizard.bacs.intro")}
           </div>
         </div>
         <button
@@ -129,7 +131,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
           disabled={bacs.current.isFetching || bacs.summary.isFetching}
           style={{ borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", padding: "10px 14px", fontWeight: 600 }}
         >
-          {bacs.current.isFetching || bacs.summary.isFetching ? "Actualisation..." : "Rafraichir"}
+          {bacs.current.isFetching || bacs.summary.isFetching ? t("wizard.bacs.refreshing") : t("wizard.bacs.refresh")}
         </button>
       </div>
 
@@ -137,15 +139,15 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
         <div style={{ display: "grid", gap: 16 }}>
           <section style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, display: "grid", gap: 16 }}>
             <div style={{ display: "grid", gap: 4 }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Questionnaire</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{t("wizard.bacs.questionnaireTitle")}</div>
               <div style={{ fontSize: 14, color: "#627084" }}>
-                {selectionCount} fonction(s) selectionnee(s) sur {functions.length}.
+                {t("wizard.bacs.selectionCount", { selected: selectionCount, total: functions.length })}
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ display: "grid", gap: 6 }}>
-                <label htmlFor="bacs_assessor_name" style={{ fontSize: 14, fontWeight: 600 }}>Evaluateur</label>
+                <label htmlFor="bacs_assessor_name" style={{ fontSize: 14, fontWeight: 600 }}>{t("wizard.bacs.assessorName")}</label>
                 <input
                   id="bacs_assessor_name"
                   {...register("assessor_name")}
@@ -155,28 +157,28 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
               </div>
 
               <div style={{ display: "grid", gap: 6 }}>
-                <label htmlFor="bacs_manual_override_class" style={{ fontSize: 14, fontWeight: 600 }}>Override manuel</label>
+                <label htmlFor="bacs_manual_override_class" style={{ fontSize: 14, fontWeight: 600 }}>{t("wizard.bacs.manualOverride")}</label>
                 {canManualOverride ? (
                   <select
                     id="bacs_manual_override_class"
                     {...register("manual_override_class")}
                     style={{ width: "100%", borderRadius: 8, border: "1px solid #d1d5db", padding: "10px 12px", fontSize: 14, background: "#fff" }}
                   >
-                    <option value="">Aucun override</option>
+                    <option value="">{t("wizard.bacs.noOverride")}</option>
                     {["A", "B", "C", "D", "E"].map((item) => (
                       <option key={item} value={item}>{item}</option>
                     ))}
                   </select>
                 ) : (
                   <div style={{ borderRadius: 8, border: "1px solid #e5e7eb", padding: "10px 12px", fontSize: 14, background: "#f8fafc", color: "#627084" }}>
-                    Reserve a l&apos;administrateur d&apos;organisation.
+                    {t("wizard.bacs.adminOnly")}
                   </div>
                 )}
               </div>
             </div>
 
             <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="bacs_notes" style={{ fontSize: 14, fontWeight: 600 }}>Notes</label>
+              <label htmlFor="bacs_notes" style={{ fontSize: 14, fontWeight: 600 }}>{t("wizard.bacs.notes")}</label>
               <textarea
                 id="bacs_notes"
                 rows={4}
@@ -188,7 +190,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
 
           {functions.length === 0 ? (
             <section style={{ border: "1px dashed #cbd5e1", borderRadius: 16, padding: 24, textAlign: "center", color: "#627084" }}>
-              Le catalogue BACS est vide pour ce projet.
+              {t("wizard.bacs.emptyCatalog")}
             </section>
           ) : (
             <BacsQuestionnaire functions={functions} selectedFunctionIds={selectedFunctionIds} onToggle={toggleFunction} />
@@ -221,7 +223,7 @@ export function BacsStepForm({ projectId, onSaved }: BacsStepFormProps) {
             cursor: bacs.saveAssessment.isPending || bacs.saveFunctions.isPending ? "not-allowed" : "pointer",
           }}
         >
-          {bacs.saveAssessment.isPending || bacs.saveFunctions.isPending ? "Enregistrement..." : "Enregistrer BACS"}
+          {bacs.saveAssessment.isPending || bacs.saveFunctions.isPending ? t("wizard.saving") : t("wizard.bacs.save")}
         </button>
       </div>
     </form>
