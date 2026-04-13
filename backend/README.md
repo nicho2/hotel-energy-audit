@@ -73,5 +73,51 @@ Comptes disponibles :
 Cas de demonstration charges :
 
 - `DEMO-HOTEL-001` : Hotel Lumiere Paris
-- `DEMO-APARTHOTEL-001` : Canal Suites Aparthotel
+- `DEMO-HOTEL-SW-001` : Hotel Belvedere Sud-Ouest
 - `DEMO-RESIDENCE-001` : Residence Azur Seaside
+
+## Nettoyage de la base locale
+
+Un outil de nettoyage non destructif par defaut est disponible:
+
+```bash
+py -3.12 scripts/db_cleanup.py stats
+```
+
+Les commandes de nettoyage simulent l'action tant que `--execute` n'est pas fourni:
+
+```bash
+py -3.12 scripts/db_cleanup.py purge-demo-projects
+py -3.12 scripts/db_cleanup.py --execute purge-demo-projects
+py -3.12 scripts/db_cleanup.py --execute --delete-files reset-working-data
+py -3.12 scripts/db_cleanup.py --execute --delete-files reset-demo
+```
+
+Commandes utiles:
+
+- `stats`: affiche le nombre de lignes par table.
+- `purge-demo-projects`: supprime uniquement les projets demo seedes.
+- `purge-reports`: supprime les metadonnees de rapports generes; avec `--delete-files`, supprime aussi les PDF.
+- `purge-audit-logs`: vide les journaux d'audit.
+- `purge-projects`: supprime les projets et donnees dependantes.
+- `reset-working-data`: supprime projets, rapports et audit logs, mais conserve organisations, utilisateurs, referentiels, hypotheses versionnees, templates et catalogues.
+- `reset-demo`: recharge les donnees de demo apres suppression des projets demo existants.
+
+Pour limiter certaines actions a une organisation:
+
+```bash
+py -3.12 scripts/db_cleanup.py --organization-slug demo-org reset-working-data
+py -3.12 scripts/db_cleanup.py --execute --organization-slug demo-org reset-working-data
+```
+
+### Retour a une base vierge
+
+Cette procedure supprime toute la base `hotel_audit`, la recree, applique les migrations, puis recharge les donnees de demo.
+
+```bash
+psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='hotel_audit' AND pid <> pg_backend_pid();"
+psql -h localhost -U postgres -d postgres -c "DROP DATABASE IF EXISTS hotel_audit;"
+psql -h localhost -U postgres -d postgres -c "CREATE DATABASE hotel_audit;"
+alembic upgrade head
+py -3.12 scripts/seed_all.py
+```
