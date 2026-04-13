@@ -14,6 +14,28 @@
           <td><span class="tag">{{ results.summary.scenario_bacs_class or "-" }}</span></td>
         </tr>
         <tr>
+          <td>Energy savings</td>
+          <td>{{ "%.0f"|format(results.summary.energy_savings_kwh_year) }} kWh/year</td>
+        </tr>
+        <tr>
+          <td>Energy intensity baseline / scenario</td>
+          <td>
+            {% if results.summary.baseline_energy_intensity_kwh_m2 %}
+            {{ "%.1f"|format(results.summary.baseline_energy_intensity_kwh_m2) }} / {{ "%.1f"|format(results.summary.scenario_energy_intensity_kwh_m2) }} kWh/m2.year
+            {% else %}
+            -
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>CO2 baseline / scenario</td>
+          <td>{{ "%.0f"|format(results.summary.baseline_co2_kg_year) }} / {{ "%.0f"|format(results.summary.scenario_co2_kg_year) }} kg/year</td>
+        </tr>
+        <tr>
+          <td>CO2 savings</td>
+          <td>{{ "%.0f"|format(results.summary.co2_savings_kg_year) }} kg/year ({{ "%.1f"|format(results.summary.co2_savings_percent) }}%)</td>
+        </tr>
+        <tr>
           <td>Total CAPEX</td>
           <td>{{ "%.0f"|format(results.economic.total_capex) }}</td>
         </tr>

@@ -1,0 +1,31 @@
+<section class="section">
+  <h2>Project Context</h2>
+  <div class="card">
+    <p>
+      The study is prepared for scenario comparison and decision support. Values are calculated from the
+      project inputs, selected scenario, BACS declarations, technical systems and versioned assumptions.
+    </p>
+    <table>
+      <tbody>
+        <tr>
+          <th>Project</th>
+          <td>{{ project.name }}</td>
+          <th>Client</th>
+          <td>{{ project.client_name or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Scenario</th>
+          <td>{{ scenario.name }}</td>
+          <th>Scenario Status</th>
+          <td>{{ scenario.status or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Building Type</th>
+          <td>{{ project.building_type }}</td>
+          <th>Project Goal</th>
+          <td>{{ project.project_goal or "-" }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from app.reporting.builders.base_report_builder import BaseReportBuilder
+from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
 
 
 class DetailedReportBuilder(BaseReportBuilder):
@@ -44,6 +45,10 @@ class DetailedReportBuilder(BaseReportBuilder):
         context["scenario"]["solutions"] = self._build_solutions_payload(scenario_solutions)
         context["comparison"] = self._build_comparison_payload(comparison_runs)
         context["assumptions"] = self._build_assumptions_payload(calculation_run.input_snapshot)
+        context["recommendations"] = ExecutiveReportBuilder._build_recommendations(
+            calculation_run.result_summary,
+            calculation_run.economic_result,
+        )
         context["limits"] = [
             "Simplified annual estimation for pre-audit and decision support.",
             "Results depend on declared building, zoning, system, BACS and scenario assumptions.",

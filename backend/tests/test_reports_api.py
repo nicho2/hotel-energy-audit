@@ -146,7 +146,9 @@ def test_download_generated_report_returns_pdf_file(client: TestClient) -> None:
     assert report["file_name"] in response.headers["content-disposition"]
     assert response.content.startswith(b"%PDF-1.4")
     assert b"Executive Summary" in response.content
+    assert b"Project Context" in response.content
     assert b"Results Overview" in response.content
+    assert b"Methodology And Limits" in response.content
 
 
 def test_generated_detailed_pdf_honors_optional_sections(client: TestClient) -> None:
@@ -181,7 +183,10 @@ def test_generated_detailed_pdf_honors_optional_sections(client: TestClient) -> 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF-1.4")
+    assert b"Project Context" in response.content
+    assert b"Initial Estimated State" in response.content
     assert b"Regulatory Context" in response.content
+    assert b"Recommendation And Action Plan" in response.content
     assert b"Assumptions And Limits" not in response.content
     assert b"Technical Annexes" not in response.content
 
@@ -206,14 +211,23 @@ def test_get_executive_report_html_returns_rendered_document(client: TestClient)
     assert body["project_id"] == project_id
     assert body["scenario_id"] == scenario_id
     assert body["title"] == "Executive report - Calculation Project"
+    assert 'lang="en"' in body["html"]
     assert "Executive Summary" in body["html"]
+    assert "Project Context" in body["html"]
     assert "Building Snapshot" in body["html"]
+    assert "BACS Snapshot" in body["html"]
     assert "Results Overview" in body["html"]
     assert "Recommendations" in body["html"]
+    assert "Methodology And Limits" in body["html"]
     assert "Scenario Energy" in body["html"]
+    assert "CO2 Reduction" in body["html"]
+    assert "NPV" in body["html"]
+    assert "simplified annual estimate" in body["html"]
     assert body["context"]["project"]["name"] == "Calculation Project"
     assert body["context"]["scenario"]["id"] == scenario_id
     assert body["context"]["branding"]["source"] == "fallback"
+    assert body["context"]["methodology"]["disclaimer"]
+    assert body["context"]["results"]["summary"]["baseline_co2_kg_year"] >= 0
     assert body["context"]["results"]["summary"]["scenario_energy_kwh_year"] == calculate_response.json()["data"]["summary"]["scenario_energy_kwh_year"]
 
 
@@ -239,17 +253,23 @@ def test_get_detailed_report_html_returns_extended_sections(client: TestClient) 
     assert body["report_type"] == "detailed"
     assert body["title"] == "Detailed report - Calculation Project"
     assert "Executive Summary" in body["html"]
+    assert "Project Context" in body["html"]
     assert "Building Description" in body["html"]
+    assert "Initial Estimated State" in body["html"]
     assert "Zone Detail" in body["html"]
     assert "System Detail" in body["html"]
     assert "BACS Analysis By Domain" in body["html"]
     assert "Scenario Comparison" in body["html"]
     assert "Economic Analysis" in body["html"]
+    assert "Economic Assumptions" in body["html"]
+    assert "Recommendation And Action Plan" in body["html"]
     assert "Assumptions And Limits" in body["html"]
     assert "Technical Annexes" in body["html"]
+    assert "This report is not a dynamic simulation" in body["html"]
     assert "Main heating plant" in body["html"]
     assert len(body["html"]) > len(executive_response.json()["data"]["html"])
     assert body["context"]["report"]["report_type"] == "detailed"
+    assert body["context"]["methodology"]["traceability"]
     assert {system["name"] for system in body["context"]["systems"]} >= {"Main heating plant", "DHW generation"}
 
 

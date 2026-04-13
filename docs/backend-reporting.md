@@ -17,15 +17,23 @@ Supported report types:
 
 The detailed report reuses the executive cover and summary sections, then adds:
 
+- project context;
 - building description;
+- initial estimated state, including usage breakdown and dominant use;
 - zone detail;
 - system detail;
 - BACS analysis by domain;
 - scenario comparison;
-- economic analysis;
+- economic analysis with key assumptions;
+- recommendation and action plan;
 - assumptions and limits;
 - optional regulatory context;
 - optional technical annexes.
+
+Both executive and detailed contexts expose the main MVP KPIs expected by the report specification:
+annual energy, energy savings, CO2 estimate, current/scenario BACS class, CAPEX, payback and NPV.
+The executive report also includes a concise methodology and limits section so generated PDFs remain
+explicitly positioned as simplified annual estimates for pre-audit and scenario comparison.
 
 ## Detailed Flags
 

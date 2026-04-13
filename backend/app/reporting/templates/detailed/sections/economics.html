@@ -71,4 +71,27 @@
     </table>
   </div>
   {% endif %}
+  <div class="card" style="margin-top: 14px;">
+    <h3>Economic Assumptions</h3>
+    <table>
+      <tbody>
+        <tr>
+          <th>Analysis Period</th>
+          <td>{{ results.economic.analysis_period_years }} years</td>
+          <th>Discount Rate</th>
+          <td>{{ "%.2f"|format(results.economic.discount_rate or 0) }}</td>
+        </tr>
+        <tr>
+          <th>Energy Inflation</th>
+          <td>{{ "%.2f"|format(results.economic.energy_inflation_rate or 0) }}</td>
+          <th>Subsidies</th>
+          <td>{{ "%.0f"|format(results.economic.subsidies or 0) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted">
+      Economic indicators are simplified decision-support estimates using the assumptions captured with
+      the calculation run.
+    </p>
+  </div>
 </section>

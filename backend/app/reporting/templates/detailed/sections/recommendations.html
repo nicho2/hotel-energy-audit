@@ -1,0 +1,53 @@
+<section class="section">
+  <h2>Recommendation And Action Plan</h2>
+  <div class="card">
+    <h3>Decision Messages</h3>
+    <ul>
+      {% for item in recommendations %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <h3 style="margin-top: 18px;">Priority Actions</h3>
+    {% if scenario.solutions %}
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Scope</th>
+          <th>Expected Gain</th>
+          <th>CAPEX</th>
+          <th>Traceability</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for solution in scenario.solutions %}
+        <tr>
+          <td>{{ solution.solution_code }}</td>
+          <td>{{ solution.target_scope }}</td>
+          <td>
+            {% if solution.gain_override_percent %}
+            {{ "%.1f"|format(solution.gain_override_percent) }}%
+            {% else %}
+            From catalog assumptions
+            {% endif %}
+          </td>
+          <td>
+            {% if solution.capex_override %}
+            {{ "%.0f"|format(solution.capex_override) }}
+            {% else %}
+            From catalog assumptions
+            {% endif %}
+          </td>
+          <td>{{ solution.notes or "Captured in scenario solution assignments." }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">
+      No solution assignment is attached to this scenario. The report therefore presents the calculated
+      baseline/scenario delta without a detailed action list.
+    </p>
+    {% endif %}
+  </div>
+</section>

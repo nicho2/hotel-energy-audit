@@ -124,12 +124,15 @@
     <main class="page">
       {% include "executive/sections/cover.html" %}
       {% include "executive/sections/summary.html" %}
+      {% include "detailed/sections/context.html" %}
       {% include "detailed/sections/building_description.html" %}
+      {% include "detailed/sections/initial_state.html" %}
       {% include "detailed/sections/zones.html" %}
       {% include "detailed/sections/systems.html" %}
       {% include "detailed/sections/bacs.html" %}
       {% include "detailed/sections/scenario_comparison.html" %}
       {% include "detailed/sections/economics.html" %}
+      {% include "detailed/sections/recommendations.html" %}
       {% if report.include_assumptions %}
       {% include "detailed/sections/assumptions.html" %}
       {% endif %}

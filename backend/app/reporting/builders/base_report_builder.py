@@ -31,6 +31,26 @@ class BaseReportBuilder:
             raise ValueError("Calculation run is missing summary or economic results")
 
         merged_branding = self._merge_branding(branding, cover_tagline)
+        by_use_payload = [
+            {
+                "usage_type": item.usage_type,
+                "baseline_energy_kwh_year": item.baseline_energy_kwh_year,
+                "scenario_energy_kwh_year": item.scenario_energy_kwh_year,
+                "energy_savings_percent": item.energy_savings_percent,
+            }
+            for item in getattr(calculation_run, "results_by_use", [])
+        ]
+        input_snapshot = calculation_run.input_snapshot if isinstance(calculation_run.input_snapshot, dict) else {}
+        assumptions = input_snapshot.get("assumptions", {}) if isinstance(input_snapshot, dict) else {}
+        systems = input_snapshot.get("systems", []) if isinstance(input_snapshot, dict) else []
+        co2 = self._estimate_co2(by_use_payload, systems, assumptions)
+        gross_area = getattr(building, "gross_floor_area_m2", None) or 0
+        energy_savings_kwh = summary.baseline_energy_kwh_year - summary.scenario_energy_kwh_year
+        dominant_usage = max(
+            by_use_payload,
+            key=lambda item: item["baseline_energy_kwh_year"],
+            default=None,
+        )
         zones_payload = [
             {
                 "id": str(zone.id),
@@ -87,7 +107,14 @@ class BaseReportBuilder:
                 "summary": {
                     "baseline_energy_kwh_year": summary.baseline_energy_kwh_year,
                     "scenario_energy_kwh_year": summary.scenario_energy_kwh_year,
+                    "energy_savings_kwh_year": round(energy_savings_kwh, 2),
                     "energy_savings_percent": summary.energy_savings_percent,
+                    "baseline_energy_intensity_kwh_m2": round(summary.baseline_energy_kwh_year / gross_area, 1) if gross_area else None,
+                    "scenario_energy_intensity_kwh_m2": round(summary.scenario_energy_kwh_year / gross_area, 1) if gross_area else None,
+                    "baseline_co2_kg_year": co2["baseline_co2_kg_year"],
+                    "scenario_co2_kg_year": co2["scenario_co2_kg_year"],
+                    "co2_savings_kg_year": co2["co2_savings_kg_year"],
+                    "co2_savings_percent": co2["co2_savings_percent"],
                     "baseline_bacs_class": summary.baseline_bacs_class,
                     "scenario_bacs_class": summary.scenario_bacs_class,
                 },
@@ -111,15 +138,8 @@ class BaseReportBuilder:
                     "cash_flows": economic.cash_flows or [],
                     "is_roi_calculable": economic.is_roi_calculable,
                 },
-                "by_use": [
-                    {
-                        "usage_type": item.usage_type,
-                        "baseline_energy_kwh_year": item.baseline_energy_kwh_year,
-                        "scenario_energy_kwh_year": item.scenario_energy_kwh_year,
-                        "energy_savings_percent": item.energy_savings_percent,
-                    }
-                    for item in getattr(calculation_run, "results_by_use", [])
-                ],
+                "by_use": by_use_payload,
+                "dominant_usage": dominant_usage,
                 "by_zone": [
                     {
                         "zone_id": str(item.zone_id) if item.zone_id else None,
@@ -142,6 +162,18 @@ class BaseReportBuilder:
                 "input_snapshot": calculation_run.input_snapshot,
                 "notes": calculation_run.notes,
             },
+            "methodology": {
+                "disclaimer": (
+                    "This report is a simplified annual estimate for pre-audit, commercial discussion "
+                    "and scenario comparison. It is not a dynamic thermal simulation, statutory audit "
+                    "or regulatory compliance certificate."
+                ),
+                "traceability": (
+                    "Results are tied to the calculation run, engine version, input snapshot and active "
+                    "assumption set captured at calculation time."
+                ),
+                "economic_assumptions": assumptions.get("economic_inputs", {}),
+            },
             "zones": zones_payload,
         }
 
@@ -163,3 +195,32 @@ class BaseReportBuilder:
         if not merged_branding.get("cover_tagline"):
             merged_branding["cover_tagline"] = cover_tagline
         return merged_branding
+
+    @staticmethod
+    def _estimate_co2(by_use: list[dict[str, Any]], systems: list[dict[str, Any]], assumptions: dict[str, Any]) -> dict[str, float]:
+        factors = assumptions.get("co2_factors_json", {}) if isinstance(assumptions, dict) else {}
+        if not isinstance(factors, dict):
+            factors = {}
+        baseline = 0.0
+        scenario = 0.0
+        for item in by_use:
+            factor = BaseReportBuilder._co2_factor_for_usage(item["usage_type"], systems, factors)
+            baseline += item["baseline_energy_kwh_year"] * factor
+            scenario += item["scenario_energy_kwh_year"] * factor
+        savings = baseline - scenario
+        savings_percent = round(max(0.0, savings / baseline * 100), 1) if baseline > 0 else 0.0
+        return {
+            "baseline_co2_kg_year": round(baseline, 2),
+            "scenario_co2_kg_year": round(scenario, 2),
+            "co2_savings_kg_year": round(max(0.0, savings), 2),
+            "co2_savings_percent": savings_percent,
+        }
+
+    @staticmethod
+    def _co2_factor_for_usage(usage: str, systems: list[dict[str, Any]], factors: dict[str, Any]) -> float:
+        system_type = "dhw" if usage == "dhw" else usage
+        for system in systems:
+            if str(system.get("system_type")) == system_type and system.get("energy_source"):
+                source = str(system["energy_source"])
+                return float(factors.get(source, factors.get("gas" if source == "natural_gas" else source, 0.2)))
+        return float(factors.get("electricity" if usage in {"cooling", "ventilation", "lighting", "auxiliaries"} else "gas", 0.2))

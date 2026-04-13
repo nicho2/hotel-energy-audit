@@ -1,0 +1,32 @@
+<section class="section">
+  <h2>Project Context</h2>
+  <div class="card">
+    <p>
+      This report summarizes a simplified energy performance estimate for
+      <strong>{{ project.name }}</strong> and scenario <strong>{{ scenario.name }}</strong>.
+      It is intended for pre-audit discussion, commercial qualification and scenario comparison.
+    </p>
+    <table>
+      <tbody>
+        <tr>
+          <th>Client</th>
+          <td>{{ project.client_name or "-" }}</td>
+          <th>Project Goal</th>
+          <td>{{ project.project_goal or "-" }}</td>
+        </tr>
+        <tr>
+          <th>Scenario</th>
+          <td>{{ scenario.name }}</td>
+          <th>Calculation Run</th>
+          <td>{{ calculation.id }}</td>
+        </tr>
+        <tr>
+          <th>Engine Version</th>
+          <td>{{ calculation.engine_version }}</td>
+          <th>Generated</th>
+          <td>{{ report.generated_at }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

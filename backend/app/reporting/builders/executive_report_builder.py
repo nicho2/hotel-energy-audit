@@ -33,16 +33,18 @@ class ExecutiveReportBuilder(BaseReportBuilder):
         recommendations: list[str] = []
         if summary.energy_savings_percent >= 20:
             recommendations.append(
-                "Prioritize this scenario for commercial follow-up because projected savings exceed 20%."
+                "Prioritize this scenario for decision review: projected energy savings exceed 20%."
             )
         if economic.simple_payback_years is not None and economic.simple_payback_years <= 4:
             recommendations.append(
-                "Payback is within a commercially attractive range and supports rapid decision-making."
+                "Payback is in a commercially attractive range and supports rapid decision-making."
             )
         if summary.scenario_bacs_class and summary.scenario_bacs_class <= "B":
             recommendations.append(
                 f"BACS performance improves to class {summary.scenario_bacs_class}, strengthening operational control."
             )
+        if economic.npv > 0:
+            recommendations.append("NPV is positive over the analysis period, supporting long-term value creation.")
         if not recommendations:
             recommendations.append(
                 "Use this scenario as a discussion baseline and refine assumptions before investment commitment."

@@ -1,0 +1,16 @@
+<section class="section">
+  <h2>BACS Snapshot</h2>
+  <div class="grid">
+    <article class="card">
+      <div class="metric-label">Current Class</div>
+      <span class="metric-value">{{ results.summary.baseline_bacs_class or "-" }}</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Target Class</div>
+      <span class="metric-value">{{ results.summary.scenario_bacs_class or "-" }}</span>
+    </article>
+  </div>
+  <p class="muted" style="margin-top: 12px;">
+    BACS class is an estimated V1 decision-support indicator based on declared functions and selected scenario actions.
+  </p>
+</section>
