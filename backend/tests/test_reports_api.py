@@ -30,9 +30,9 @@ def test_generate_report_persists_metadata_and_stores_file(client: TestClient) -
     assert body["status"] == "generated"
     assert body["mime_type"] == "application/pdf"
     assert body["file_name"].endswith(".pdf")
-    assert body["file_size_bytes"] > 0
+    assert body["file_size_bytes"] > 1500
     assert body["branding_profile_id"] is None
-    assert body["generator_version"] == "placeholder_pdf_v1"
+    assert body["generator_version"] == "html_text_pdf_v1"
 
 
 def test_generate_detailed_report_persists_distinct_metadata_and_file(client: TestClient) -> None:
@@ -66,7 +66,8 @@ def test_generate_detailed_report_persists_distinct_metadata_and_file(client: Te
     assert body["status"] == "generated"
     assert body["mime_type"] == "application/pdf"
     assert body["file_name"] == f"detailed-report-{calculation_run_id}.pdf"
-    assert body["file_size_bytes"] > 0
+    assert body["file_size_bytes"] > 1500
+    assert body["generator_version"] == "html_text_pdf_v1"
 
 
 def test_list_project_reports_returns_generated_reports(client: TestClient) -> None:
@@ -144,6 +145,45 @@ def test_download_generated_report_returns_pdf_file(client: TestClient) -> None:
     assert response.headers["content-type"] == "application/pdf"
     assert report["file_name"] in response.headers["content-disposition"]
     assert response.content.startswith(b"%PDF-1.4")
+    assert b"Executive Summary" in response.content
+    assert b"Results Overview" in response.content
+
+
+def test_generated_detailed_pdf_honors_optional_sections(client: TestClient) -> None:
+    token, project_id, scenario_id = _create_ready_project_with_scenario(client)
+    calculate_response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/{scenario_id}/calculate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    calculation_run_id = calculate_response.json()["data"]["calculation_run_id"]
+
+    generate_response = client.post(
+        f"/api/v1/projects/{project_id}/reports",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "scenario_id": scenario_id,
+            "calculation_run_id": calculation_run_id,
+            "report_type": "detailed",
+            "language": "fr",
+            "include_assumptions": False,
+            "include_regulatory_section": True,
+            "include_annexes": False,
+        },
+    )
+
+    assert generate_response.status_code == 201
+    report = generate_response.json()["data"]
+    response = client.get(
+        f"/api/v1/reports/{report['id']}/download",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF-1.4")
+    assert b"Regulatory Context" in response.content
+    assert b"Assumptions And Limits" not in response.content
+    assert b"Technical Annexes" not in response.content
 
 
 def test_get_executive_report_html_returns_rendered_document(client: TestClient) -> None:

@@ -5,7 +5,7 @@ The reporting module follows the MVP pipeline:
 1. load project, scenario, calculation results, building data, zones and branding;
 2. build a serializable report context;
 3. render an HTML/Jinja template;
-4. generate and store a PDF artifact;
+4. generate and store a PDF artifact from the rendered HTML;
 5. persist `GeneratedReport` metadata.
 
 ## Report Types
@@ -36,6 +36,17 @@ Detailed rendering is controlled by:
 - `include_annexes`: includes technical annexes with messages, warnings and by-use/by-zone results.
 
 These flags are passed through both HTML rendering and PDF generation paths.
+
+## PDF Rendering
+
+PDF generation uses the backend `HtmlReportPdfRenderer` pipeline:
+
+1. render the existing Jinja HTML template;
+2. extract the printable report text from that HTML while ignoring CSS/script blocks;
+3. paginate content with a branded header and footer;
+4. write a valid PDF 1.4 artifact to the configured report storage directory.
+
+The renderer version is persisted in `GeneratedReport.generator_version` as `html_text_pdf_v1`. If rendering fails unexpectedly, the service writes a controlled fallback PDF with diagnostic text and stores a `:fallback` generator version. The public API contract and MIME type remain unchanged.
 
 ## API
 

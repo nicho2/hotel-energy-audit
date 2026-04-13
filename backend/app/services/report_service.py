@@ -8,6 +8,7 @@ from app.db.models.generated_report import GeneratedReport
 from app.db.models.user import User
 from app.reporting.builders.detailed_report_builder import DetailedReportBuilder
 from app.reporting.builders.executive_report_builder import ExecutiveReportBuilder
+from app.reporting.pdf_renderer import PDF_RENDERER_VERSION, HtmlReportPdfRenderer
 from app.repositories.bacs_repository import BacsRepository
 from app.repositories.branding_repository import BrandingRepository
 from app.repositories.building_repository import BuildingRepository
@@ -23,7 +24,7 @@ from app.schemas.reports import ExecutiveReportHtmlResponse, GeneratedReportResp
 
 
 class ReportService:
-    PLACEHOLDER_PDF_VERSION = "placeholder_pdf_v1"
+    PDF_RENDERER_VERSION = PDF_RENDERER_VERSION
 
     def __init__(
         self,
@@ -40,6 +41,7 @@ class ReportService:
         report_repository: ReportRepository,
         executive_builder: ExecutiveReportBuilder,
         detailed_builder: DetailedReportBuilder,
+        pdf_renderer: HtmlReportPdfRenderer | None = None,
         audit_service=None,
     ):
         self.project_repository = project_repository
@@ -55,6 +57,7 @@ class ReportService:
         self.report_repository = report_repository
         self.executive_builder = executive_builder
         self.detailed_builder = detailed_builder
+        self.pdf_renderer = pdf_renderer or HtmlReportPdfRenderer()
         self.audit_service = audit_service
 
     def build_executive_report_html(
@@ -216,13 +219,24 @@ class ReportService:
         absolute_storage_path = storage_root / relative_storage_path
         absolute_storage_path.parent.mkdir(parents=True, exist_ok=True)
 
-        pdf_bytes = self._render_placeholder_pdf(
-            title=html_report.title,
-            report_type=report_type,
-            project_id=html_report.project_id,
-            scenario_id=html_report.scenario_id,
-            calculation_run_id=html_report.calculation_run_id,
-        )
+        generator_version = self.PDF_RENDERER_VERSION
+        try:
+            pdf_bytes = self.pdf_renderer.render(
+                html=html_report.html,
+                title=html_report.title,
+                branding=html_report.context.get("branding", {}),
+                report_type=report_type,
+            )
+        except Exception as exc:  # pragma: no cover - defensive fallback for renderer failures
+            generator_version = f"{self.PDF_RENDERER_VERSION}:fallback"
+            pdf_bytes = self._render_fallback_pdf(
+                title=html_report.title,
+                report_type=report_type,
+                project_id=html_report.project_id,
+                scenario_id=html_report.scenario_id,
+                calculation_run_id=html_report.calculation_run_id,
+                reason=str(exc),
+            )
         absolute_storage_path.write_bytes(pdf_bytes)
         branding_profile, _ = self._resolve_branding(
             self.project_repository.get_by_id(html_report.project_id, current_user.organization_id)
@@ -242,7 +256,7 @@ class ReportService:
             mime_type="application/pdf",
             storage_path=relative_storage_path.as_posix(),
             file_size_bytes=len(pdf_bytes),
-            generator_version=self.PLACEHOLDER_PDF_VERSION,
+            generator_version=generator_version,
         )
         if self.audit_service is not None:
             self.audit_service.log(
@@ -345,23 +359,25 @@ class ReportService:
         )
 
     @staticmethod
-    def _render_placeholder_pdf(
+    def _render_fallback_pdf(
         *,
         title: str,
         report_type: str,
         project_id: UUID,
         scenario_id: UUID,
         calculation_run_id: UUID,
+        reason: str,
     ) -> bytes:
         lines = [
             title,
             "",
-            f"{report_type.title()} report placeholder",
+            f"{report_type.title()} report fallback",
             f"Project ID: {project_id}",
             f"Scenario ID: {scenario_id}",
             f"Calculation run ID: {calculation_run_id}",
             "",
-            "A richer PDF renderer can replace this placeholder without changing the API contract.",
+            "The HTML report was rendered, but PDF conversion failed.",
+            f"Reason: {reason[:180]}",
         ]
         return _build_simple_pdf("\n".join(lines))
 
