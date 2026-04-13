@@ -171,6 +171,7 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 - `auxiliaries_model_json`
 - `economic_defaults_json`
 - `bacs_rules_json`
+- `scoring_rules_json`
 - `co2_factors_json`
 - `notes`
 - `is_active`
@@ -201,6 +202,7 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 - `input_snapshot.assumptions.usage_payload` for wizard usage inputs used by the run
 - `input_snapshot.assumptions.climate_zone` for heating, cooling, and solar severity indexes
 - `input_snapshot.assumptions.economic_inputs` for discount rate, energy inflation, period, maintenance, subsidies, and energy prices used by the run
+- `input_snapshot.assumptions.scoring_rules_json` for scenario comparison score version, weights, thresholds, and BACS class points
 - `input_snapshot.selected_solutions[]` for scenario solution assignments and their resolved catalog assumptions when available
 
 The V1 engine is annual and simplified. Results vary by building surface, construction period, compactness, climate indexes, zones, orientation, occupancy, systems, BACS functions, and selected scenario solutions.
@@ -224,6 +226,16 @@ The V1 engine is annual and simplified. Results vary by building surface, constr
 - `energy_inflation_rate`
 - `cash_flows[]`
 - `is_roi_calculable`
+
+### scenario comparison scoring fields
+- `score`: backward-compatible global score on 0..100
+- `scoring_version`: version label from `scoring_rules_json.version`
+- `score_breakdown.weights`: normalized weights used for energy, BACS, ROI, and CAPEX
+- `score_breakdown.sub_scores`: 0..100 sub-score for each dimension
+- `score_breakdown.contributions`: weighted contribution of each dimension to `score`
+- `score_breakdown.dominant_contributors`: top dimensions used to explain the recommendation
+
+The comparison endpoint reads scoring rules from each calculation snapshot. If a historical run has no scoring rules, the platform V1 default is applied explicitly by the scoring module.
 
 ### solution definition fields
 - `id`

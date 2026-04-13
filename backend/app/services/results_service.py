@@ -21,6 +21,7 @@ from app.schemas.results import (
     ResultsByUseResponse,
     ResultsByZoneResponse,
 )
+from app.scoring.scenario_scoring import ScenarioScoreInput, score_scenario
 from app.services.project_service import ProjectService
 
 
@@ -37,8 +38,6 @@ class ResultsService:
         "ambient": 0.0,
         "other": 0.2,
     }
-    BACS_CLASS_POINTS = {"A": 100.0, "B": 80.0, "C": 60.0, "D": 40.0, "E": 20.0, "F": 0.0}
-
     def __init__(
         self,
         project_service: ProjectService,
@@ -176,13 +175,16 @@ class ResultsService:
                 (economic.annual_cost_savings / economic.total_capex) * 100.0,
                 1,
             ) if economic.total_capex > 0 else 0.0
-            score = self._compute_score(
-                energy_savings_percent=summary.energy_savings_percent,
-                scenario_bacs_class=summary.scenario_bacs_class,
-                roi_percent=roi_percent,
-                payback_years=economic.simple_payback_years,
-                capex=economic.total_capex,
-                annual_cost_savings=economic.annual_cost_savings,
+            scoring = score_scenario(
+                ScenarioScoreInput(
+                    energy_savings_percent=summary.energy_savings_percent,
+                    scenario_bacs_class=summary.scenario_bacs_class,
+                    roi_percent=roi_percent,
+                    payback_years=economic.simple_payback_years,
+                    capex=economic.total_capex,
+                    annual_cost_savings=economic.annual_cost_savings,
+                ),
+                self._scoring_rules_from_run(run),
             )
             comparison_items.append(
                 ScenarioComparisonItemResponse(
@@ -209,7 +211,14 @@ class ResultsService:
                     npv=economic.npv,
                     irr=economic.irr,
                     roi_percent=roi_percent,
-                    score=score,
+                    score=scoring["score"],
+                    scoring_version=scoring["version"],
+                    score_breakdown={
+                        "weights": scoring["weights"],
+                        "sub_scores": scoring["sub_scores"],
+                        "contributions": scoring["contributions"],
+                        "dominant_contributors": scoring["dominant_contributors"],
+                    },
                 )
             )
 
@@ -221,6 +230,8 @@ class ResultsService:
             scenario_id=recommended_item.scenario_id,
             scenario_name=recommended_item.scenario_name,
             score=recommended_item.score,
+            scoring_version=recommended_item.scoring_version,
+            dominant_contributors=(recommended_item.score_breakdown or {}).get("dominant_contributors", []),
             reasons=self._build_recommendation_reasons(recommended_item),
         )
         return ScenarioComparisonResponse(
@@ -265,37 +276,30 @@ class ResultsService:
             return 0.2
         return round(sum(weighted_factors) / len(weighted_factors), 3)
 
-    def _compute_score(
-        self,
-        *,
-        energy_savings_percent: float,
-        scenario_bacs_class: str | None,
-        roi_percent: float,
-        payback_years: float | None,
-        capex: float,
-        annual_cost_savings: float,
-    ) -> float:
-        bacs_points = self.BACS_CLASS_POINTS.get(scenario_bacs_class or "", 0.0)
-        payback_points = max(0.0, 100.0 - (payback_years * 10.0)) if payback_years is not None else 0.0
-        capex_penalty = min(capex / 5000.0, 20.0)
-        savings_bonus = min(annual_cost_savings / 1000.0, 20.0)
-        raw_score = (
-            energy_savings_percent * 2.0
-            + bacs_points * 0.2
-            + roi_percent * 0.8
-            + payback_points * 0.2
-            + savings_bonus
-            - capex_penalty
-        )
-        return round(max(raw_score, 0.0), 1)
+    @staticmethod
+    def _scoring_rules_from_run(run) -> dict:
+        snapshot = run.input_snapshot if isinstance(run.input_snapshot, dict) else {}
+        assumptions = snapshot.get("assumptions", {}) if isinstance(snapshot, dict) else {}
+        return assumptions.get("scoring_rules_json", {}) if isinstance(assumptions, dict) else {}
 
     def _build_recommendation_reasons(
         self,
         item: ScenarioComparisonItemResponse,
     ) -> list[str]:
         payback_label = f"{item.simple_payback_years:.1f} years" if item.simple_payback_years is not None else "not calculable"
+        labels = {
+            "energy": "energy savings",
+            "bacs": "BACS level",
+            "roi": "financial return",
+            "capex": "investment accessibility",
+        }
+        dominant = [
+            labels.get(value, value)
+            for value in ((item.score_breakdown or {}).get("dominant_contributors") or [])
+        ]
+        dominant_label = " and ".join(dominant) if dominant else "balanced scenario performance"
         return [
-            f"Best composite score based on energy savings, BACS level, ROI and payback ({item.score}).",
+            f"Best composite score ({item.score}) driven by {dominant_label}.",
             f"Estimated annual savings are {item.annual_cost_savings:.0f} with a payback of {payback_label}.",
             f"Projected BACS class is {item.scenario_bacs_class or 'unknown'} and estimated CO2 is {item.estimated_co2_kg_year:.0f} kg/year.",
         ]

@@ -215,6 +215,7 @@ class CalculationService:
                     "auxiliaries_model_json": assumption_set.auxiliaries_model_json,
                     "economic_defaults_json": assumption_set.economic_defaults_json,
                     "bacs_rules_json": assumption_set.bacs_rules_json,
+                    "scoring_rules_json": assumption_set.scoring_rules_json,
                     "co2_factors_json": assumption_set.co2_factors_json,
                 }
             )

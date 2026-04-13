@@ -157,6 +157,7 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
     assert "heating" in body["input_snapshot"]["assumptions"]["applied_impacts"][0]["gains"]
     assert body["input_snapshot"]["assumptions"]["economic_inputs"]["discount_rate"] == 0.06
     assert body["input_snapshot"]["assumptions"]["economic_inputs"]["analysis_period_years"] == 15
+    assert body["input_snapshot"]["assumptions"]["scoring_rules_json"]["version"] == "comparison-score-v1"
     assert any("Impacts appliques dans l'ordre" in message for message in body["messages"])
 
     with SessionLocal() as db:

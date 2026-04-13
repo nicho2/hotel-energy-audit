@@ -24,6 +24,7 @@ LOCKED_FIELDS = {
     "auxiliaries_model_json",
     "economic_defaults_json",
     "bacs_rules_json",
+    "scoring_rules_json",
     "co2_factors_json",
 }
 
@@ -151,6 +152,7 @@ class AssumptionSetService:
             "auxiliaries_model_json": dict(source.auxiliaries_model_json),
             "economic_defaults_json": dict(source.economic_defaults_json),
             "bacs_rules_json": dict(source.bacs_rules_json),
+            "scoring_rules_json": dict(source.scoring_rules_json),
             "co2_factors_json": dict(source.co2_factors_json),
             "notes": payload.notes if payload.notes is not None else source.notes,
             "is_active": payload.is_active,
@@ -252,6 +254,7 @@ class AssumptionSetService:
             auxiliaries_model_json=item.auxiliaries_model_json,
             economic_defaults_json=item.economic_defaults_json,
             bacs_rules_json=item.bacs_rules_json,
+            scoring_rules_json=item.scoring_rules_json,
             co2_factors_json=item.co2_factors_json,
             notes=item.notes,
             is_active=item.is_active,
@@ -293,6 +296,10 @@ class AssumptionSetService:
                 item.economic_defaults_json,
             ),
             "bacs_rules_json": updates.get("bacs_rules_json", item.bacs_rules_json),
+            "scoring_rules_json": updates.get(
+                "scoring_rules_json",
+                item.scoring_rules_json,
+            ),
             "co2_factors_json": updates.get("co2_factors_json", item.co2_factors_json),
             "notes": updates.get("notes", item.notes),
             "is_active": updates.get("is_active", item.is_active),

@@ -41,6 +41,7 @@ class CalculationAssumptionSet(Base):
     auxiliaries_model_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     economic_defaults_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     bacs_rules_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    scoring_rules_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     co2_factors_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(

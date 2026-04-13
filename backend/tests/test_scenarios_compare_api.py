@@ -92,6 +92,7 @@ def _persist_run(
     simple_payback_years: float | None,
     npv: float = 100000,
     irr: float | None = 0.2,
+    scoring_rules: dict | None = None,
 ) -> None:
     with SessionLocal() as db:
         run = CalculationRun(
@@ -99,7 +100,11 @@ def _persist_run(
             scenario_id=scenario_id,
             status="completed",
             engine_version=engine_version,
-            input_snapshot={"project_id": project_id, "scenario_id": scenario_id},
+            input_snapshot={
+                "project_id": project_id,
+                "scenario_id": scenario_id,
+                "assumptions": {"scoring_rules_json": scoring_rules or {}},
+            },
             messages_json=[f"Run for {scenario_id}"],
             warnings_json=[],
         )
@@ -195,9 +200,15 @@ def test_compare_scenarios_returns_tabular_comparison_and_recommendation(client:
     assert second["npv"] == 100000
     assert second["irr"] == 0.2
     assert second["annual_cost_savings"] == 32000
+    assert second["scoring_version"] == "comparison-score-v1"
+    assert second["score_breakdown"]["weights"] == {"energy": 0.35, "bacs": 0.2, "roi": 0.25, "capex": 0.2}
+    assert set(second["score_breakdown"]["sub_scores"]) == {"energy", "bacs", "roi", "capex"}
+    assert set(second["score_breakdown"]["contributions"]) == {"energy", "bacs", "roi", "capex"}
     assert second["roi_percent"] > 0
     assert second["score"] > 0
     assert body["recommended_scenario"]["scenario_id"] == scenario_ids[1]
+    assert body["recommended_scenario"]["scoring_version"] == "comparison-score-v1"
+    assert body["recommended_scenario"]["dominant_contributors"]
     assert len(body["recommended_scenario"]["reasons"]) == 3
 
 
@@ -241,6 +252,51 @@ def test_compare_scenarios_exposes_not_calculable_roi(client: TestClient) -> Non
     assert body["items"][1]["simple_payback_years"] is None
     assert body["items"][1]["irr"] is None
     assert body["items"][1]["npv"] == -65000
+
+
+def test_compare_scenarios_recommendation_uses_snapshot_scoring_rules(client: TestClient) -> None:
+    token, project_id, scenario_ids = _create_project_with_scenarios(client, scenario_count=2)
+    bacs_only_rules = {
+        "version": "bacs-only-test",
+        "weights": {"energy": 0, "bacs": 1, "roi": 0, "capex": 0},
+    }
+    _persist_run(
+        project_id=project_id,
+        scenario_id=scenario_ids[0],
+        engine_version="compare-v1",
+        scenario_energy_kwh_year=850000,
+        energy_savings_percent=29.2,
+        scenario_bacs_class="C",
+        total_capex=10000,
+        annual_cost_savings=45000,
+        simple_payback_years=0.2,
+        scoring_rules=bacs_only_rules,
+    )
+    _persist_run(
+        project_id=project_id,
+        scenario_id=scenario_ids[1],
+        engine_version="compare-v1",
+        scenario_energy_kwh_year=1100000,
+        energy_savings_percent=8.3,
+        scenario_bacs_class="A",
+        total_capex=250000,
+        annual_cost_savings=5000,
+        simple_payback_years=50,
+        scoring_rules=bacs_only_rules,
+    )
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/compare",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"scenario_ids": scenario_ids},
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert body["recommended_scenario"]["scenario_id"] == scenario_ids[1]
+    assert body["recommended_scenario"]["scoring_version"] == "bacs-only-test"
+    assert body["items"][1]["score_breakdown"]["contributions"]["bacs"] == 100
+    assert body["items"][1]["score_breakdown"]["dominant_contributors"] == ["bacs"]
 
 
 def test_compare_scenarios_rejects_missing_scenario(client: TestClient) -> None:

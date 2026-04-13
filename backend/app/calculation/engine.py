@@ -5,6 +5,7 @@ from math import isfinite
 from typing import Any
 
 from app.calculation.types import CalculationInput, CalculationOutput
+from app.scoring.scenario_scoring import DEFAULT_SCORING_RULES
 
 ENGINE_VERSION = "simplified-annual-v1"
 USAGES = ["heating", "cooling", "ventilation", "dhw", "lighting", "auxiliaries"]
@@ -63,6 +64,7 @@ DEFAULT_ASSUMPTIONS: dict[str, Any] = {
         "gain_caps": {"heating": 0.40, "cooling": 0.40, "ventilation": 0.45, "dhw": 0.25, "lighting": 0.60, "auxiliaries": 0.35},
     },
     "co2_factors_json": {"electricity": 0.055, "gas": 0.227, "natural_gas": 0.227, "district_heating": 0.120},
+    "scoring_rules_json": DEFAULT_SCORING_RULES,
 }
 
 
@@ -81,6 +83,7 @@ class CalculationEngine:
         baseline_by_zone = _freeze_zone_baselines(baseline_by_zone)
 
         baseline_totals = _sum_by_usage_from_key(baseline_by_zone, "baseline_uses")
+        input_data.assumptions["scoring_rules_json"] = assumptions["scoring_rules_json"]
         solution_impacts = _solution_impacts(input_data.selected_solutions)
         input_data.assumptions["applied_impacts"] = _impact_trace(solution_impacts)
         scenario_by_zone = _apply_solution_impacts(baseline_by_zone, solution_impacts, assumptions)

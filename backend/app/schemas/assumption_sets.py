@@ -20,6 +20,7 @@ class AssumptionSetBase(BaseModel):
     auxiliaries_model_json: dict[str, Any] = Field(default_factory=dict)
     economic_defaults_json: dict[str, Any]
     bacs_rules_json: dict[str, Any]
+    scoring_rules_json: dict[str, Any] = Field(default_factory=dict)
     co2_factors_json: dict[str, Any]
     notes: str | None = None
     is_active: bool = False
@@ -48,6 +49,7 @@ class AssumptionSetUpdate(BaseModel):
     auxiliaries_model_json: dict[str, Any] | None = None
     economic_defaults_json: dict[str, Any] | None = None
     bacs_rules_json: dict[str, Any] | None = None
+    scoring_rules_json: dict[str, Any] | None = None
     co2_factors_json: dict[str, Any] | None = None
     notes: str | None = None
     is_active: bool | None = None
@@ -80,6 +82,7 @@ class AssumptionSetResponse(BaseModel):
     auxiliaries_model_json: dict[str, Any]
     economic_defaults_json: dict[str, Any]
     bacs_rules_json: dict[str, Any]
+    scoring_rules_json: dict[str, Any]
     co2_factors_json: dict[str, Any]
     notes: str | None
     is_active: bool
@@ -112,6 +115,7 @@ def validate_assumption_json_payloads(payload: dict[str, Any]) -> None:
     _validate_dhw_model(payload.get("dhw_model_json", {}))
     _validate_economic_defaults(payload.get("economic_defaults_json", {}))
     _validate_bacs_rules(payload.get("bacs_rules_json", {}))
+    _validate_scoring_rules(payload.get("scoring_rules_json", {}))
     _validate_co2_factors(payload.get("co2_factors_json", {}))
 
 
@@ -178,6 +182,23 @@ def _validate_bacs_rules(data: dict[str, Any]) -> None:
             raise ValueError(
                 f"bacs_rules_json.score_to_class.{class_name} bounds must be ordered within 0..100"
             )
+
+
+def _validate_scoring_rules(data: dict[str, Any]) -> None:
+    if not isinstance(data, dict):
+        raise ValueError("scoring_rules_json must be an object")
+    if not data:
+        return
+    weights = data.get("weights")
+    if not isinstance(weights, dict):
+        raise ValueError("scoring_rules_json.weights must be an object")
+    for key in ["energy", "bacs", "roi", "capex"]:
+        value = weights.get(key)
+        if not isinstance(value, int | float) or value < 0:
+            raise ValueError(f"scoring_rules_json.weights.{key} must be a positive number or zero")
+    thresholds = data.get("thresholds", {})
+    if thresholds is not None and not isinstance(thresholds, dict):
+        raise ValueError("scoring_rules_json.thresholds must be an object")
 
 
 def _validate_co2_factors(data: dict[str, Any]) -> None:

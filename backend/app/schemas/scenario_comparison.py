@@ -38,12 +38,16 @@ class ScenarioComparisonItemResponse(BaseModel):
     irr: float | None = None
     roi_percent: float
     score: float
+    scoring_version: str | None = None
+    score_breakdown: dict[str, object] | None = None
 
 
 class ScenarioComparisonRecommendationResponse(BaseModel):
     scenario_id: UUID
     scenario_name: str
     score: float
+    scoring_version: str | None = None
+    dominant_contributors: list[str] = Field(default_factory=list)
     reasons: list[str]
 
 
