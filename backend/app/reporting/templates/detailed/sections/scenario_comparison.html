@@ -10,6 +10,8 @@
           <th>Savings</th>
           <th>BACS</th>
           <th>CAPEX</th>
+          <th>NPV</th>
+          <th>IRR</th>
           <th>Payback</th>
         </tr>
       </thead>
@@ -21,7 +23,9 @@
           <td>{{ "%.1f"|format(item.energy_savings_percent) }}%</td>
           <td>{{ item.scenario_bacs_class or "-" }}</td>
           <td>{{ "%.0f"|format(item.total_capex) }}</td>
-          <td>{{ "%.1f"|format(item.simple_payback_years) }} years</td>
+          <td>{{ "%.0f"|format(item.npv or 0) }}</td>
+          <td>{% if item.irr is not none %}{{ "%.2f"|format(item.irr) }}{% else %}-{% endif %}</td>
+          <td>{% if item.simple_payback_years is not none %}{{ "%.1f"|format(item.simple_payback_years) }} years{% else %}-{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>

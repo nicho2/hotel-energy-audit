@@ -18,6 +18,14 @@
           <td>{{ "%.0f"|format(results.economic.total_capex) }}</td>
         </tr>
         <tr>
+          <td>Baseline OPEX</td>
+          <td>{{ "%.0f"|format(results.economic.baseline_opex_year or 0) }}/year</td>
+        </tr>
+        <tr>
+          <td>Scenario OPEX</td>
+          <td>{{ "%.0f"|format(results.economic.scenario_opex_year or 0) }}/year</td>
+        </tr>
+        <tr>
           <td>Annual cost savings</td>
           <td>{{ "%.0f"|format(results.economic.annual_cost_savings) }}</td>
         </tr>
@@ -27,7 +35,7 @@
         </tr>
         <tr>
           <td>IRR</td>
-          <td>{{ "%.2f"|format(results.economic.irr) }}</td>
+          <td>{% if results.economic.irr is not none %}{{ "%.2f"|format(results.economic.irr) }}{% else %}Not calculable{% endif %}</td>
         </tr>
       </tbody>
     </table>

@@ -200,9 +200,30 @@ Detailed generation also supports `include_assumptions`, `include_regulatory_sec
 - `input_snapshot.assumptions.assumption_set_id` when an active versioned assumption set is found
 - `input_snapshot.assumptions.usage_payload` for wizard usage inputs used by the run
 - `input_snapshot.assumptions.climate_zone` for heating, cooling, and solar severity indexes
+- `input_snapshot.assumptions.economic_inputs` for discount rate, energy inflation, period, maintenance, subsidies, and energy prices used by the run
 - `input_snapshot.selected_solutions[]` for scenario solution assignments and their resolved catalog assumptions when available
 
-The V1 engine is annual and simplified. Results vary by building surface, construction period, compactness, climate indexes, zones, orientation, occupancy, systems, BACS functions, and selected scenario solutions. It keeps the persisted summary/by-use/by-zone/economic contracts unchanged.
+The V1 engine is annual and simplified. Results vary by building surface, construction period, compactness, climate indexes, zones, orientation, occupancy, systems, BACS functions, and selected scenario solutions.
+
+### economic result fields
+- `total_capex`
+- `subsidies`
+- `net_capex`
+- `baseline_opex_year`
+- `scenario_opex_year`
+- `energy_cost_savings`
+- `maintenance_cost_year`
+- `maintenance_savings_year`
+- `net_annual_savings`
+- `annual_cost_savings`
+- `simple_payback_years` (`null` when not calculable)
+- `npv`
+- `irr` (`null` when not calculable)
+- `analysis_period_years`
+- `discount_rate`
+- `energy_inflation_rate`
+- `cash_flows[]`
+- `is_roi_calculable`
 
 ### solution definition fields
 - `id`

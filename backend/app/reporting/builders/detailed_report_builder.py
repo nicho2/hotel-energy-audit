@@ -153,8 +153,18 @@ class DetailedReportBuilder(BaseReportBuilder):
                     "energy_savings_percent": run.result_summary.energy_savings_percent,
                     "scenario_bacs_class": run.result_summary.scenario_bacs_class,
                     "total_capex": run.economic_result.total_capex,
+                    "subsidies": run.economic_result.subsidies,
+                    "net_capex": run.economic_result.net_capex,
+                    "baseline_opex_year": run.economic_result.baseline_opex_year,
+                    "scenario_opex_year": run.economic_result.scenario_opex_year,
+                    "energy_cost_savings": run.economic_result.energy_cost_savings,
+                    "maintenance_cost_year": run.economic_result.maintenance_cost_year,
+                    "maintenance_savings_year": run.economic_result.maintenance_savings_year,
+                    "net_annual_savings": run.economic_result.net_annual_savings,
                     "annual_cost_savings": run.economic_result.annual_cost_savings,
                     "simple_payback_years": run.economic_result.simple_payback_years,
+                    "npv": run.economic_result.npv,
+                    "irr": run.economic_result.irr,
                 }
             )
         return payload

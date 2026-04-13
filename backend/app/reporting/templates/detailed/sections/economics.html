@@ -6,16 +6,69 @@
       <span class="metric-value">{{ "%.0f"|format(results.economic.total_capex) }}</span>
     </article>
     <article class="card">
+      <div class="metric-label">Net CAPEX</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.net_capex or results.economic.total_capex) }}</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Baseline OPEX</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.baseline_opex_year or 0) }}/year</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">Scenario OPEX</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.scenario_opex_year or 0) }}/year</span>
+    </article>
+    <article class="card">
       <div class="metric-label">Annual Cost Savings</div>
       <span class="metric-value">{{ "%.0f"|format(results.economic.annual_cost_savings) }}</span>
     </article>
     <article class="card">
       <div class="metric-label">Simple Payback</div>
-      <span class="metric-value">{{ "%.1f"|format(results.economic.simple_payback_years) }} years</span>
+      <span class="metric-value">
+        {% if results.economic.simple_payback_years is not none %}
+        {{ "%.1f"|format(results.economic.simple_payback_years) }} years
+        {% else %}
+        Not calculable
+        {% endif %}
+      </span>
     </article>
     <article class="card">
-      <div class="metric-label">NPV / IRR</div>
-      <span class="metric-value">{{ "%.0f"|format(results.economic.npv) }} / {{ "%.2f"|format(results.economic.irr) }}</span>
+      <div class="metric-label">NPV</div>
+      <span class="metric-value">{{ "%.0f"|format(results.economic.npv) }}</span>
+    </article>
+    <article class="card">
+      <div class="metric-label">IRR</div>
+      <span class="metric-value">
+        {% if results.economic.irr is not none %}
+        {{ "%.2f"|format(results.economic.irr) }}
+        {% else %}
+        Not calculable
+        {% endif %}
+      </span>
     </article>
   </div>
+  {% if results.economic.cash_flows %}
+  <div class="card" style="margin-top: 14px;">
+    <h3>Cash-flow Simplified</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Net cash-flow</th>
+          <th>Discounted</th>
+          <th>Cumulative</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for flow in results.economic.cash_flows[:6] %}
+        <tr>
+          <td>{{ flow.year }}</td>
+          <td>{{ "%.0f"|format(flow.net_cash_flow) }}</td>
+          <td>{{ "%.0f"|format(flow.discounted_cash_flow) }}</td>
+          <td>{{ "%.0f"|format(flow.cumulative_cash_flow) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
 </section>

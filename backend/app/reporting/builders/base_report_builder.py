@@ -93,10 +93,23 @@ class BaseReportBuilder:
                 },
                 "economic": {
                     "total_capex": economic.total_capex,
+                    "subsidies": economic.subsidies,
+                    "net_capex": economic.net_capex,
+                    "baseline_opex_year": economic.baseline_opex_year,
+                    "scenario_opex_year": economic.scenario_opex_year,
+                    "energy_cost_savings": economic.energy_cost_savings,
+                    "maintenance_cost_year": economic.maintenance_cost_year,
+                    "maintenance_savings_year": economic.maintenance_savings_year,
+                    "net_annual_savings": economic.net_annual_savings,
                     "annual_cost_savings": economic.annual_cost_savings,
                     "simple_payback_years": economic.simple_payback_years,
                     "npv": economic.npv,
                     "irr": economic.irr,
+                    "analysis_period_years": economic.analysis_period_years,
+                    "discount_rate": economic.discount_rate,
+                    "energy_inflation_rate": economic.energy_inflation_rate,
+                    "cash_flows": economic.cash_flows or [],
+                    "is_roi_calculable": economic.is_roi_calculable,
                 },
                 "by_use": [
                     {

@@ -15,7 +15,13 @@
     </article>
     <article class="card">
       <div class="metric-label">Simple Payback</div>
-      <span class="metric-value">{{ "%.1f"|format(results.economic.simple_payback_years) }} years</span>
+      <span class="metric-value">
+        {% if results.economic.simple_payback_years is not none %}
+        {{ "%.1f"|format(results.economic.simple_payback_years) }} years
+        {% else %}
+        Not calculable
+        {% endif %}
+      </span>
     </article>
   </div>
 </section>

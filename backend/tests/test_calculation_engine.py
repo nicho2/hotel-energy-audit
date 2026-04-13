@@ -1,4 +1,4 @@
-from app.calculation.engine import CalculationEngine
+from app.calculation.engine import CalculationEngine, _economic_results
 from app.calculation.types import CalculationInput
 
 
@@ -135,3 +135,70 @@ def test_run_combines_solution_impacts_sequentially_and_traces_order() -> None:
     assert "Impacts appliques dans l'ordre" in output.messages[-1] or any(
         "Impacts appliques dans l'ordre" in message for message in output.messages
     )
+
+
+def test_economic_results_compute_opex_npv_irr_payback_and_cash_flows() -> None:
+    assumptions = {
+        "economic_defaults_json": {
+            "energy_prices": {"electricity": 0.20},
+            "discount_rate": 0.0,
+            "energy_inflation_rate": 0.0,
+            "analysis_period_years": 2,
+            "maintenance_rate": 0.0,
+            "subsidies": 1000,
+            "performance_degradation_rate": 0.0,
+        }
+    }
+    baseline = {usage: 0.0 for usage in ["heating", "cooling", "ventilation", "dhw", "lighting", "auxiliaries"]}
+    scenario = dict(baseline)
+    baseline["heating"] = 10000
+    scenario["heating"] = 5000
+
+    economic = _economic_results(
+        baseline,
+        scenario,
+        [{"system_type": "heating", "energy_source": "electricity"}],
+        assumptions,
+        3000,
+        [],
+    )
+
+    assert economic["baseline_opex_year"] == 2000
+    assert economic["scenario_opex_year"] == 1000
+    assert economic["energy_cost_savings"] == 1000
+    assert economic["subsidies"] == 1000
+    assert economic["net_capex"] == 2000
+    assert economic["simple_payback_years"] == 2.0
+    assert economic["npv"] == 0
+    assert economic["irr"] == 0.0
+    assert [flow["net_cash_flow"] for flow in economic["cash_flows"]] == [-2000, 1000, 1000]
+
+
+def test_economic_results_marks_roi_not_calculable_without_positive_savings() -> None:
+    assumptions = {
+        "economic_defaults_json": {
+            "energy_prices": {"electricity": 0.20},
+            "discount_rate": 0.06,
+            "energy_inflation_rate": 0.0,
+            "analysis_period_years": 3,
+            "maintenance_rate": 0.02,
+        }
+    }
+    baseline = {usage: 0.0 for usage in ["heating", "cooling", "ventilation", "dhw", "lighting", "auxiliaries"]}
+    scenario = dict(baseline)
+    baseline["lighting"] = 5000
+    scenario["lighting"] = 5000
+
+    economic = _economic_results(
+        baseline,
+        scenario,
+        [{"system_type": "lighting", "energy_source": "electricity"}],
+        assumptions,
+        10000,
+        [],
+    )
+
+    assert economic["annual_cost_savings"] < 0
+    assert economic["simple_payback_years"] is None
+    assert economic["irr"] is None
+    assert economic["is_roi_calculable"] is False

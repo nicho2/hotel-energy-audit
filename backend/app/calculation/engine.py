@@ -46,7 +46,17 @@ DEFAULT_ASSUMPTIONS: dict[str, Any] = {
         "technology_factors": {"led_dimming": 0.65, "led": 0.78, "mixed": 0.92, "fluorescent": 1.00, "old": 1.20},
     },
     "auxiliaries_model_json": {"ratio_by_complexity": {"low": 0.05, "standard": 0.08, "high": 0.11, "very_high": 0.14}},
-    "economic_defaults_json": {"discount_rate": 0.06, "energy_inflation_rate": 0.03, "analysis_period_years": 15, "maintenance_rate": 0.02, "energy_prices": {"electricity": 0.18, "gas": 0.09, "district_heating": 0.12}},
+    "economic_defaults_json": {
+        "discount_rate": 0.06,
+        "energy_inflation_rate": 0.03,
+        "analysis_period_years": 15,
+        "maintenance_rate": 0.02,
+        "maintenance_savings_rate": 0.0,
+        "performance_degradation_rate": 0.005,
+        "subsidy_rate": 0.0,
+        "subsidies": 0.0,
+        "energy_prices": {"electricity": 0.18, "gas": 0.09, "district_heating": 0.12},
+    },
     "bacs_rules_json": {
         "score_to_class": {"A": [85, 100], "B": [65, 84], "C": [40, 64], "D": [0, 39]},
         "domain_weights": {"heating": 18, "cooling": 14, "ventilation": 12, "dhw": 10, "lighting": 12, "supervision": 12, "monitoring": 10, "room_automation": 12},
@@ -83,7 +93,8 @@ class CalculationEngine:
         scenario_bacs_score = min(100.0, current_bacs_score + _scenario_bacs_score_gain(input_data.selected_solutions))
         scenario_bacs_class = _class_from_score(scenario_bacs_score, assumptions)
         capex = _total_capex(input_data.selected_solutions)
-        economic = _economic_results(baseline_totals, scenario_totals, systems, assumptions, capex)
+        economic = _economic_results(baseline_totals, scenario_totals, systems, assumptions, capex, input_data.selected_solutions)
+        input_data.assumptions["economic_inputs"] = _economic_trace(assumptions["economic_defaults_json"], economic)
 
         return CalculationOutput(
             summary={
@@ -454,29 +465,111 @@ def _economic_results(
     systems: list[dict[str, Any]],
     assumptions: dict[str, Any],
     capex: float,
-) -> dict[str, float]:
-    baseline_cost = _energy_cost(baseline_totals, systems, assumptions)
-    scenario_cost = _energy_cost(scenario_totals, systems, assumptions)
-    annual_savings = max(0.0, baseline_cost - scenario_cost)
+    selected_solutions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     economic = assumptions["economic_defaults_json"]
-    maintenance_cost = capex * _num(economic.get("maintenance_rate"), 0.02)
-    net_annual_savings = max(0.0, annual_savings - maintenance_cost)
-    payback = capex / net_annual_savings if capex > 0 and net_annual_savings > 0 else 0.0
-    period = int(_num(economic.get("analysis_period_years"), 15))
+    baseline_energy_cost = _energy_cost(baseline_totals, systems, assumptions)
+    scenario_energy_cost = _energy_cost(scenario_totals, systems, assumptions)
+    energy_cost_savings = baseline_energy_cost - scenario_energy_cost
+    maintenance_cost = _annual_maintenance_cost(selected_solutions or [], capex, economic)
+    maintenance_savings = capex * _bounded(_num(economic.get("maintenance_savings_rate"), 0.0), 0.0, 1.0)
+    baseline_opex = baseline_energy_cost
+    scenario_opex = scenario_energy_cost + maintenance_cost - maintenance_savings
+    net_annual_savings = baseline_opex - scenario_opex
+    subsidies = _subsidies(capex, economic)
+    net_capex = max(0.0, capex - subsidies)
+    period = max(1, int(_num(economic.get("analysis_period_years"), 15)))
     discount_rate = _num(economic.get("discount_rate"), 0.06)
     inflation = _num(economic.get("energy_inflation_rate"), 0.03)
-    npv = -capex
-    cash_flows = [-capex]
+    degradation = _bounded(_num(economic.get("performance_degradation_rate"), 0.005), 0.0, 0.50)
+    payback = _simple_payback(net_capex, net_annual_savings)
+    npv = -net_capex
+    cash_flow_values = [-net_capex]
+    cumulative = -net_capex
+    cash_flows = [{
+        "year": 0,
+        "energy_cost_savings": 0.0,
+        "maintenance_savings": 0.0,
+        "maintenance_cost": 0.0,
+        "net_cash_flow": round(-net_capex, 2),
+        "discounted_cash_flow": round(-net_capex, 2),
+        "cumulative_cash_flow": round(cumulative, 2),
+    }]
     for year in range(1, period + 1):
-        cash_flow = net_annual_savings * ((1 + inflation) ** (year - 1))
-        cash_flows.append(cash_flow)
-        npv += cash_flow / ((1 + discount_rate) ** year)
+        effective_energy_savings = energy_cost_savings * ((1 + inflation) ** (year - 1)) * ((1 - degradation) ** (year - 1))
+        cash_flow = effective_energy_savings + maintenance_savings - maintenance_cost
+        discounted = cash_flow / ((1 + discount_rate) ** year)
+        cash_flow_values.append(cash_flow)
+        npv += discounted
+        cumulative += cash_flow
+        cash_flows.append({
+            "year": year,
+            "energy_cost_savings": round(effective_energy_savings, 2),
+            "maintenance_savings": round(maintenance_savings, 2),
+            "maintenance_cost": round(maintenance_cost, 2),
+            "net_cash_flow": round(cash_flow, 2),
+            "discounted_cash_flow": round(discounted, 2),
+            "cumulative_cash_flow": round(cumulative, 2),
+        })
+    irr = _irr(cash_flow_values)
     return {
         "total_capex": round(capex, 2),
+        "subsidies": round(subsidies, 2),
+        "net_capex": round(net_capex, 2),
+        "baseline_opex_year": round(baseline_opex, 2),
+        "scenario_opex_year": round(scenario_opex, 2),
+        "energy_cost_savings": round(energy_cost_savings, 2),
+        "maintenance_cost_year": round(maintenance_cost, 2),
+        "maintenance_savings_year": round(maintenance_savings, 2),
+        "net_annual_savings": round(net_annual_savings, 2),
         "annual_cost_savings": round(net_annual_savings, 2),
-        "simple_payback_years": round(payback, 1) if payback else 0.0,
+        "simple_payback_years": round(payback, 1) if payback is not None else None,
         "npv": round(npv, 2),
-        "irr": round(_irr(cash_flows), 4),
+        "irr": _rounded_optional(irr, 4),
+        "analysis_period_years": period,
+        "discount_rate": round(discount_rate, 4),
+        "energy_inflation_rate": round(inflation, 4),
+        "cash_flows": cash_flows,
+        "is_roi_calculable": payback is not None or irr is not None,
+    }
+
+
+def _annual_maintenance_cost(selected_solutions: list[dict[str, Any]], capex: float, economic: dict[str, Any]) -> float:
+    overrides = [
+        _num(solution.get("maintenance_override"))
+        for solution in selected_solutions
+        if solution.get("is_selected") is not False and solution.get("maintenance_override") is not None
+    ]
+    if overrides:
+        return max(0.0, sum(overrides))
+    return max(0.0, capex * _num(economic.get("maintenance_rate"), 0.02))
+
+
+def _subsidies(capex: float, economic: dict[str, Any]) -> float:
+    fixed = max(0.0, _num(economic.get("subsidies"), 0.0))
+    rated = capex * _bounded(_num(economic.get("subsidy_rate"), 0.0), 0.0, 1.0)
+    return min(capex, fixed + rated)
+
+
+def _simple_payback(net_capex: float, annual_savings: float) -> float | None:
+    if net_capex <= 0 and annual_savings > 0:
+        return 0.0
+    if net_capex > 0 and annual_savings > 0:
+        return net_capex / annual_savings
+    return None
+
+
+def _economic_trace(economic: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "discount_rate": result["discount_rate"],
+        "energy_inflation_rate": result["energy_inflation_rate"],
+        "analysis_period_years": result["analysis_period_years"],
+        "maintenance_rate": _num(economic.get("maintenance_rate"), 0.02),
+        "maintenance_savings_rate": _num(economic.get("maintenance_savings_rate"), 0.0),
+        "performance_degradation_rate": _num(economic.get("performance_degradation_rate"), 0.005),
+        "subsidy_rate": _num(economic.get("subsidy_rate"), 0.0),
+        "subsidies": result["subsidies"],
+        "energy_prices": _dict(economic.get("energy_prices")),
     }
 
 
@@ -502,10 +595,18 @@ def _normalise_energy_source(value: str) -> str:
     return value
 
 
-def _irr(cash_flows: list[float]) -> float:
-    if not cash_flows or all(value <= 0 for value in cash_flows[1:]):
-        return 0.0
+def _irr(cash_flows: list[float]) -> float | None:
+    if not cash_flows or not any(value < 0 for value in cash_flows) or not any(value > 0 for value in cash_flows):
+        return None
     low, high = -0.95, 1.0
+    low_value = sum(cash_flow / ((1 + low) ** index) for index, cash_flow in enumerate(cash_flows))
+    high_value = sum(cash_flow / ((1 + high) ** index) for index, cash_flow in enumerate(cash_flows))
+    if low_value == 0:
+        return low
+    if high_value == 0:
+        return high
+    if (low_value > 0) == (high_value > 0):
+        return None
     for _ in range(80):
         mid = (low + high) / 2
         value = sum(cash_flow / ((1 + mid) ** index) for index, cash_flow in enumerate(cash_flows))
@@ -513,7 +614,11 @@ def _irr(cash_flows: list[float]) -> float:
             low = mid
         else:
             high = mid
-    return max(0.0, (low + high) / 2)
+    return (low + high) / 2
+
+
+def _rounded_optional(value: float | None, digits: int) -> float | None:
+    return round(value, digits) if value is not None else None
 
 
 def _compute_bacs_score(functions: list[dict[str, Any]], assumptions: dict[str, Any]) -> float:

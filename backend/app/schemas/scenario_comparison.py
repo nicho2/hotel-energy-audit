@@ -24,8 +24,18 @@ class ScenarioComparisonItemResponse(BaseModel):
     baseline_bacs_class: str | None
     scenario_bacs_class: str | None
     total_capex: float
+    subsidies: float | None = None
+    net_capex: float | None = None
+    baseline_opex_year: float | None = None
+    scenario_opex_year: float | None = None
+    energy_cost_savings: float | None = None
+    maintenance_cost_year: float | None = None
+    maintenance_savings_year: float | None = None
+    net_annual_savings: float | None = None
     annual_cost_savings: float
-    simple_payback_years: float
+    simple_payback_years: float | None
+    npv: float | None = None
+    irr: float | None = None
     roi_percent: float
     score: float
 

@@ -89,7 +89,9 @@ def _persist_run(
     scenario_bacs_class: str,
     total_capex: float,
     annual_cost_savings: float,
-    simple_payback_years: float,
+    simple_payback_years: float | None,
+    npv: float = 100000,
+    irr: float | None = 0.2,
 ) -> None:
     with SessionLocal() as db:
         run = CalculationRun(
@@ -117,10 +119,17 @@ def _persist_run(
             EconomicResult(
                 calculation_run_id=run.id,
                 total_capex=total_capex,
+                net_capex=total_capex,
+                baseline_opex_year=100000,
+                scenario_opex_year=100000 - annual_cost_savings,
+                energy_cost_savings=annual_cost_savings,
+                net_annual_savings=annual_cost_savings,
                 annual_cost_savings=annual_cost_savings,
                 simple_payback_years=simple_payback_years,
-                npv=100000,
-                irr=0.2,
+                npv=npv,
+                irr=irr,
+                cash_flows=[],
+                is_roi_calculable=simple_payback_years is not None or irr is not None,
             )
         )
         db.commit()
@@ -180,11 +189,58 @@ def test_compare_scenarios_returns_tabular_comparison_and_recommendation(client:
     assert second["estimated_co2_kg_year"] > 0
     assert second["scenario_bacs_class"] == "B"
     assert second["total_capex"] == 85000
+    assert second["net_capex"] == 85000
+    assert second["baseline_opex_year"] == 100000
+    assert second["scenario_opex_year"] == 68000
+    assert second["npv"] == 100000
+    assert second["irr"] == 0.2
     assert second["annual_cost_savings"] == 32000
     assert second["roi_percent"] > 0
     assert second["score"] > 0
     assert body["recommended_scenario"]["scenario_id"] == scenario_ids[1]
     assert len(body["recommended_scenario"]["reasons"]) == 3
+
+
+def test_compare_scenarios_exposes_not_calculable_roi(client: TestClient) -> None:
+    token, project_id, scenario_ids = _create_project_with_scenarios(client, scenario_count=2)
+    _persist_run(
+        project_id=project_id,
+        scenario_id=scenario_ids[0],
+        engine_version="compare-v1",
+        scenario_energy_kwh_year=1200000,
+        energy_savings_percent=0,
+        scenario_bacs_class="C",
+        total_capex=0,
+        annual_cost_savings=0,
+        simple_payback_years=None,
+        npv=0,
+        irr=None,
+    )
+    _persist_run(
+        project_id=project_id,
+        scenario_id=scenario_ids[1],
+        engine_version="compare-v1",
+        scenario_energy_kwh_year=1190000,
+        energy_savings_percent=0.8,
+        scenario_bacs_class="C",
+        total_capex=50000,
+        annual_cost_savings=-1000,
+        simple_payback_years=None,
+        npv=-65000,
+        irr=None,
+    )
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/scenarios/compare",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"scenario_ids": scenario_ids},
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert body["items"][1]["simple_payback_years"] is None
+    assert body["items"][1]["irr"] is None
+    assert body["items"][1]["npv"] == -65000
 
 
 def test_compare_scenarios_rejects_missing_scenario(client: TestClient) -> None:

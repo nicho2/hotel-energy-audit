@@ -138,6 +138,16 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
     assert body["summary"]["baseline_energy_kwh_year"] > body["summary"]["scenario_energy_kwh_year"]
     assert body["summary"]["energy_savings_percent"] > 0
     assert body["economic"]["total_capex"] == 18000
+    assert body["economic"]["net_capex"] == 18000
+    assert body["economic"]["baseline_opex_year"] > body["economic"]["scenario_opex_year"]
+    assert body["economic"]["energy_cost_savings"] > 0
+    assert body["economic"]["maintenance_cost_year"] == 360
+    assert body["economic"]["net_annual_savings"] == body["economic"]["annual_cost_savings"]
+    assert body["economic"]["simple_payback_years"] is not None
+    assert body["economic"]["npv"] != 0
+    assert body["economic"]["cash_flows"][0]["year"] == 0
+    assert body["economic"]["cash_flows"][0]["net_cash_flow"] == -18000
+    assert body["economic"]["analysis_period_years"] == 15
     assert body["messages"]
     assert body["input_snapshot"]["project_id"] == project_id
     assert body["input_snapshot"]["assumptions"]["engine_version"] == "simplified-annual-v1"
@@ -145,6 +155,8 @@ def test_calculate_scenario_persists_run_and_result(client: TestClient) -> None:
     assert body["input_snapshot"]["selected_solutions"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
     assert body["input_snapshot"]["assumptions"]["applied_impacts"][0]["solution_code"] == "ROOM_AUTOMATION_BASIC"
     assert "heating" in body["input_snapshot"]["assumptions"]["applied_impacts"][0]["gains"]
+    assert body["input_snapshot"]["assumptions"]["economic_inputs"]["discount_rate"] == 0.06
+    assert body["input_snapshot"]["assumptions"]["economic_inputs"]["analysis_period_years"] == 15
     assert any("Impacts appliques dans l'ordre" in message for message in body["messages"])
 
     with SessionLocal() as db:
@@ -170,6 +182,8 @@ def test_get_latest_result_returns_latest_persisted_payload(client: TestClient) 
     body = latest_response.json()["data"]
     assert body["summary"]["scenario_energy_kwh_year"] < body["summary"]["baseline_energy_kwh_year"]
     assert body["economic"]["annual_cost_savings"] > 0
+    assert body["economic"]["baseline_opex_year"] > body["economic"]["scenario_opex_year"]
+    assert body["economic"]["cash_flows"]
     assert body["messages"]
 
 

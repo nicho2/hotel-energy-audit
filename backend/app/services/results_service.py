@@ -106,10 +106,23 @@ class ResultsService:
             ),
             economic=EconomicResultResponse(
                 total_capex=economic.total_capex,
+                subsidies=economic.subsidies,
+                net_capex=economic.net_capex,
+                baseline_opex_year=economic.baseline_opex_year,
+                scenario_opex_year=economic.scenario_opex_year,
+                energy_cost_savings=economic.energy_cost_savings,
+                maintenance_cost_year=economic.maintenance_cost_year,
+                maintenance_savings_year=economic.maintenance_savings_year,
+                net_annual_savings=economic.net_annual_savings,
                 annual_cost_savings=economic.annual_cost_savings,
                 simple_payback_years=economic.simple_payback_years,
                 npv=economic.npv,
                 irr=economic.irr,
+                analysis_period_years=economic.analysis_period_years,
+                discount_rate=economic.discount_rate,
+                energy_inflation_rate=economic.energy_inflation_rate,
+                cash_flows=economic.cash_flows,
+                is_roi_calculable=economic.is_roi_calculable,
             ),
             messages=run.messages_json,
             warnings=run.warnings_json,
@@ -183,8 +196,18 @@ class ResultsService:
                     baseline_bacs_class=summary.baseline_bacs_class,
                     scenario_bacs_class=summary.scenario_bacs_class,
                     total_capex=economic.total_capex,
+                    subsidies=economic.subsidies,
+                    net_capex=economic.net_capex,
+                    baseline_opex_year=economic.baseline_opex_year,
+                    scenario_opex_year=economic.scenario_opex_year,
+                    energy_cost_savings=economic.energy_cost_savings,
+                    maintenance_cost_year=economic.maintenance_cost_year,
+                    maintenance_savings_year=economic.maintenance_savings_year,
+                    net_annual_savings=economic.net_annual_savings,
                     annual_cost_savings=economic.annual_cost_savings,
                     simple_payback_years=economic.simple_payback_years,
+                    npv=economic.npv,
+                    irr=economic.irr,
                     roi_percent=roi_percent,
                     score=score,
                 )
@@ -248,12 +271,12 @@ class ResultsService:
         energy_savings_percent: float,
         scenario_bacs_class: str | None,
         roi_percent: float,
-        payback_years: float,
+        payback_years: float | None,
         capex: float,
         annual_cost_savings: float,
     ) -> float:
         bacs_points = self.BACS_CLASS_POINTS.get(scenario_bacs_class or "", 0.0)
-        payback_points = max(0.0, 100.0 - (payback_years * 10.0))
+        payback_points = max(0.0, 100.0 - (payback_years * 10.0)) if payback_years is not None else 0.0
         capex_penalty = min(capex / 5000.0, 20.0)
         savings_bonus = min(annual_cost_savings / 1000.0, 20.0)
         raw_score = (
@@ -270,8 +293,9 @@ class ResultsService:
         self,
         item: ScenarioComparisonItemResponse,
     ) -> list[str]:
+        payback_label = f"{item.simple_payback_years:.1f} years" if item.simple_payback_years is not None else "not calculable"
         return [
             f"Best composite score based on energy savings, BACS level, ROI and payback ({item.score}).",
-            f"Estimated annual savings are {item.annual_cost_savings:.0f} with a payback of {item.simple_payback_years:.1f} years.",
+            f"Estimated annual savings are {item.annual_cost_savings:.0f} with a payback of {payback_label}.",
             f"Projected BACS class is {item.scenario_bacs_class or 'unknown'} and estimated CO2 is {item.estimated_co2_kg_year:.0f} kg/year.",
         ]

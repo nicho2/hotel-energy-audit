@@ -35,7 +35,7 @@ class ExecutiveReportBuilder(BaseReportBuilder):
             recommendations.append(
                 "Prioritize this scenario for commercial follow-up because projected savings exceed 20%."
             )
-        if economic.simple_payback_years <= 4:
+        if economic.simple_payback_years is not None and economic.simple_payback_years <= 4:
             recommendations.append(
                 "Payback is within a commercially attractive range and supports rapid decision-making."
             )
